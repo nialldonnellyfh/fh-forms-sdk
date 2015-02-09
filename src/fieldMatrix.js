@@ -27,6 +27,8 @@ function getMatrixCols() {
 }
 
 module.exports = {
-    getMatrixRows: getMatrixRows,
-    getMatrixCols: getMatrixCols
+    prototype: {
+        getMatrixRows: getMatrixRows,
+        getMatrixCols: getMatrixCols
+    }
 };

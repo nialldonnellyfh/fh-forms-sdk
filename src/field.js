@@ -26,11 +26,12 @@ function Field(opt, form) {
 }
 
 utils.extend(Field, Model);
-utils.extend(fieldCheckboxes, Field);
-utils.extend(fieldFile, Field);
-utils.extend(fieldLocation, Field);
-utils.extend(fieldMatrix, Field);
-utils.extend(fieldRadio, Field);
+utils.extend(Field, fieldCheckboxes);
+utils.extend(Field, fieldFile);
+utils.extend(Field, fieldLocation);
+utils.extend(Field, fieldMatrix);
+utils.extend(Field, fieldRadio);
+utils.extend(Field, fieldImage);
 
 Field.prototype.isRequired = function() {
     return this.get('required');

@@ -240,6 +240,18 @@
             "_id": "54d4cd220a9b02c67e9c3f0a",
             "adminOnly": false,
             "repeating": false
+        },
+        {
+            "fieldOptions": {
+                
+            },
+            "helpText": "File",
+            "name": "File",
+            "required": false,
+            "type": "file",
+            "_id": "54d4cd220a9b02c67e9c1245",
+            "adminOnly": false,
+            "repeating": false
         }]
     }],
     "pageRef": {
@@ -313,6 +325,10 @@
         "54d4cd220a9b02c67e9c3f0a": {
             "page": 0,
             "field": 16
+        },
+        "54d4cd220a9b02c67e9c1245": {
+            "page": 0,
+            "field": 17  
         }
     }
 }

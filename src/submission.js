@@ -358,13 +358,13 @@ Submission.prototype.upload = function(cb) {
                     if (err) {
                         log.e("Error saving upload task: " + err);
                     }
+                    self.emit("inprogress", ut);
+                    ut.on("progress", function(progress) {
+                        log.d("Emitting upload progress for submission: " + self.getLocalId() + JSON.stringify(progress));
+                        self.emit("progress", progress);
+                    });
+                    cb(null, ut);
                 });
-                self.emit("inprogress", ut);
-                ut.on("progress", function(progress) {
-                    log.d("Emitting upload progress for submission: " + self.getLocalId() + JSON.stringify(progress));
-                    self.emit("progress", progress);
-                });
-                cb(null, ut);
             }
         });
     } else {
@@ -390,13 +390,14 @@ Submission.prototype.download = function(cb) {
                     if (err) {
                         log.e("Error saving download task: " + err);
                     }
+                    that.emit("inprogress", downloadTask);
+                    downloadTask.on("progress", function(progress) {
+                        log.d("Emitting download progress for submission: " + that.getLocalId() + JSON.stringify(progress));
+                        that.emit("progress", progress);
+                    });
+                    return cb(null, downloadTask);
                 });
-                that.emit("inprogress", downloadTask);
-                downloadTask.on("progress", function(progress) {
-                    log.d("Emitting download progress for submission: " + that.getLocalId() + JSON.stringify(progress));
-                    that.emit("progress", progress);
-                });
-                return cb(null, downloadTask);
+                
             });
         } else {
             return cb("Invalid Status to dowload a form submission");
@@ -916,7 +917,7 @@ Submission.prototype.clearLocal = function(cb) {
                 return cb(err);
             }
             self.clearLocalSubmissionFiles(function() {
-                Model.clearLocal.call(self, function(err) {
+                Model.prototype.clearLocal.call(self, function(err) {
                     if (err) {
                         log.e(err);
                         return cb(err);

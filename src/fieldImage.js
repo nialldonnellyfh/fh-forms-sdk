@@ -2,11 +2,12 @@
  * extension of Field class to support file field
  */
 
-var localStorage = require("./localStorage");
-var fileSystem = require("./fileSystem");
-var log = require("./log");
-var config = require("./config");
+var localStorage = require("./localStorage.js");
+var fileSystem = require("./fileSystem.js");
+var log = require("./log.js");
+var config = require("./config.js");
 var async = require("async");
+var _ = require("underscore");
 
 function imageProcess(params, cb) {
     var self = this;
@@ -76,10 +77,10 @@ function genImageName(cb) {
 
 //TODO - Dont make functions here!
 function convertImage(value, cb) {
-    async.map(value || [], function(meta, cb){
+    async.map(value || [], function(meta, cb) {
         _loadImage(meta, function() {
-                cb(null, value);
-            });
+            cb(null, value);
+        });
     }, cb);
 }
 
@@ -128,8 +129,11 @@ function _loadImage(meta, cb) {
 }
 
 module.exports = {
-    process_signature: imageProcess,
-    convert_signature: convertImage,
-    process_photo: imageProcess,
-    convert_photo: convertImage
+    prototype: {
+        process_signature: imageProcess,
+        convert_signature: convertImage,
+        process_photo: imageProcess,
+        convert_photo: convertImage
+    }
+
 };

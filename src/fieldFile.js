@@ -1,10 +1,11 @@
 /**
  * extension of Field class to support file field
  */
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-var localStorage = require("./localStorage");
+var Model = require("./model.js");
+var log = require("./log.js");
+var config = require("./config.js");
+var localStorage = require("./localStorage.js");
+var utils = require('./utils.js');
 
 function checkFileObj(obj) {
     return obj.fileName && obj.fileType && obj.hashName;
@@ -125,6 +126,9 @@ function process_file(params, cb) {
 }
 
 module.exports = {
-    checkFileObj: checkFileObj,
-    process_file: process_file
+    prototype: {
+        checkFileObj: checkFileObj,
+        process_file: process_file
+    }
+
 };

@@ -16,5 +16,7 @@ function getRadioOption() {
 }
 
 module.exports = {
-    getRadioOption: getRadioOption
+    prototype: {
+        getRadioOption: getRadioOption
+    }
 };

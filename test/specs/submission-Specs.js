@@ -115,7 +115,6 @@ describe("Submission model", function() {
         });
         it("how to add a comment to a submission with or without a user", function(done) {
             var meta = submissions.findByFormId(testData.formId)[0];
-            // debugger;
             var localId = meta._ludid;
             submission.fromLocal(localId, function(err, submission) {
                 assert(!err);
@@ -333,8 +332,8 @@ describe("Submission model", function() {
                     assert(uploadTask);
                 });
             });
-            newSub1.on("progress", function(err, progress) {
-                console.log("PROGRESS: ", err, progress);
+            newSub1.on("progress", function(progress) {
+                console.log("PROGRESS: ", progress);
             });
             newSub1.on("error", function(err, progress) {
                 assert.ok(!err);
@@ -342,8 +341,8 @@ describe("Submission model", function() {
             });
             newSub1.on("submitted", function(submissionId) {
                 assert.ok(submissionId);
-                assert.ok(submission.getLocalId());
-                assert.ok(submission.getRemoteSubmissionId());
+                assert.ok(newSub1.getLocalId());
+                assert.ok(newSub1.getRemoteSubmissionId());
                 done();
             });
             newSub1.submit(function(err) {
@@ -366,16 +365,19 @@ describe("Submission model", function() {
             });
 
             submissionToDownload.on("progress", function(progress) {
+                
                 console.log("DOWNLOAD PROGRESS: ", progress);
                 assert.ok(progress);
             });
 
             submissionToDownload.on("downloaded", function() {
+                
                 console.log("downloaded event called");
                 done();
             });
 
             submissionToDownload.on("error", function(err, progress) {
+                
                 console.error("error event called");
                 assert.ok(!err);
                 assert.ok(progress);
@@ -383,11 +385,13 @@ describe("Submission model", function() {
             });
 
             submissionToDownload.download(function(err, downloadTask) {
+                
                 console.log(err, downloadTask);
                 assert.ok(!err);
                 assert.ok(downloadTask);
 
                 submissionToDownload.getDownloadTask(function(err, downloadTask) {
+                    
                     console.log(err, downloadTask);
                     assert.ok(!err);
                     assert.ok(downloadTask);

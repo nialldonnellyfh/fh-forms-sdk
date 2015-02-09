@@ -9,7 +9,7 @@ var sampleConfig = require("../test/fixtures/getConfig.json");
 var submissionFile = require("../test/fixtures/submissionFile.json");
 var submissionData = require("../test/fixtures/submissionData.json");
 var sampleConfig = require("../test/fixtures/getConfig.json");
-var responseDelay = 10;
+var responseDelay = 100;
 var web = {
     GET: function(url, params, cb) {
         console.log("FAKE GET: ", url, params);
@@ -124,7 +124,6 @@ var web = {
         }, responseDelay);
     },
     POST: function(url, body, cb) {
-        console.log("FAKE POST: ", url, body);
 
         function _completeSubmission(body, cb) {
             var submissionId = body.submissionId;
@@ -145,7 +144,7 @@ var web = {
                 submissionStatusFileHash = "";
                 submissionStatusCounter = 0;
             }
-            console.log(resJSON);
+            console.log("_completeSubmission", resJSON);
             setTimeout(function() {
                 cb(null, resJSON);
             }, responseDelay);
@@ -182,20 +181,16 @@ var web = {
             }, responseDelay);
         }
 
-        function _submitFormData() {
-            setTimeout(function() {
-                console.log("Returning: ", body.testText);
-                console.log("submissionId: ", submissionId);
-                cb(null, {
-                    status: "200"
-                });
-            }, responseDelay);
+        function _postFormFile(){
+            cb(null, {status: 200});
         }
 
         var urlMap = {
             hostmbaasformSubmission: _postFormSubmission,
             hostmbaascompleteSubmission: _completeSubmission,
-            hostmbaassubmitFormData: _submitFormData
+            hostmbaassubmitFormData: _postFormSubmission,
+            hostmbaassubmitFormFile: _postFormFile,
+            hostmbaassubmitFormFileBase64: _postFormFile
         };
 
         setTimeout(function() {
@@ -205,7 +200,6 @@ var web = {
 };
 
 module.exports = function(params) {
-    console.log("Fake Ajax ", params);
 
     web[params.type](params.url, params, function(err, res) {
         console.log("FAKE AJAX ", err, res);
@@ -5501,11 +5495,12 @@ function Field(opt, form) {
 }
 
 utils.extend(Field, Model);
-utils.extend(fieldCheckboxes, Field);
-utils.extend(fieldFile, Field);
-utils.extend(fieldLocation, Field);
-utils.extend(fieldMatrix, Field);
-utils.extend(fieldRadio, Field);
+utils.extend(Field, fieldCheckboxes);
+utils.extend(Field, fieldFile);
+utils.extend(Field, fieldLocation);
+utils.extend(Field, fieldMatrix);
+utils.extend(Field, fieldRadio);
+utils.extend(Field, fieldImage);
 
 Field.prototype.isRequired = function() {
     return this.get('required');
@@ -5696,19 +5691,21 @@ function convert_checkboxes(value, cb) {
 }
 
 module.exports = {
-    getCheckBoxOptions: getCheckBoxOptions,
-    process_checkboxes: process_checkboxes,
-    convert_checkboxes: convert_checkboxes
+    prototype: {
+        getCheckBoxOptions: getCheckBoxOptions,
+        process_checkboxes: process_checkboxes,
+        convert_checkboxes: convert_checkboxes
+    }
 };
-
 },{}],17:[function(require,module,exports){
 /**
  * extension of Field class to support file field
  */
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-var localStorage = require("./localStorage");
+var Model = require("./model.js");
+var log = require("./log.js");
+var config = require("./config.js");
+var localStorage = require("./localStorage.js");
+var utils = require('./utils.js');
 
 function checkFileObj(obj) {
     return obj.fileName && obj.fileType && obj.hashName;
@@ -5829,20 +5826,23 @@ function process_file(params, cb) {
 }
 
 module.exports = {
-    checkFileObj: checkFileObj,
-    process_file: process_file
-};
+    prototype: {
+        checkFileObj: checkFileObj,
+        process_file: process_file
+    }
 
-},{"./config":13,"./localStorage":33,"./log":34,"./model":35}],18:[function(require,module,exports){
+};
+},{"./config.js":13,"./localStorage.js":33,"./log.js":34,"./model.js":35,"./utils.js":45}],18:[function(require,module,exports){
 /**
  * extension of Field class to support file field
  */
 
-var localStorage = require("./localStorage");
-var fileSystem = require("./fileSystem");
-var log = require("./log");
-var config = require("./config");
+var localStorage = require("./localStorage.js");
+var fileSystem = require("./fileSystem.js");
+var log = require("./log.js");
+var config = require("./config.js");
 var async = require("async");
+var _ = require("underscore");
 
 function imageProcess(params, cb) {
     var self = this;
@@ -5912,10 +5912,10 @@ function genImageName(cb) {
 
 //TODO - Dont make functions here!
 function convertImage(value, cb) {
-    async.map(value || [], function(meta, cb){
+    async.map(value || [], function(meta, cb) {
         _loadImage(meta, function() {
-                cb(null, value);
-            });
+            cb(null, value);
+        });
     }, cb);
 }
 
@@ -5964,59 +5964,62 @@ function _loadImage(meta, cb) {
 }
 
 module.exports = {
-    process_signature: imageProcess,
-    convert_signature: convertImage,
-    process_photo: imageProcess,
-    convert_photo: convertImage
-};
-
-},{"./config":13,"./fileSystem":25,"./localStorage":33,"./log":34,"async":7}],19:[function(require,module,exports){
-    /**
- * extension of Field class to support latitude longitude field
- */
-
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-
-function process_location(params, cb) {
-    var inputValue = params.value;
-    var def = this.getFieldDefinition();
-    var obj = {};
-    switch (def.locationUnit) {
-        case 'latlong':
-            if (!inputValue.lat || !inputValue.long) {
-                cb('the input values for latlong field is {lat: number, long: number}');
-            } else {
-                obj = {
-                    'lat': inputValue.lat,
-                    'long': inputValue.long
-                };
-                cb(null, obj);
-            }
-            break;
-        case 'eastnorth':
-            if (!inputValue.zone || !inputValue.eastings || !inputValue.northings) {
-                cb('the input values for northeast field is {zone: text, eastings: text, northings:text}');
-            } else {
-                obj = {
-                    'zone': inputValue.zone,
-                    'eastings': inputValue.eastings,
-                    'northings': inputValue.northings
-                };
-                cb(null, obj);
-            }
-            break;
-        default:
-            cb('Invalid subtype type of location field, allowed types: latlong and eastnorth, was: ' + def.locationUnit);
-            break;
+    prototype: {
+        process_signature: imageProcess,
+        convert_signature: convertImage,
+        process_photo: imageProcess,
+        convert_photo: convertImage
     }
-}
 
-module.exports = {
-    process_location: process_location
 };
+},{"./config.js":13,"./fileSystem.js":25,"./localStorage.js":33,"./log.js":34,"async":7,"underscore":11}],19:[function(require,module,exports){
+    /**
+     * extension of Field class to support latitude longitude field
+     */
 
+    var Model = require("./model");
+    var log = require("./log");
+    var config = require("./config");
+
+    function process_location(params, cb) {
+        var inputValue = params.value;
+        var def = this.getFieldDefinition();
+        var obj = {};
+        switch (def.locationUnit) {
+            case 'latlong':
+                if (!inputValue.lat || !inputValue.long) {
+                    cb('the input values for latlong field is {lat: number, long: number}');
+                } else {
+                    obj = {
+                        'lat': inputValue.lat,
+                        'long': inputValue.long
+                    };
+                    cb(null, obj);
+                }
+                break;
+            case 'eastnorth':
+                if (!inputValue.zone || !inputValue.eastings || !inputValue.northings) {
+                    cb('the input values for northeast field is {zone: text, eastings: text, northings:text}');
+                } else {
+                    obj = {
+                        'zone': inputValue.zone,
+                        'eastings': inputValue.eastings,
+                        'northings': inputValue.northings
+                    };
+                    cb(null, obj);
+                }
+                break;
+            default:
+                cb('Invalid subtype type of location field, allowed types: latlong and eastnorth, was: ' + def.locationUnit);
+                break;
+        }
+    }
+
+    module.exports = {
+        prototype: {
+            process_location: process_location
+        }
+    };
 },{"./config":13,"./log":34,"./model":35}],20:[function(require,module,exports){
 /**
  * extension of Field class to support matrix field
@@ -6047,10 +6050,11 @@ function getMatrixCols() {
 }
 
 module.exports = {
-    getMatrixRows: getMatrixRows,
-    getMatrixCols: getMatrixCols
+    prototype: {
+        getMatrixRows: getMatrixRows,
+        getMatrixCols: getMatrixCols
+    }
 };
-
 },{"./config":13,"./log":34,"./model":35}],21:[function(require,module,exports){
 /**
  * extension of Field class to support radio field
@@ -6070,9 +6074,10 @@ function getRadioOption() {
 }
 
 module.exports = {
-    getRadioOption: getRadioOption
+    prototype: {
+        getRadioOption: getRadioOption
+    }
 };
-
 },{"./config":13,"./log":34,"./model":35}],22:[function(require,module,exports){
 var Model = require("./model");
 var log = require("./log");
@@ -7558,7 +7563,7 @@ Model.prototype.set = function(key, val) {
     if(!this.props){
         this.props = {};
     }
-    if (key && val) {
+    if (key && val !== null) {
         this.props[key] = val;
     }
 };
@@ -9884,13 +9889,13 @@ Submission.prototype.upload = function(cb) {
                     if (err) {
                         log.e("Error saving upload task: " + err);
                     }
+                    self.emit("inprogress", ut);
+                    ut.on("progress", function(progress) {
+                        log.d("Emitting upload progress for submission: " + self.getLocalId() + JSON.stringify(progress));
+                        self.emit("progress", progress);
+                    });
+                    cb(null, ut);
                 });
-                self.emit("inprogress", ut);
-                ut.on("progress", function(progress) {
-                    log.d("Emitting upload progress for submission: " + self.getLocalId() + JSON.stringify(progress));
-                    self.emit("progress", progress);
-                });
-                cb(null, ut);
             }
         });
     } else {
@@ -9916,13 +9921,14 @@ Submission.prototype.download = function(cb) {
                     if (err) {
                         log.e("Error saving download task: " + err);
                     }
+                    that.emit("inprogress", downloadTask);
+                    downloadTask.on("progress", function(progress) {
+                        log.d("Emitting download progress for submission: " + that.getLocalId() + JSON.stringify(progress));
+                        that.emit("progress", progress);
+                    });
+                    return cb(null, downloadTask);
                 });
-                that.emit("inprogress", downloadTask);
-                downloadTask.on("progress", function(progress) {
-                    log.d("Emitting download progress for submission: " + that.getLocalId() + JSON.stringify(progress));
-                    that.emit("progress", progress);
-                });
-                return cb(null, downloadTask);
+                
             });
         } else {
             return cb("Invalid Status to dowload a form submission");
@@ -10442,7 +10448,7 @@ Submission.prototype.clearLocal = function(cb) {
                 return cb(err);
             }
             self.clearLocalSubmissionFiles(function() {
-                Model.clearLocal.call(self, function(err) {
+                Model.prototype.clearLocal.call(self, function(err) {
                     if (err) {
                         log.e(err);
                         return cb(err);
@@ -12409,6 +12415,18 @@ module.exports={
             "_id": "54d4cd220a9b02c67e9c3f0a",
             "adminOnly": false,
             "repeating": false
+        },
+        {
+            "fieldOptions": {
+                
+            },
+            "helpText": "File",
+            "name": "File",
+            "required": false,
+            "type": "file",
+            "_id": "54d4cd220a9b02c67e9c1245",
+            "adminOnly": false,
+            "repeating": false
         }]
     }],
     "pageRef": {
@@ -12482,6 +12500,10 @@ module.exports={
         "54d4cd220a9b02c67e9c3f0a": {
             "page": 0,
             "field": 16
+        },
+        "54d4cd220a9b02c67e9c1245": {
+            "page": 0,
+            "field": 17  
         }
     }
 }

@@ -7,7 +7,7 @@ var sampleConfig = require("../test/fixtures/getConfig.json");
 var submissionFile = require("../test/fixtures/submissionFile.json");
 var submissionData = require("../test/fixtures/submissionData.json");
 var sampleConfig = require("../test/fixtures/getConfig.json");
-var responseDelay = 10;
+var responseDelay = 100;
 var web = {
     GET: function(url, params, cb) {
         console.log("FAKE GET: ", url, params);
@@ -122,7 +122,6 @@ var web = {
         }, responseDelay);
     },
     POST: function(url, body, cb) {
-        console.log("FAKE POST: ", url, body);
 
         function _completeSubmission(body, cb) {
             var submissionId = body.submissionId;
@@ -143,7 +142,7 @@ var web = {
                 submissionStatusFileHash = "";
                 submissionStatusCounter = 0;
             }
-            console.log(resJSON);
+            console.log("_completeSubmission", resJSON);
             setTimeout(function() {
                 cb(null, resJSON);
             }, responseDelay);
@@ -180,10 +179,16 @@ var web = {
             }, responseDelay);
         }
 
+        function _postFormFile(){
+            cb(null, {status: 200});
+        }
+
         var urlMap = {
             hostmbaasformSubmission: _postFormSubmission,
             hostmbaascompleteSubmission: _completeSubmission,
-            hostmbaassubmitFormData: _postFormSubmission
+            hostmbaassubmitFormData: _postFormSubmission,
+            hostmbaassubmitFormFile: _postFormFile,
+            hostmbaassubmitFormFileBase64: _postFormFile
         };
 
         setTimeout(function() {
@@ -193,7 +198,6 @@ var web = {
 };
 
 module.exports = function(params) {
-    console.log("Fake Ajax ", params);
 
     web[params.type](params.url, params, function(err, res) {
         console.log("FAKE AJAX ", err, res);

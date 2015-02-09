@@ -29,7 +29,9 @@ function convert_checkboxes(value, cb) {
 }
 
 module.exports = {
-    getCheckBoxOptions: getCheckBoxOptions,
-    process_checkboxes: process_checkboxes,
-    convert_checkboxes: convert_checkboxes
+    prototype: {
+        getCheckBoxOptions: getCheckBoxOptions,
+        process_checkboxes: process_checkboxes,
+        convert_checkboxes: convert_checkboxes
+    }
 };

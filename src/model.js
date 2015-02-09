@@ -30,7 +30,7 @@ Model.prototype.set = function(key, val) {
     if(!this.props){
         this.props = {};
     }
-    if (key && val) {
+    if (key && val !== null) {
         this.props[key] = val;
     }
 };
