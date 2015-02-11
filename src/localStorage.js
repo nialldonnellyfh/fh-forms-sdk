@@ -161,7 +161,7 @@ function _fhFileData(options, success, failure) {
     }
 
     function filenameForKey(key, cb) {
-        var appid = require("./config.js").get("appId", "unknownAppId");
+        var appid = require("./config.js").get("appId", "");
         key = key + appid;
         utils.md5(key, function(err, hash) {
             if (err) {

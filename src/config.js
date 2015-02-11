@@ -29,7 +29,7 @@ Config.prototype.init = function(config, cb) {
         //load hard coded static config first
         self.staticConfig(config);
         //attempt to load config from mbaas then local storage.
-        self.refresh(true, cb);
+        self.refresh(false, cb);
     }
 };
 Config.prototype.isStudioMode = function() {
@@ -76,7 +76,12 @@ Config.prototype.refresh = function(fromRemote, cb) {
             log.e("Config loadLocal ", err);
         }
 
-        dataAgent.refreshRead(self, _handler);
+        if(fromRemote){
+            dataAgent.refreshRead(self, _handler);
+        } else {
+            cb(err, self);
+        }
+        
     });
 };
 Config.prototype.getCloudHost = function() {

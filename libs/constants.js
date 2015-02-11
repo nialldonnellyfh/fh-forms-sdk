@@ -28,18 +28,18 @@ module.exports = {
     "userConfigValues": {
 
     },
-    "formUrls": {
-        "forms": "forms",
-        "form": "form/:formId",
-        "theme": "theme",
-        "formSubmission": "submitFormData",
-        "fileSubmission": "submitFormFile",
-        "base64fileSubmission": "submitFormFileBase64",
-        "submissionStatus": "submissionStatus",
-        "formSubmissionDownload": "formSubmissionDownload",
-        "fileSubmissionDownload": "fileSubmissionDownload",
-        "completeSubmission": "completeSubmission",
-        "config": "config"
+    'formUrls': {
+      'forms': '/forms/:appId',
+      'form': '/forms/:appId/:formId',
+      'theme': '/forms/:appId/theme',
+      'formSubmission': '/forms/:appId/:formId/submitFormData',
+      'fileSubmission': '/forms/:appId/:submissionId/:fieldId/:hashName/submitFormFile',
+      'base64fileSubmission': '/forms/:appId/:submissionId/:fieldId/:hashName/submitFormFileBase64',
+      'submissionStatus': '/forms/:appId/:submissionId/status',
+      'formSubmissionDownload': '/forms/:appId/submission/:submissionId',
+      'fileSubmissionDownload': '/forms/:appId/submission/:submissionId/file/:fileGroupId',
+      'completeSubmission': '/forms/:appId/:submissionId/completeSubmission',
+      'config': '/forms/:appid/config/:deviceId'
     }
 
 };

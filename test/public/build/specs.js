@@ -8,207 +8,208 @@ var sampleConfig = require("../test/fixtures/getConfig.json");
 var submissionFile = require("../test/fixtures/submissionFile.json");
 var submissionData = require("../test/fixtures/submissionData.json");
 var sampleConfig = require("../test/fixtures/getConfig.json");
-var responseDelay = 100;
-var web = {
-    GET: function(url, params, cb) {
-        console.log("FAKE GET: ", url, params);
+var $ = require('jquery');
+// var web = {
+//     GET: function(url, params, cb) {
+//         console.log("FAKE GET: ", url, params);
 
-        function _ping(params, cb) {
-            console.log("In _ping, ", url);
-            cb(null, "OK");
-        }
+//         function _ping(params, cb) {
+//             console.log("In _ping, ", url);
+//             cb(null, "OK");
+//         }
 
-        function _getTheme(params, cb) {
-            console.log("In _getTheme, ", url);
-            cb(null, theme);
-        }
+//         function _getTheme(params, cb) {
+//             console.log("In _getTheme, ", url);
+//             cb(null, theme);
+//         }
 
-        function _getConfig(params, cb) {
-            console.log("In _getConfig, ");
+//         function _getConfig(params, cb) {
+//             console.log("In _getConfig, ");
 
-            cb(null, JSON.stringify(sampleConfig));
-        }
+//             cb(null, JSON.stringify(sampleConfig));
+//         }
 
-        function _getSubmissionData(params, cb) {
-            var submissionId = params.submissionId;
-            console.log("In _getSubmissionData", url);
-            var retVal = {};
+//         function _getSubmissionData(params, cb) {
+//             var submissionId = params.submissionId;
+//             console.log("In _getSubmissionData", url);
+//             var retVal = {};
 
-            if (submissionId === "submissionData") {
-                retVal = submissionData;
-            } else if (submissionId === "submissionFile") {
-                retVal = submissionFile;
-            } else { //If it is not either of these, send back an error
-                retVal = {
-                    error: "No submission matches id: " + submissionId
-                };
-            }
-            cb(null, retVal);
-        }
+//             if (submissionId === "submissionData") {
+//                 retVal = submissionData;
+//             } else if (submissionId === "submissionFile") {
+//                 retVal = submissionFile;
+//             } else { //If it is not either of these, send back an error
+//                 retVal = {
+//                     error: "No submission matches id: " + submissionId
+//                 };
+//             }
+//             cb(null, retVal);
+//         }
 
-        function _getSubmissionFile(params, cb) {
-            console.log("In _getSubmissionData", url);
+//         function _getSubmissionFile(params, cb) {
+//             console.log("In _getSubmissionData", url);
 
-            cb(null, "some/path/to/file");
-        }
+//             cb(null, "some/path/to/file");
+//         }
 
-        function _getForms(params, cb) {
-            console.log("In _getForms, ", url);
-            cb(null, getFormsData);
-        }
+//         function _getForms(params, cb) {
+//             console.log("In _getForms, ", url);
+//             cb(null, getFormsData);
+//         }
 
-        function _getForm(params, cb) {
-            console.log("In _getForm, ", url);
-            var formId = params.formId;
+//         function _getForm(params, cb) {
+//             console.log("In _getForm, ", url);
+//             var formId = params.formId;
 
-            if (url.indexOf("somerandomformid") > -1) {
-                cb("Cannot find specified form");
-            } else {
-                console.log("Form Found");
-                cb(null, allForms);
-            }
-        }
+//             if (url.indexOf("somerandomformid") > -1) {
+//                 cb("Cannot find specified form");
+//             } else {
+//                 console.log("Form Found");
+//                 cb(null, allForms);
+//             }
+//         }
 
-        function _getSubmissionStatus(params, cb) {
-            var submissionId = params.submissionId;
-            console.log("In _getSubmissionStatus, ", submissionId);
+//         function _getSubmissionStatus(params, cb) {
+//             var submissionId = params.submissionId;
+//             console.log("In _getSubmissionStatus, ", submissionId);
 
-            var responseJSON = {
-                "status": "complete"
-            };
+//             var responseJSON = {
+//                 "status": "complete"
+//             };
 
-            if (submissionId === "submissionStatus") {
-                if (submissionStatusCounter === 0) {
-                    responseJSON = {
-                        "status": "pending",
-                        "pendingFiles": [submissionStatusFileHash]
-                    };
-                    submissionStatusCounter++;
-                } else {
-                    responseJSON = {
-                        "status": "complete"
-                    };
-                }
-            } else if (submissionId === "failedFileUpload") {
-                responseJSON = {
-                    "status": "pending",
-                    "pendingFiles": [failedFileUploadFileHash]
-                };
-            } else if (submissionId === "submissionError") {
-                responseJSON = {
-                    "status": "pending",
-                    "pendingFiles": ["filePlaceHolder123456"]
-                };
-            }
+//             if (submissionId === "submissionStatus") {
+//                 if (submissionStatusCounter === 0) {
+//                     responseJSON = {
+//                         "status": "pending",
+//                         "pendingFiles": [submissionStatusFileHash]
+//                     };
+//                     submissionStatusCounter++;
+//                 } else {
+//                     responseJSON = {
+//                         "status": "complete"
+//                     };
+//                 }
+//             } else if (submissionId === "failedFileUpload") {
+//                 responseJSON = {
+//                     "status": "pending",
+//                     "pendingFiles": [failedFileUploadFileHash]
+//                 };
+//             } else if (submissionId === "submissionError") {
+//                 responseJSON = {
+//                     "status": "pending",
+//                     "pendingFiles": ["filePlaceHolder123456"]
+//                 };
+//             }
 
-            setTimeout(function() {
-                cb(null, responseJSON);
-            }, responseDelay);
-        }
+//             setTimeout(function() {
+//                 cb(null, responseJSON);
+//             }, responseDelay);
+//         }
 
-        var urlMap = {
-            hostmbaasforms: _getForms,
-            "hostmbaasform/54d4cd220a9b02c67e9c3f0c": _getForm,
-            "hostmbaasform/somerandomformid": _getForm,
-            hostmbaastheme: _getTheme,
-            hostmbaassubmissionStatus: _getSubmissionStatus,
-            hostmbaasconfig: _getConfig,
-            hostmbaasformSubmissionDownload: _getSubmissionData,
-            hostmbaasfileSubmissionDownload: _getSubmissionFile,
-            hostping: _ping
-        };
+//         var urlMap = {
+//             hostmbaasforms: _getForms,
+//             "hostmbaasform/54d4cd220a9b02c67e9c3f0c": _getForm,
+//             "hostmbaasform/somerandomformid": _getForm,
+//             hostmbaastheme: _getTheme,
+//             hostmbaassubmissionStatus: _getSubmissionStatus,
+//             hostmbaasconfig: _getConfig,
+//             hostmbaasformSubmissionDownload: _getSubmissionData,
+//             hostmbaasfileSubmissionDownload: _getSubmissionFile,
+//             hostping: _ping
+//         };
 
-        setTimeout(function() {
-            urlMap[url](params, cb);
-        }, responseDelay);
-    },
-    POST: function(url, body, cb) {
+//         setTimeout(function() {
+//             urlMap[url](params, cb);
+//         }, responseDelay);
+//     },
+//     POST: function(url, body, cb) {
+//         function _completeSubmission(body, cb) {
+//             var submissionId = body.submissionId;
+//             console.log("In _completeSubmission, ", submissionId);
+//             var resJSON = {
+//                 "status": "complete"
+//             };
+//             if (submissionId === "submissionNotComplete") {
+//                 resJSON = {
+//                     "status": "pending",
+//                     "pendingFiles": ["filePlaceHolder123456"]
+//                 };
+//             } else if (submissionId === "submissionError") {
+//                 resJSON = {
+//                     "status": "error"
+//                 };
+//             } else if (submissionId === "submissionStatus") {
+//                 submissionStatusFileHash = "";
+//                 submissionStatusCounter = 0;
+//             }
+//             console.log("_completeSubmission", resJSON);
+//             setTimeout(function() {
+//                 cb(null, resJSON);
+//             }, responseDelay);
+//         }
 
-        function _completeSubmission(body, cb) {
-            var submissionId = body.submissionId;
-            console.log("In _completeSubmission, ", submissionId);
-            var resJSON = {
-                "status": "complete"
-            };
-            if (submissionId === "submissionNotComplete") {
-                resJSON = {
-                    "status": "pending",
-                    "pendingFiles": ["filePlaceHolder123456"]
-                };
-            } else if (submissionId === "submissionError") {
-                resJSON = {
-                    "status": "error"
-                };
-            } else if (submissionId === "submissionStatus") {
-                submissionStatusFileHash = "";
-                submissionStatusCounter = 0;
-            }
-            console.log("_completeSubmission", resJSON);
-            setTimeout(function() {
-                cb(null, resJSON);
-            }, responseDelay);
-        }
+//         function _postFormSubmission(body, cb) {
+//             debugger;
+//             console.log("In _postFormSubmission, ", body);
+//             var bodyJSON = JSON.parse(body.data);
 
-        function _postFormSubmission(body, cb) {
-            console.log("In _postFormSubmission, ", body);
+//             var submissionId = "123456";
 
-            var submissionId = "123456";
+//             if (bodyJSON.testText === "failedFileUpload") {
+//                 submissionId = "failedFileUpload";
+//             } else if (bodyJSON.testText === "submissionNotComplete") {
+//                 submissionId = "submissionNotComplete";
+//             } else if (bodyJSON.testText === "submissionError") {
+//                 submissionId = "submissionError";
+//             } else if (bodyJSON.testText === "submissionStatus") {
+//                 submissionId = "submissionStatus";
+//             } else {
+//                 submissionId = Math.floor((Math.random() * 1000) + 1).toString();
+//             }
 
-            if (body.testText === "failedFileUpload") {
-                submissionId = "failedFileUpload";
-            } else if (body.testText === "submissionNotComplete") {
-                submissionId = "submissionNotComplete";
-            } else if (body.testText === "submissionError") {
-                submissionId = "submissionError";
-            } else if (body.testText === "submissionStatus") {
-                submissionId = "submissionStatus";
-            } else {
-                submissionId = Math.floor((Math.random() * 1000) + 1).toString();
-            }
+//             var rtn = {
+//                 "submissionId": submissionId,
+//                 "ori": body
+//             };
+//             if (body.outOfDate) {
+//                 rtn.updatedFormDefinition = allForms;
+//             }
+//             setTimeout(function() {
+//                 cb(null, rtn);
+//             }, responseDelay);
+//         }
 
-            var rtn = {
-                "submissionId": submissionId,
-                "ori": body
-            };
-            if (body.outOfDate) {
-                rtn.updatedFormDefinition = allForms;
-            }
-            setTimeout(function() {
-                console.log("Returning: ", body.testText);
-                console.log("submissionId: ", submissionId);
-                cb(null, rtn);
-            }, responseDelay);
-        }
+//         function _postFormFile(){
+//             debugger;
+//             cb(null, {status: 200});
+//         }
 
-        function _postFormFile(){
-            cb(null, {status: 200});
-        }
+//         var urlMap = {
+//             hostmbaasformSubmission: _postFormSubmission,
+//             hostmbaascompleteSubmission: _completeSubmission,
+//             hostmbaassubmitFormData: _postFormSubmission,
+//             hostmbaassubmitFormFile: _postFormFile,
+//             hostmbaassubmitFormFileBase64: _postFormFile
+//         };
 
-        var urlMap = {
-            hostmbaasformSubmission: _postFormSubmission,
-            hostmbaascompleteSubmission: _completeSubmission,
-            hostmbaassubmitFormData: _postFormSubmission,
-            hostmbaassubmitFormFile: _postFormFile,
-            hostmbaassubmitFormFileBase64: _postFormFile
-        };
+//         setTimeout(function() {
+//             urlMap[url](body, cb);
+//         }, responseDelay);
+//     }
+// };
 
-        setTimeout(function() {
-            urlMap[url](body, cb);
-        }, responseDelay);
-    }
-};
+// module.exports = function(params) {
 
-module.exports = function(params) {
+//     web[params.type](params.url, params, function(err, res) {
+//         if (err) {
+//             return params.error(null, null, err);
+//         }
+//         return params.success(res);
+//     });
+// }
 
-    web[params.type](params.url, params, function(err, res) {
-        console.log("FAKE AJAX ", err, res);
-        if (err) {
-            return params.error(null, null, err);
-        }
-        return params.success(res);
-    });
-}
-},{"../test/fixtures/getConfig.json":80,"../test/fixtures/getForm.json":81,"../test/fixtures/getForms.json":82,"../test/fixtures/getTheme.json":83,"../test/fixtures/submissionData.json":84,"../test/fixtures/submissionFile.json":85}],2:[function(require,module,exports){
+module.exports = $.ajax
+},{"../test/fixtures/getConfig.json":87,"../test/fixtures/getForm.json":88,"../test/fixtures/getForms.json":89,"../test/fixtures/getTheme.json":90,"../test/fixtures/submissionData.json":91,"../test/fixtures/submissionFile.json":92,"jquery":48}],2:[function(require,module,exports){
 
 module.exports = {
 	getAppProps: function(){
@@ -249,18 +250,18 @@ module.exports = {
     "userConfigValues": {
 
     },
-    "formUrls": {
-        "forms": "forms",
-        "form": "form/:formId",
-        "theme": "theme",
-        "formSubmission": "submitFormData",
-        "fileSubmission": "submitFormFile",
-        "base64fileSubmission": "submitFormFileBase64",
-        "submissionStatus": "submissionStatus",
-        "formSubmissionDownload": "formSubmissionDownload",
-        "fileSubmissionDownload": "fileSubmissionDownload",
-        "completeSubmission": "completeSubmission",
-        "config": "config"
+    'formUrls': {
+      'forms': '/forms/:appId',
+      'form': '/forms/:appId/:formId',
+      'theme': '/forms/:appId/theme',
+      'formSubmission': '/forms/:appId/:formId/submitFormData',
+      'fileSubmission': '/forms/:appId/:submissionId/:fieldId/:hashName/submitFormFile',
+      'base64fileSubmission': '/forms/:appId/:submissionId/:fieldId/:hashName/submitFormFileBase64',
+      'submissionStatus': '/forms/:appId/:submissionId/status',
+      'formSubmissionDownload': '/forms/:appId/submission/:submissionId',
+      'fileSubmissionDownload': '/forms/:appId/submission/:submissionId/file/:fileGroupId',
+      'completeSubmission': '/forms/:appId/:submissionId/completeSubmission',
+      'config': '/forms/:appid/config/:deviceId'
     }
 
 };
@@ -2548,7 +2549,7 @@ module.exports = {
 }());
 
 }).call(this,require('_process'))
-},{"_process":46}],8:[function(require,module,exports){
+},{"_process":50}],8:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -4114,9 +4115,631 @@ module.exports = isArray || function (val) {
 };
 
 },{}],12:[function(require,module,exports){
+if (typeof Object.create === 'function') {
+  // implementation from standard node.js 'util' module
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  };
+} else {
+  // old school shim for old browsers
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    var TempCtor = function () {}
+    TempCtor.prototype = superCtor.prototype
+    ctor.prototype = new TempCtor()
+    ctor.prototype.constructor = ctor
+  }
+}
+
+},{}],13:[function(require,module,exports){
+module.exports = function isBuffer(arg) {
+  return arg && typeof arg === 'object'
+    && typeof arg.copy === 'function'
+    && typeof arg.fill === 'function'
+    && typeof arg.readUInt8 === 'function';
+}
+},{}],14:[function(require,module,exports){
+(function (process,global){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+var formatRegExp = /%[sdj%]/g;
+exports.format = function(f) {
+  if (!isString(f)) {
+    var objects = [];
+    for (var i = 0; i < arguments.length; i++) {
+      objects.push(inspect(arguments[i]));
+    }
+    return objects.join(' ');
+  }
+
+  var i = 1;
+  var args = arguments;
+  var len = args.length;
+  var str = String(f).replace(formatRegExp, function(x) {
+    if (x === '%%') return '%';
+    if (i >= len) return x;
+    switch (x) {
+      case '%s': return String(args[i++]);
+      case '%d': return Number(args[i++]);
+      case '%j':
+        try {
+          return JSON.stringify(args[i++]);
+        } catch (_) {
+          return '[Circular]';
+        }
+      default:
+        return x;
+    }
+  });
+  for (var x = args[i]; i < len; x = args[++i]) {
+    if (isNull(x) || !isObject(x)) {
+      str += ' ' + x;
+    } else {
+      str += ' ' + inspect(x);
+    }
+  }
+  return str;
+};
+
+
+// Mark that a method should not be used.
+// Returns a modified function which warns once by default.
+// If --no-deprecation is set, then it is a no-op.
+exports.deprecate = function(fn, msg) {
+  // Allow for deprecating things in the process of starting up.
+  if (isUndefined(global.process)) {
+    return function() {
+      return exports.deprecate(fn, msg).apply(this, arguments);
+    };
+  }
+
+  if (process.noDeprecation === true) {
+    return fn;
+  }
+
+  var warned = false;
+  function deprecated() {
+    if (!warned) {
+      if (process.throwDeprecation) {
+        throw new Error(msg);
+      } else if (process.traceDeprecation) {
+        console.trace(msg);
+      } else {
+        console.error(msg);
+      }
+      warned = true;
+    }
+    return fn.apply(this, arguments);
+  }
+
+  return deprecated;
+};
+
+
+var debugs = {};
+var debugEnviron;
+exports.debuglog = function(set) {
+  if (isUndefined(debugEnviron))
+    debugEnviron = process.env.NODE_DEBUG || '';
+  set = set.toUpperCase();
+  if (!debugs[set]) {
+    if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
+      var pid = process.pid;
+      debugs[set] = function() {
+        var msg = exports.format.apply(exports, arguments);
+        console.error('%s %d: %s', set, pid, msg);
+      };
+    } else {
+      debugs[set] = function() {};
+    }
+  }
+  return debugs[set];
+};
+
+
+/**
+ * Echos the value of a value. Trys to print the value out
+ * in the best way possible given the different types.
+ *
+ * @param {Object} obj The object to print out.
+ * @param {Object} opts Optional options object that alters the output.
+ */
+/* legacy: obj, showHidden, depth, colors*/
+function inspect(obj, opts) {
+  // default options
+  var ctx = {
+    seen: [],
+    stylize: stylizeNoColor
+  };
+  // legacy...
+  if (arguments.length >= 3) ctx.depth = arguments[2];
+  if (arguments.length >= 4) ctx.colors = arguments[3];
+  if (isBoolean(opts)) {
+    // legacy...
+    ctx.showHidden = opts;
+  } else if (opts) {
+    // got an "options" object
+    exports._extend(ctx, opts);
+  }
+  // set default options
+  if (isUndefined(ctx.showHidden)) ctx.showHidden = false;
+  if (isUndefined(ctx.depth)) ctx.depth = 2;
+  if (isUndefined(ctx.colors)) ctx.colors = false;
+  if (isUndefined(ctx.customInspect)) ctx.customInspect = true;
+  if (ctx.colors) ctx.stylize = stylizeWithColor;
+  return formatValue(ctx, obj, ctx.depth);
+}
+exports.inspect = inspect;
+
+
+// http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
+inspect.colors = {
+  'bold' : [1, 22],
+  'italic' : [3, 23],
+  'underline' : [4, 24],
+  'inverse' : [7, 27],
+  'white' : [37, 39],
+  'grey' : [90, 39],
+  'black' : [30, 39],
+  'blue' : [34, 39],
+  'cyan' : [36, 39],
+  'green' : [32, 39],
+  'magenta' : [35, 39],
+  'red' : [31, 39],
+  'yellow' : [33, 39]
+};
+
+// Don't use 'blue' not visible on cmd.exe
+inspect.styles = {
+  'special': 'cyan',
+  'number': 'yellow',
+  'boolean': 'yellow',
+  'undefined': 'grey',
+  'null': 'bold',
+  'string': 'green',
+  'date': 'magenta',
+  // "name": intentionally not styling
+  'regexp': 'red'
+};
+
+
+function stylizeWithColor(str, styleType) {
+  var style = inspect.styles[styleType];
+
+  if (style) {
+    return '\u001b[' + inspect.colors[style][0] + 'm' + str +
+           '\u001b[' + inspect.colors[style][1] + 'm';
+  } else {
+    return str;
+  }
+}
+
+
+function stylizeNoColor(str, styleType) {
+  return str;
+}
+
+
+function arrayToHash(array) {
+  var hash = {};
+
+  array.forEach(function(val, idx) {
+    hash[val] = true;
+  });
+
+  return hash;
+}
+
+
+function formatValue(ctx, value, recurseTimes) {
+  // Provide a hook for user-specified inspect functions.
+  // Check that value is an object with an inspect function on it
+  if (ctx.customInspect &&
+      value &&
+      isFunction(value.inspect) &&
+      // Filter out the util module, it's inspect function is special
+      value.inspect !== exports.inspect &&
+      // Also filter out any prototype objects using the circular check.
+      !(value.constructor && value.constructor.prototype === value)) {
+    var ret = value.inspect(recurseTimes, ctx);
+    if (!isString(ret)) {
+      ret = formatValue(ctx, ret, recurseTimes);
+    }
+    return ret;
+  }
+
+  // Primitive types cannot have properties
+  var primitive = formatPrimitive(ctx, value);
+  if (primitive) {
+    return primitive;
+  }
+
+  // Look up the keys of the object.
+  var keys = Object.keys(value);
+  var visibleKeys = arrayToHash(keys);
+
+  if (ctx.showHidden) {
+    keys = Object.getOwnPropertyNames(value);
+  }
+
+  // IE doesn't make error fields non-enumerable
+  // http://msdn.microsoft.com/en-us/library/ie/dww52sbt(v=vs.94).aspx
+  if (isError(value)
+      && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
+    return formatError(value);
+  }
+
+  // Some type of object without properties can be shortcutted.
+  if (keys.length === 0) {
+    if (isFunction(value)) {
+      var name = value.name ? ': ' + value.name : '';
+      return ctx.stylize('[Function' + name + ']', 'special');
+    }
+    if (isRegExp(value)) {
+      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+    }
+    if (isDate(value)) {
+      return ctx.stylize(Date.prototype.toString.call(value), 'date');
+    }
+    if (isError(value)) {
+      return formatError(value);
+    }
+  }
+
+  var base = '', array = false, braces = ['{', '}'];
+
+  // Make Array say that they are Array
+  if (isArray(value)) {
+    array = true;
+    braces = ['[', ']'];
+  }
+
+  // Make functions say that they are functions
+  if (isFunction(value)) {
+    var n = value.name ? ': ' + value.name : '';
+    base = ' [Function' + n + ']';
+  }
+
+  // Make RegExps say that they are RegExps
+  if (isRegExp(value)) {
+    base = ' ' + RegExp.prototype.toString.call(value);
+  }
+
+  // Make dates with properties first say the date
+  if (isDate(value)) {
+    base = ' ' + Date.prototype.toUTCString.call(value);
+  }
+
+  // Make error with message first say the error
+  if (isError(value)) {
+    base = ' ' + formatError(value);
+  }
+
+  if (keys.length === 0 && (!array || value.length == 0)) {
+    return braces[0] + base + braces[1];
+  }
+
+  if (recurseTimes < 0) {
+    if (isRegExp(value)) {
+      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+    } else {
+      return ctx.stylize('[Object]', 'special');
+    }
+  }
+
+  ctx.seen.push(value);
+
+  var output;
+  if (array) {
+    output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
+  } else {
+    output = keys.map(function(key) {
+      return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
+    });
+  }
+
+  ctx.seen.pop();
+
+  return reduceToSingleString(output, base, braces);
+}
+
+
+function formatPrimitive(ctx, value) {
+  if (isUndefined(value))
+    return ctx.stylize('undefined', 'undefined');
+  if (isString(value)) {
+    var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
+                                             .replace(/'/g, "\\'")
+                                             .replace(/\\"/g, '"') + '\'';
+    return ctx.stylize(simple, 'string');
+  }
+  if (isNumber(value))
+    return ctx.stylize('' + value, 'number');
+  if (isBoolean(value))
+    return ctx.stylize('' + value, 'boolean');
+  // For some reason typeof null is "object", so special case here.
+  if (isNull(value))
+    return ctx.stylize('null', 'null');
+}
+
+
+function formatError(value) {
+  return '[' + Error.prototype.toString.call(value) + ']';
+}
+
+
+function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
+  var output = [];
+  for (var i = 0, l = value.length; i < l; ++i) {
+    if (hasOwnProperty(value, String(i))) {
+      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+          String(i), true));
+    } else {
+      output.push('');
+    }
+  }
+  keys.forEach(function(key) {
+    if (!key.match(/^\d+$/)) {
+      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+          key, true));
+    }
+  });
+  return output;
+}
+
+
+function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
+  var name, str, desc;
+  desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
+  if (desc.get) {
+    if (desc.set) {
+      str = ctx.stylize('[Getter/Setter]', 'special');
+    } else {
+      str = ctx.stylize('[Getter]', 'special');
+    }
+  } else {
+    if (desc.set) {
+      str = ctx.stylize('[Setter]', 'special');
+    }
+  }
+  if (!hasOwnProperty(visibleKeys, key)) {
+    name = '[' + key + ']';
+  }
+  if (!str) {
+    if (ctx.seen.indexOf(desc.value) < 0) {
+      if (isNull(recurseTimes)) {
+        str = formatValue(ctx, desc.value, null);
+      } else {
+        str = formatValue(ctx, desc.value, recurseTimes - 1);
+      }
+      if (str.indexOf('\n') > -1) {
+        if (array) {
+          str = str.split('\n').map(function(line) {
+            return '  ' + line;
+          }).join('\n').substr(2);
+        } else {
+          str = '\n' + str.split('\n').map(function(line) {
+            return '   ' + line;
+          }).join('\n');
+        }
+      }
+    } else {
+      str = ctx.stylize('[Circular]', 'special');
+    }
+  }
+  if (isUndefined(name)) {
+    if (array && key.match(/^\d+$/)) {
+      return str;
+    }
+    name = JSON.stringify('' + key);
+    if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
+      name = name.substr(1, name.length - 2);
+      name = ctx.stylize(name, 'name');
+    } else {
+      name = name.replace(/'/g, "\\'")
+                 .replace(/\\"/g, '"')
+                 .replace(/(^"|"$)/g, "'");
+      name = ctx.stylize(name, 'string');
+    }
+  }
+
+  return name + ': ' + str;
+}
+
+
+function reduceToSingleString(output, base, braces) {
+  var numLinesEst = 0;
+  var length = output.reduce(function(prev, cur) {
+    numLinesEst++;
+    if (cur.indexOf('\n') >= 0) numLinesEst++;
+    return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
+  }, 0);
+
+  if (length > 60) {
+    return braces[0] +
+           (base === '' ? '' : base + '\n ') +
+           ' ' +
+           output.join(',\n  ') +
+           ' ' +
+           braces[1];
+  }
+
+  return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
+}
+
+
+// NOTE: These type checking functions intentionally don't use `instanceof`
+// because it is fragile and can be easily faked with `Object.create()`.
+function isArray(ar) {
+  return Array.isArray(ar);
+}
+exports.isArray = isArray;
+
+function isBoolean(arg) {
+  return typeof arg === 'boolean';
+}
+exports.isBoolean = isBoolean;
+
+function isNull(arg) {
+  return arg === null;
+}
+exports.isNull = isNull;
+
+function isNullOrUndefined(arg) {
+  return arg == null;
+}
+exports.isNullOrUndefined = isNullOrUndefined;
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+exports.isNumber = isNumber;
+
+function isString(arg) {
+  return typeof arg === 'string';
+}
+exports.isString = isString;
+
+function isSymbol(arg) {
+  return typeof arg === 'symbol';
+}
+exports.isSymbol = isSymbol;
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+exports.isUndefined = isUndefined;
+
+function isRegExp(re) {
+  return isObject(re) && objectToString(re) === '[object RegExp]';
+}
+exports.isRegExp = isRegExp;
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+exports.isObject = isObject;
+
+function isDate(d) {
+  return isObject(d) && objectToString(d) === '[object Date]';
+}
+exports.isDate = isDate;
+
+function isError(e) {
+  return isObject(e) &&
+      (objectToString(e) === '[object Error]' || e instanceof Error);
+}
+exports.isError = isError;
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+exports.isFunction = isFunction;
+
+function isPrimitive(arg) {
+  return arg === null ||
+         typeof arg === 'boolean' ||
+         typeof arg === 'number' ||
+         typeof arg === 'string' ||
+         typeof arg === 'symbol' ||  // ES6 symbol
+         typeof arg === 'undefined';
+}
+exports.isPrimitive = isPrimitive;
+
+exports.isBuffer = require('./support/isBuffer');
+
+function objectToString(o) {
+  return Object.prototype.toString.call(o);
+}
+
+
+function pad(n) {
+  return n < 10 ? '0' + n.toString(10) : n.toString(10);
+}
+
+
+var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+              'Oct', 'Nov', 'Dec'];
+
+// 26 Feb 16:19:34
+function timestamp() {
+  var d = new Date();
+  var time = [pad(d.getHours()),
+              pad(d.getMinutes()),
+              pad(d.getSeconds())].join(':');
+  return [d.getDate(), months[d.getMonth()], time].join(' ');
+}
+
+
+// log is just a thin wrapper to console.log that prepends a timestamp
+exports.log = function() {
+  console.log('%s - %s', timestamp(), exports.format.apply(exports, arguments));
+};
+
+
+/**
+ * Inherit the prototype methods from one constructor into another.
+ *
+ * The Function.prototype.inherits from lang.js rewritten as a standalone
+ * function (not on Function.prototype). NOTE: If this file is to be loaded
+ * during bootstrapping this function needs to be rewritten using some native
+ * functions as prototype setup using normal JavaScript does not work as
+ * expected during bootstrapping (see mirror.js in r114903).
+ *
+ * @param {function} ctor Constructor function which needs to inherit the
+ *     prototype.
+ * @param {function} superCtor Constructor function to inherit prototype from.
+ */
+exports.inherits = require('inherits');
+
+exports._extend = function(origin, add) {
+  // Don't do anything if add isn't an object
+  if (!add || !isObject(add)) return origin;
+
+  var keys = Object.keys(add);
+  var i = keys.length;
+  while (i--) {
+    origin[keys[i]] = add[keys[i]];
+  }
+  return origin;
+};
+
+function hasOwnProperty(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./support/isBuffer":13,"_process":50,"inherits":12}],15:[function(require,module,exports){
 module.exports = require('./lib/chai');
 
-},{"./lib/chai":13}],13:[function(require,module,exports){
+},{"./lib/chai":16}],16:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011-2014 Jake Luer <jake@alogicalparadox.com>
@@ -4205,7 +4828,7 @@ exports.use(should);
 var assert = require('./chai/interface/assert');
 exports.use(assert);
 
-},{"./chai/assertion":14,"./chai/config":15,"./chai/core/assertions":16,"./chai/interface/assert":17,"./chai/interface/expect":18,"./chai/interface/should":19,"./chai/utils":30,"assertion-error":39}],14:[function(require,module,exports){
+},{"./chai/assertion":17,"./chai/config":18,"./chai/core/assertions":19,"./chai/interface/assert":20,"./chai/interface/expect":21,"./chai/interface/should":22,"./chai/utils":33,"assertion-error":42}],17:[function(require,module,exports){
 /*!
  * chai
  * http://chaijs.com
@@ -4342,7 +4965,7 @@ module.exports = function (_chai, util) {
   });
 };
 
-},{"./config":15}],15:[function(require,module,exports){
+},{"./config":18}],18:[function(require,module,exports){
 module.exports = {
 
   /**
@@ -4394,7 +5017,7 @@ module.exports = {
 
 };
 
-},{}],16:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /*!
  * chai
  * http://chaijs.com
@@ -5755,7 +6378,7 @@ module.exports = function (chai, _) {
   });
 };
 
-},{}],17:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011-2014 Jake Luer <jake@alogicalparadox.com>
@@ -6813,7 +7436,7 @@ module.exports = function (chai, util) {
   ('Throw', 'throws');
 };
 
-},{}],18:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011-2014 Jake Luer <jake@alogicalparadox.com>
@@ -6827,7 +7450,7 @@ module.exports = function (chai, util) {
 };
 
 
-},{}],19:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011-2014 Jake Luer <jake@alogicalparadox.com>
@@ -6907,7 +7530,7 @@ module.exports = function (chai, util) {
   chai.Should = loadShould;
 };
 
-},{}],20:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /*!
  * Chai - addChainingMethod utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -7020,7 +7643,7 @@ module.exports = function (ctx, name, method, chainingBehavior) {
   });
 };
 
-},{"../config":15,"./flag":23,"./transferFlags":37}],21:[function(require,module,exports){
+},{"../config":18,"./flag":26,"./transferFlags":40}],24:[function(require,module,exports){
 /*!
  * Chai - addMethod utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -7065,7 +7688,7 @@ module.exports = function (ctx, name, method) {
   };
 };
 
-},{"../config":15,"./flag":23}],22:[function(require,module,exports){
+},{"../config":18,"./flag":26}],25:[function(require,module,exports){
 /*!
  * Chai - addProperty utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -7107,7 +7730,7 @@ module.exports = function (ctx, name, getter) {
   });
 };
 
-},{}],23:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /*!
  * Chai - flag utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -7141,7 +7764,7 @@ module.exports = function (obj, key, value) {
   }
 };
 
-},{}],24:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /*!
  * Chai - getActual utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -7161,7 +7784,7 @@ module.exports = function (obj, args) {
   return args.length > 4 ? args[4] : obj._obj;
 };
 
-},{}],25:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*!
  * Chai - getEnumerableProperties utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -7188,7 +7811,7 @@ module.exports = function getEnumerableProperties(object) {
   return result;
 };
 
-},{}],26:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /*!
  * Chai - message composition utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -7240,7 +7863,7 @@ module.exports = function (obj, args) {
   return flagMsg ? flagMsg + ': ' + msg : msg;
 };
 
-},{"./flag":23,"./getActual":24,"./inspect":31,"./objDisplay":32}],27:[function(require,module,exports){
+},{"./flag":26,"./getActual":27,"./inspect":34,"./objDisplay":35}],30:[function(require,module,exports){
 /*!
  * Chai - getName utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -7262,7 +7885,7 @@ module.exports = function (func) {
   return match && match[1] ? match[1] : "";
 };
 
-},{}],28:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 /*!
  * Chai - getPathValue utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -7366,7 +7989,7 @@ function _getPathValue (parsed, obj) {
   return res;
 };
 
-},{}],29:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 /*!
  * Chai - getProperties utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -7403,7 +8026,7 @@ module.exports = function getProperties(object) {
   return result;
 };
 
-},{}],30:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 /*!
  * chai
  * Copyright(c) 2011 Jake Luer <jake@alogicalparadox.com>
@@ -7519,7 +8142,7 @@ exports.addChainableMethod = require('./addChainableMethod');
 exports.overwriteChainableMethod = require('./overwriteChainableMethod');
 
 
-},{"./addChainableMethod":20,"./addMethod":21,"./addProperty":22,"./flag":23,"./getActual":24,"./getMessage":26,"./getName":27,"./getPathValue":28,"./inspect":31,"./objDisplay":32,"./overwriteChainableMethod":33,"./overwriteMethod":34,"./overwriteProperty":35,"./test":36,"./transferFlags":37,"./type":38,"deep-eql":40}],31:[function(require,module,exports){
+},{"./addChainableMethod":23,"./addMethod":24,"./addProperty":25,"./flag":26,"./getActual":27,"./getMessage":29,"./getName":30,"./getPathValue":31,"./inspect":34,"./objDisplay":35,"./overwriteChainableMethod":36,"./overwriteMethod":37,"./overwriteProperty":38,"./test":39,"./transferFlags":40,"./type":41,"deep-eql":43}],34:[function(require,module,exports){
 // This is (almost) directly from Node.js utils
 // https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/util.js
 
@@ -7854,7 +8477,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 
-},{"./getEnumerableProperties":25,"./getName":27,"./getProperties":29}],32:[function(require,module,exports){
+},{"./getEnumerableProperties":28,"./getName":30,"./getProperties":32}],35:[function(require,module,exports){
 /*!
  * Chai - flag utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -7905,7 +8528,7 @@ module.exports = function (obj) {
   }
 };
 
-},{"../config":15,"./inspect":31}],33:[function(require,module,exports){
+},{"../config":18,"./inspect":34}],36:[function(require,module,exports){
 /*!
  * Chai - overwriteChainableMethod utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -7960,7 +8583,7 @@ module.exports = function (ctx, name, method, chainingBehavior) {
   };
 };
 
-},{}],34:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 /*!
  * Chai - overwriteMethod utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -8013,7 +8636,7 @@ module.exports = function (ctx, name, method) {
   }
 };
 
-},{}],35:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 /*!
  * Chai - overwriteProperty utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -8069,7 +8692,7 @@ module.exports = function (ctx, name, getter) {
   });
 };
 
-},{}],36:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 /*!
  * Chai - test utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -8097,7 +8720,7 @@ module.exports = function (obj, args) {
   return negate ? !expr : expr;
 };
 
-},{"./flag":23}],37:[function(require,module,exports){
+},{"./flag":26}],40:[function(require,module,exports){
 /*!
  * Chai - transferFlags utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -8143,7 +8766,7 @@ module.exports = function (assertion, object, includeAll) {
   }
 };
 
-},{}],38:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 /*!
  * Chai - type utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -8190,7 +8813,7 @@ module.exports = function (obj) {
   return typeof obj;
 };
 
-},{}],39:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 /*!
  * assertion-error
  * Copyright(c) 2013 Jake Luer <jake@qualiancy.com>
@@ -8302,10 +8925,10 @@ AssertionError.prototype.toJSON = function (stack) {
   return props;
 };
 
-},{}],40:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 module.exports = require('./lib/eql');
 
-},{"./lib/eql":41}],41:[function(require,module,exports){
+},{"./lib/eql":44}],44:[function(require,module,exports){
 /*!
  * deep-eql
  * Copyright(c) 2013 Jake Luer <jake@alogicalparadox.com>
@@ -8564,10 +9187,10 @@ function objectEqual(a, b, m) {
   return true;
 }
 
-},{"buffer":8,"type-detect":42}],42:[function(require,module,exports){
+},{"buffer":8,"type-detect":45}],45:[function(require,module,exports){
 module.exports = require('./lib/type');
 
-},{"./lib/type":43}],43:[function(require,module,exports){
+},{"./lib/type":46}],46:[function(require,module,exports){
 /*!
  * type-detect
  * Copyright(c) 2013 jake luer <jake@alogicalparadox.com>
@@ -8711,7 +9334,7 @@ Library.prototype.test = function (obj, type) {
   }
 };
 
-},{}],44:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 /*!
  * EventEmitter2
  * https://github.com/hij1nx/EventEmitter2
@@ -9286,7 +9909,9214 @@ Library.prototype.test = function (obj, type) {
   }
 }();
 
-},{}],45:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
+/*!
+ * jQuery JavaScript Library v2.1.3
+ * http://jquery.com/
+ *
+ * Includes Sizzle.js
+ * http://sizzlejs.com/
+ *
+ * Copyright 2005, 2014 jQuery Foundation, Inc. and other contributors
+ * Released under the MIT license
+ * http://jquery.org/license
+ *
+ * Date: 2014-12-18T15:11Z
+ */
+
+(function( global, factory ) {
+
+	if ( typeof module === "object" && typeof module.exports === "object" ) {
+		// For CommonJS and CommonJS-like environments where a proper `window`
+		// is present, execute the factory and get jQuery.
+		// For environments that do not have a `window` with a `document`
+		// (such as Node.js), expose a factory as module.exports.
+		// This accentuates the need for the creation of a real `window`.
+		// e.g. var jQuery = require("jquery")(window);
+		// See ticket #14549 for more info.
+		module.exports = global.document ?
+			factory( global, true ) :
+			function( w ) {
+				if ( !w.document ) {
+					throw new Error( "jQuery requires a window with a document" );
+				}
+				return factory( w );
+			};
+	} else {
+		factory( global );
+	}
+
+// Pass this if window is not defined yet
+}(typeof window !== "undefined" ? window : this, function( window, noGlobal ) {
+
+// Support: Firefox 18+
+// Can't be in strict mode, several libs including ASP.NET trace
+// the stack via arguments.caller.callee and Firefox dies if
+// you try to trace through "use strict" call chains. (#13335)
+//
+
+var arr = [];
+
+var slice = arr.slice;
+
+var concat = arr.concat;
+
+var push = arr.push;
+
+var indexOf = arr.indexOf;
+
+var class2type = {};
+
+var toString = class2type.toString;
+
+var hasOwn = class2type.hasOwnProperty;
+
+var support = {};
+
+
+
+var
+	// Use the correct document accordingly with window argument (sandbox)
+	document = window.document,
+
+	version = "2.1.3",
+
+	// Define a local copy of jQuery
+	jQuery = function( selector, context ) {
+		// The jQuery object is actually just the init constructor 'enhanced'
+		// Need init if jQuery is called (just allow error to be thrown if not included)
+		return new jQuery.fn.init( selector, context );
+	},
+
+	// Support: Android<4.1
+	// Make sure we trim BOM and NBSP
+	rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,
+
+	// Matches dashed string for camelizing
+	rmsPrefix = /^-ms-/,
+	rdashAlpha = /-([\da-z])/gi,
+
+	// Used by jQuery.camelCase as callback to replace()
+	fcamelCase = function( all, letter ) {
+		return letter.toUpperCase();
+	};
+
+jQuery.fn = jQuery.prototype = {
+	// The current version of jQuery being used
+	jquery: version,
+
+	constructor: jQuery,
+
+	// Start with an empty selector
+	selector: "",
+
+	// The default length of a jQuery object is 0
+	length: 0,
+
+	toArray: function() {
+		return slice.call( this );
+	},
+
+	// Get the Nth element in the matched element set OR
+	// Get the whole matched element set as a clean array
+	get: function( num ) {
+		return num != null ?
+
+			// Return just the one element from the set
+			( num < 0 ? this[ num + this.length ] : this[ num ] ) :
+
+			// Return all the elements in a clean array
+			slice.call( this );
+	},
+
+	// Take an array of elements and push it onto the stack
+	// (returning the new matched element set)
+	pushStack: function( elems ) {
+
+		// Build a new jQuery matched element set
+		var ret = jQuery.merge( this.constructor(), elems );
+
+		// Add the old object onto the stack (as a reference)
+		ret.prevObject = this;
+		ret.context = this.context;
+
+		// Return the newly-formed element set
+		return ret;
+	},
+
+	// Execute a callback for every element in the matched set.
+	// (You can seed the arguments with an array of args, but this is
+	// only used internally.)
+	each: function( callback, args ) {
+		return jQuery.each( this, callback, args );
+	},
+
+	map: function( callback ) {
+		return this.pushStack( jQuery.map(this, function( elem, i ) {
+			return callback.call( elem, i, elem );
+		}));
+	},
+
+	slice: function() {
+		return this.pushStack( slice.apply( this, arguments ) );
+	},
+
+	first: function() {
+		return this.eq( 0 );
+	},
+
+	last: function() {
+		return this.eq( -1 );
+	},
+
+	eq: function( i ) {
+		var len = this.length,
+			j = +i + ( i < 0 ? len : 0 );
+		return this.pushStack( j >= 0 && j < len ? [ this[j] ] : [] );
+	},
+
+	end: function() {
+		return this.prevObject || this.constructor(null);
+	},
+
+	// For internal use only.
+	// Behaves like an Array's method, not like a jQuery method.
+	push: push,
+	sort: arr.sort,
+	splice: arr.splice
+};
+
+jQuery.extend = jQuery.fn.extend = function() {
+	var options, name, src, copy, copyIsArray, clone,
+		target = arguments[0] || {},
+		i = 1,
+		length = arguments.length,
+		deep = false;
+
+	// Handle a deep copy situation
+	if ( typeof target === "boolean" ) {
+		deep = target;
+
+		// Skip the boolean and the target
+		target = arguments[ i ] || {};
+		i++;
+	}
+
+	// Handle case when target is a string or something (possible in deep copy)
+	if ( typeof target !== "object" && !jQuery.isFunction(target) ) {
+		target = {};
+	}
+
+	// Extend jQuery itself if only one argument is passed
+	if ( i === length ) {
+		target = this;
+		i--;
+	}
+
+	for ( ; i < length; i++ ) {
+		// Only deal with non-null/undefined values
+		if ( (options = arguments[ i ]) != null ) {
+			// Extend the base object
+			for ( name in options ) {
+				src = target[ name ];
+				copy = options[ name ];
+
+				// Prevent never-ending loop
+				if ( target === copy ) {
+					continue;
+				}
+
+				// Recurse if we're merging plain objects or arrays
+				if ( deep && copy && ( jQuery.isPlainObject(copy) || (copyIsArray = jQuery.isArray(copy)) ) ) {
+					if ( copyIsArray ) {
+						copyIsArray = false;
+						clone = src && jQuery.isArray(src) ? src : [];
+
+					} else {
+						clone = src && jQuery.isPlainObject(src) ? src : {};
+					}
+
+					// Never move original objects, clone them
+					target[ name ] = jQuery.extend( deep, clone, copy );
+
+				// Don't bring in undefined values
+				} else if ( copy !== undefined ) {
+					target[ name ] = copy;
+				}
+			}
+		}
+	}
+
+	// Return the modified object
+	return target;
+};
+
+jQuery.extend({
+	// Unique for each copy of jQuery on the page
+	expando: "jQuery" + ( version + Math.random() ).replace( /\D/g, "" ),
+
+	// Assume jQuery is ready without the ready module
+	isReady: true,
+
+	error: function( msg ) {
+		throw new Error( msg );
+	},
+
+	noop: function() {},
+
+	isFunction: function( obj ) {
+		return jQuery.type(obj) === "function";
+	},
+
+	isArray: Array.isArray,
+
+	isWindow: function( obj ) {
+		return obj != null && obj === obj.window;
+	},
+
+	isNumeric: function( obj ) {
+		// parseFloat NaNs numeric-cast false positives (null|true|false|"")
+		// ...but misinterprets leading-number strings, particularly hex literals ("0x...")
+		// subtraction forces infinities to NaN
+		// adding 1 corrects loss of precision from parseFloat (#15100)
+		return !jQuery.isArray( obj ) && (obj - parseFloat( obj ) + 1) >= 0;
+	},
+
+	isPlainObject: function( obj ) {
+		// Not plain objects:
+		// - Any object or value whose internal [[Class]] property is not "[object Object]"
+		// - DOM nodes
+		// - window
+		if ( jQuery.type( obj ) !== "object" || obj.nodeType || jQuery.isWindow( obj ) ) {
+			return false;
+		}
+
+		if ( obj.constructor &&
+				!hasOwn.call( obj.constructor.prototype, "isPrototypeOf" ) ) {
+			return false;
+		}
+
+		// If the function hasn't returned already, we're confident that
+		// |obj| is a plain object, created by {} or constructed with new Object
+		return true;
+	},
+
+	isEmptyObject: function( obj ) {
+		var name;
+		for ( name in obj ) {
+			return false;
+		}
+		return true;
+	},
+
+	type: function( obj ) {
+		if ( obj == null ) {
+			return obj + "";
+		}
+		// Support: Android<4.0, iOS<6 (functionish RegExp)
+		return typeof obj === "object" || typeof obj === "function" ?
+			class2type[ toString.call(obj) ] || "object" :
+			typeof obj;
+	},
+
+	// Evaluates a script in a global context
+	globalEval: function( code ) {
+		var script,
+			indirect = eval;
+
+		code = jQuery.trim( code );
+
+		if ( code ) {
+			// If the code includes a valid, prologue position
+			// strict mode pragma, execute code by injecting a
+			// script tag into the document.
+			if ( code.indexOf("use strict") === 1 ) {
+				script = document.createElement("script");
+				script.text = code;
+				document.head.appendChild( script ).parentNode.removeChild( script );
+			} else {
+			// Otherwise, avoid the DOM node creation, insertion
+			// and removal by using an indirect global eval
+				indirect( code );
+			}
+		}
+	},
+
+	// Convert dashed to camelCase; used by the css and data modules
+	// Support: IE9-11+
+	// Microsoft forgot to hump their vendor prefix (#9572)
+	camelCase: function( string ) {
+		return string.replace( rmsPrefix, "ms-" ).replace( rdashAlpha, fcamelCase );
+	},
+
+	nodeName: function( elem, name ) {
+		return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
+	},
+
+	// args is for internal usage only
+	each: function( obj, callback, args ) {
+		var value,
+			i = 0,
+			length = obj.length,
+			isArray = isArraylike( obj );
+
+		if ( args ) {
+			if ( isArray ) {
+				for ( ; i < length; i++ ) {
+					value = callback.apply( obj[ i ], args );
+
+					if ( value === false ) {
+						break;
+					}
+				}
+			} else {
+				for ( i in obj ) {
+					value = callback.apply( obj[ i ], args );
+
+					if ( value === false ) {
+						break;
+					}
+				}
+			}
+
+		// A special, fast, case for the most common use of each
+		} else {
+			if ( isArray ) {
+				for ( ; i < length; i++ ) {
+					value = callback.call( obj[ i ], i, obj[ i ] );
+
+					if ( value === false ) {
+						break;
+					}
+				}
+			} else {
+				for ( i in obj ) {
+					value = callback.call( obj[ i ], i, obj[ i ] );
+
+					if ( value === false ) {
+						break;
+					}
+				}
+			}
+		}
+
+		return obj;
+	},
+
+	// Support: Android<4.1
+	trim: function( text ) {
+		return text == null ?
+			"" :
+			( text + "" ).replace( rtrim, "" );
+	},
+
+	// results is for internal usage only
+	makeArray: function( arr, results ) {
+		var ret = results || [];
+
+		if ( arr != null ) {
+			if ( isArraylike( Object(arr) ) ) {
+				jQuery.merge( ret,
+					typeof arr === "string" ?
+					[ arr ] : arr
+				);
+			} else {
+				push.call( ret, arr );
+			}
+		}
+
+		return ret;
+	},
+
+	inArray: function( elem, arr, i ) {
+		return arr == null ? -1 : indexOf.call( arr, elem, i );
+	},
+
+	merge: function( first, second ) {
+		var len = +second.length,
+			j = 0,
+			i = first.length;
+
+		for ( ; j < len; j++ ) {
+			first[ i++ ] = second[ j ];
+		}
+
+		first.length = i;
+
+		return first;
+	},
+
+	grep: function( elems, callback, invert ) {
+		var callbackInverse,
+			matches = [],
+			i = 0,
+			length = elems.length,
+			callbackExpect = !invert;
+
+		// Go through the array, only saving the items
+		// that pass the validator function
+		for ( ; i < length; i++ ) {
+			callbackInverse = !callback( elems[ i ], i );
+			if ( callbackInverse !== callbackExpect ) {
+				matches.push( elems[ i ] );
+			}
+		}
+
+		return matches;
+	},
+
+	// arg is for internal usage only
+	map: function( elems, callback, arg ) {
+		var value,
+			i = 0,
+			length = elems.length,
+			isArray = isArraylike( elems ),
+			ret = [];
+
+		// Go through the array, translating each of the items to their new values
+		if ( isArray ) {
+			for ( ; i < length; i++ ) {
+				value = callback( elems[ i ], i, arg );
+
+				if ( value != null ) {
+					ret.push( value );
+				}
+			}
+
+		// Go through every key on the object,
+		} else {
+			for ( i in elems ) {
+				value = callback( elems[ i ], i, arg );
+
+				if ( value != null ) {
+					ret.push( value );
+				}
+			}
+		}
+
+		// Flatten any nested arrays
+		return concat.apply( [], ret );
+	},
+
+	// A global GUID counter for objects
+	guid: 1,
+
+	// Bind a function to a context, optionally partially applying any
+	// arguments.
+	proxy: function( fn, context ) {
+		var tmp, args, proxy;
+
+		if ( typeof context === "string" ) {
+			tmp = fn[ context ];
+			context = fn;
+			fn = tmp;
+		}
+
+		// Quick check to determine if target is callable, in the spec
+		// this throws a TypeError, but we will just return undefined.
+		if ( !jQuery.isFunction( fn ) ) {
+			return undefined;
+		}
+
+		// Simulated bind
+		args = slice.call( arguments, 2 );
+		proxy = function() {
+			return fn.apply( context || this, args.concat( slice.call( arguments ) ) );
+		};
+
+		// Set the guid of unique handler to the same of original handler, so it can be removed
+		proxy.guid = fn.guid = fn.guid || jQuery.guid++;
+
+		return proxy;
+	},
+
+	now: Date.now,
+
+	// jQuery.support is not used in Core but other projects attach their
+	// properties to it so it needs to exist.
+	support: support
+});
+
+// Populate the class2type map
+jQuery.each("Boolean Number String Function Array Date RegExp Object Error".split(" "), function(i, name) {
+	class2type[ "[object " + name + "]" ] = name.toLowerCase();
+});
+
+function isArraylike( obj ) {
+	var length = obj.length,
+		type = jQuery.type( obj );
+
+	if ( type === "function" || jQuery.isWindow( obj ) ) {
+		return false;
+	}
+
+	if ( obj.nodeType === 1 && length ) {
+		return true;
+	}
+
+	return type === "array" || length === 0 ||
+		typeof length === "number" && length > 0 && ( length - 1 ) in obj;
+}
+var Sizzle =
+/*!
+ * Sizzle CSS Selector Engine v2.2.0-pre
+ * http://sizzlejs.com/
+ *
+ * Copyright 2008, 2014 jQuery Foundation, Inc. and other contributors
+ * Released under the MIT license
+ * http://jquery.org/license
+ *
+ * Date: 2014-12-16
+ */
+(function( window ) {
+
+var i,
+	support,
+	Expr,
+	getText,
+	isXML,
+	tokenize,
+	compile,
+	select,
+	outermostContext,
+	sortInput,
+	hasDuplicate,
+
+	// Local document vars
+	setDocument,
+	document,
+	docElem,
+	documentIsHTML,
+	rbuggyQSA,
+	rbuggyMatches,
+	matches,
+	contains,
+
+	// Instance-specific data
+	expando = "sizzle" + 1 * new Date(),
+	preferredDoc = window.document,
+	dirruns = 0,
+	done = 0,
+	classCache = createCache(),
+	tokenCache = createCache(),
+	compilerCache = createCache(),
+	sortOrder = function( a, b ) {
+		if ( a === b ) {
+			hasDuplicate = true;
+		}
+		return 0;
+	},
+
+	// General-purpose constants
+	MAX_NEGATIVE = 1 << 31,
+
+	// Instance methods
+	hasOwn = ({}).hasOwnProperty,
+	arr = [],
+	pop = arr.pop,
+	push_native = arr.push,
+	push = arr.push,
+	slice = arr.slice,
+	// Use a stripped-down indexOf as it's faster than native
+	// http://jsperf.com/thor-indexof-vs-for/5
+	indexOf = function( list, elem ) {
+		var i = 0,
+			len = list.length;
+		for ( ; i < len; i++ ) {
+			if ( list[i] === elem ) {
+				return i;
+			}
+		}
+		return -1;
+	},
+
+	booleans = "checked|selected|async|autofocus|autoplay|controls|defer|disabled|hidden|ismap|loop|multiple|open|readonly|required|scoped",
+
+	// Regular expressions
+
+	// Whitespace characters http://www.w3.org/TR/css3-selectors/#whitespace
+	whitespace = "[\\x20\\t\\r\\n\\f]",
+	// http://www.w3.org/TR/css3-syntax/#characters
+	characterEncoding = "(?:\\\\.|[\\w-]|[^\\x00-\\xa0])+",
+
+	// Loosely modeled on CSS identifier characters
+	// An unquoted value should be a CSS identifier http://www.w3.org/TR/css3-selectors/#attribute-selectors
+	// Proper syntax: http://www.w3.org/TR/CSS21/syndata.html#value-def-identifier
+	identifier = characterEncoding.replace( "w", "w#" ),
+
+	// Attribute selectors: http://www.w3.org/TR/selectors/#attribute-selectors
+	attributes = "\\[" + whitespace + "*(" + characterEncoding + ")(?:" + whitespace +
+		// Operator (capture 2)
+		"*([*^$|!~]?=)" + whitespace +
+		// "Attribute values must be CSS identifiers [capture 5] or strings [capture 3 or capture 4]"
+		"*(?:'((?:\\\\.|[^\\\\'])*)'|\"((?:\\\\.|[^\\\\\"])*)\"|(" + identifier + "))|)" + whitespace +
+		"*\\]",
+
+	pseudos = ":(" + characterEncoding + ")(?:\\((" +
+		// To reduce the number of selectors needing tokenize in the preFilter, prefer arguments:
+		// 1. quoted (capture 3; capture 4 or capture 5)
+		"('((?:\\\\.|[^\\\\'])*)'|\"((?:\\\\.|[^\\\\\"])*)\")|" +
+		// 2. simple (capture 6)
+		"((?:\\\\.|[^\\\\()[\\]]|" + attributes + ")*)|" +
+		// 3. anything else (capture 2)
+		".*" +
+		")\\)|)",
+
+	// Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter
+	rwhitespace = new RegExp( whitespace + "+", "g" ),
+	rtrim = new RegExp( "^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" + whitespace + "+$", "g" ),
+
+	rcomma = new RegExp( "^" + whitespace + "*," + whitespace + "*" ),
+	rcombinators = new RegExp( "^" + whitespace + "*([>+~]|" + whitespace + ")" + whitespace + "*" ),
+
+	rattributeQuotes = new RegExp( "=" + whitespace + "*([^\\]'\"]*?)" + whitespace + "*\\]", "g" ),
+
+	rpseudo = new RegExp( pseudos ),
+	ridentifier = new RegExp( "^" + identifier + "$" ),
+
+	matchExpr = {
+		"ID": new RegExp( "^#(" + characterEncoding + ")" ),
+		"CLASS": new RegExp( "^\\.(" + characterEncoding + ")" ),
+		"TAG": new RegExp( "^(" + characterEncoding.replace( "w", "w*" ) + ")" ),
+		"ATTR": new RegExp( "^" + attributes ),
+		"PSEUDO": new RegExp( "^" + pseudos ),
+		"CHILD": new RegExp( "^:(only|first|last|nth|nth-last)-(child|of-type)(?:\\(" + whitespace +
+			"*(even|odd|(([+-]|)(\\d*)n|)" + whitespace + "*(?:([+-]|)" + whitespace +
+			"*(\\d+)|))" + whitespace + "*\\)|)", "i" ),
+		"bool": new RegExp( "^(?:" + booleans + ")$", "i" ),
+		// For use in libraries implementing .is()
+		// We use this for POS matching in `select`
+		"needsContext": new RegExp( "^" + whitespace + "*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\(" +
+			whitespace + "*((?:-\\d)?\\d*)" + whitespace + "*\\)|)(?=[^-]|$)", "i" )
+	},
+
+	rinputs = /^(?:input|select|textarea|button)$/i,
+	rheader = /^h\d$/i,
+
+	rnative = /^[^{]+\{\s*\[native \w/,
+
+	// Easily-parseable/retrievable ID or TAG or CLASS selectors
+	rquickExpr = /^(?:#([\w-]+)|(\w+)|\.([\w-]+))$/,
+
+	rsibling = /[+~]/,
+	rescape = /'|\\/g,
+
+	// CSS escapes http://www.w3.org/TR/CSS21/syndata.html#escaped-characters
+	runescape = new RegExp( "\\\\([\\da-f]{1,6}" + whitespace + "?|(" + whitespace + ")|.)", "ig" ),
+	funescape = function( _, escaped, escapedWhitespace ) {
+		var high = "0x" + escaped - 0x10000;
+		// NaN means non-codepoint
+		// Support: Firefox<24
+		// Workaround erroneous numeric interpretation of +"0x"
+		return high !== high || escapedWhitespace ?
+			escaped :
+			high < 0 ?
+				// BMP codepoint
+				String.fromCharCode( high + 0x10000 ) :
+				// Supplemental Plane codepoint (surrogate pair)
+				String.fromCharCode( high >> 10 | 0xD800, high & 0x3FF | 0xDC00 );
+	},
+
+	// Used for iframes
+	// See setDocument()
+	// Removing the function wrapper causes a "Permission Denied"
+	// error in IE
+	unloadHandler = function() {
+		setDocument();
+	};
+
+// Optimize for push.apply( _, NodeList )
+try {
+	push.apply(
+		(arr = slice.call( preferredDoc.childNodes )),
+		preferredDoc.childNodes
+	);
+	// Support: Android<4.0
+	// Detect silently failing push.apply
+	arr[ preferredDoc.childNodes.length ].nodeType;
+} catch ( e ) {
+	push = { apply: arr.length ?
+
+		// Leverage slice if possible
+		function( target, els ) {
+			push_native.apply( target, slice.call(els) );
+		} :
+
+		// Support: IE<9
+		// Otherwise append directly
+		function( target, els ) {
+			var j = target.length,
+				i = 0;
+			// Can't trust NodeList.length
+			while ( (target[j++] = els[i++]) ) {}
+			target.length = j - 1;
+		}
+	};
+}
+
+function Sizzle( selector, context, results, seed ) {
+	var match, elem, m, nodeType,
+		// QSA vars
+		i, groups, old, nid, newContext, newSelector;
+
+	if ( ( context ? context.ownerDocument || context : preferredDoc ) !== document ) {
+		setDocument( context );
+	}
+
+	context = context || document;
+	results = results || [];
+	nodeType = context.nodeType;
+
+	if ( typeof selector !== "string" || !selector ||
+		nodeType !== 1 && nodeType !== 9 && nodeType !== 11 ) {
+
+		return results;
+	}
+
+	if ( !seed && documentIsHTML ) {
+
+		// Try to shortcut find operations when possible (e.g., not under DocumentFragment)
+		if ( nodeType !== 11 && (match = rquickExpr.exec( selector )) ) {
+			// Speed-up: Sizzle("#ID")
+			if ( (m = match[1]) ) {
+				if ( nodeType === 9 ) {
+					elem = context.getElementById( m );
+					// Check parentNode to catch when Blackberry 4.6 returns
+					// nodes that are no longer in the document (jQuery #6963)
+					if ( elem && elem.parentNode ) {
+						// Handle the case where IE, Opera, and Webkit return items
+						// by name instead of ID
+						if ( elem.id === m ) {
+							results.push( elem );
+							return results;
+						}
+					} else {
+						return results;
+					}
+				} else {
+					// Context is not a document
+					if ( context.ownerDocument && (elem = context.ownerDocument.getElementById( m )) &&
+						contains( context, elem ) && elem.id === m ) {
+						results.push( elem );
+						return results;
+					}
+				}
+
+			// Speed-up: Sizzle("TAG")
+			} else if ( match[2] ) {
+				push.apply( results, context.getElementsByTagName( selector ) );
+				return results;
+
+			// Speed-up: Sizzle(".CLASS")
+			} else if ( (m = match[3]) && support.getElementsByClassName ) {
+				push.apply( results, context.getElementsByClassName( m ) );
+				return results;
+			}
+		}
+
+		// QSA path
+		if ( support.qsa && (!rbuggyQSA || !rbuggyQSA.test( selector )) ) {
+			nid = old = expando;
+			newContext = context;
+			newSelector = nodeType !== 1 && selector;
+
+			// qSA works strangely on Element-rooted queries
+			// We can work around this by specifying an extra ID on the root
+			// and working up from there (Thanks to Andrew Dupont for the technique)
+			// IE 8 doesn't work on object elements
+			if ( nodeType === 1 && context.nodeName.toLowerCase() !== "object" ) {
+				groups = tokenize( selector );
+
+				if ( (old = context.getAttribute("id")) ) {
+					nid = old.replace( rescape, "\\$&" );
+				} else {
+					context.setAttribute( "id", nid );
+				}
+				nid = "[id='" + nid + "'] ";
+
+				i = groups.length;
+				while ( i-- ) {
+					groups[i] = nid + toSelector( groups[i] );
+				}
+				newContext = rsibling.test( selector ) && testContext( context.parentNode ) || context;
+				newSelector = groups.join(",");
+			}
+
+			if ( newSelector ) {
+				try {
+					push.apply( results,
+						newContext.querySelectorAll( newSelector )
+					);
+					return results;
+				} catch(qsaError) {
+				} finally {
+					if ( !old ) {
+						context.removeAttribute("id");
+					}
+				}
+			}
+		}
+	}
+
+	// All others
+	return select( selector.replace( rtrim, "$1" ), context, results, seed );
+}
+
+/**
+ * Create key-value caches of limited size
+ * @returns {Function(string, Object)} Returns the Object data after storing it on itself with
+ *	property name the (space-suffixed) string and (if the cache is larger than Expr.cacheLength)
+ *	deleting the oldest entry
+ */
+function createCache() {
+	var keys = [];
+
+	function cache( key, value ) {
+		// Use (key + " ") to avoid collision with native prototype properties (see Issue #157)
+		if ( keys.push( key + " " ) > Expr.cacheLength ) {
+			// Only keep the most recent entries
+			delete cache[ keys.shift() ];
+		}
+		return (cache[ key + " " ] = value);
+	}
+	return cache;
+}
+
+/**
+ * Mark a function for special use by Sizzle
+ * @param {Function} fn The function to mark
+ */
+function markFunction( fn ) {
+	fn[ expando ] = true;
+	return fn;
+}
+
+/**
+ * Support testing using an element
+ * @param {Function} fn Passed the created div and expects a boolean result
+ */
+function assert( fn ) {
+	var div = document.createElement("div");
+
+	try {
+		return !!fn( div );
+	} catch (e) {
+		return false;
+	} finally {
+		// Remove from its parent by default
+		if ( div.parentNode ) {
+			div.parentNode.removeChild( div );
+		}
+		// release memory in IE
+		div = null;
+	}
+}
+
+/**
+ * Adds the same handler for all of the specified attrs
+ * @param {String} attrs Pipe-separated list of attributes
+ * @param {Function} handler The method that will be applied
+ */
+function addHandle( attrs, handler ) {
+	var arr = attrs.split("|"),
+		i = attrs.length;
+
+	while ( i-- ) {
+		Expr.attrHandle[ arr[i] ] = handler;
+	}
+}
+
+/**
+ * Checks document order of two siblings
+ * @param {Element} a
+ * @param {Element} b
+ * @returns {Number} Returns less than 0 if a precedes b, greater than 0 if a follows b
+ */
+function siblingCheck( a, b ) {
+	var cur = b && a,
+		diff = cur && a.nodeType === 1 && b.nodeType === 1 &&
+			( ~b.sourceIndex || MAX_NEGATIVE ) -
+			( ~a.sourceIndex || MAX_NEGATIVE );
+
+	// Use IE sourceIndex if available on both nodes
+	if ( diff ) {
+		return diff;
+	}
+
+	// Check if b follows a
+	if ( cur ) {
+		while ( (cur = cur.nextSibling) ) {
+			if ( cur === b ) {
+				return -1;
+			}
+		}
+	}
+
+	return a ? 1 : -1;
+}
+
+/**
+ * Returns a function to use in pseudos for input types
+ * @param {String} type
+ */
+function createInputPseudo( type ) {
+	return function( elem ) {
+		var name = elem.nodeName.toLowerCase();
+		return name === "input" && elem.type === type;
+	};
+}
+
+/**
+ * Returns a function to use in pseudos for buttons
+ * @param {String} type
+ */
+function createButtonPseudo( type ) {
+	return function( elem ) {
+		var name = elem.nodeName.toLowerCase();
+		return (name === "input" || name === "button") && elem.type === type;
+	};
+}
+
+/**
+ * Returns a function to use in pseudos for positionals
+ * @param {Function} fn
+ */
+function createPositionalPseudo( fn ) {
+	return markFunction(function( argument ) {
+		argument = +argument;
+		return markFunction(function( seed, matches ) {
+			var j,
+				matchIndexes = fn( [], seed.length, argument ),
+				i = matchIndexes.length;
+
+			// Match elements found at the specified indexes
+			while ( i-- ) {
+				if ( seed[ (j = matchIndexes[i]) ] ) {
+					seed[j] = !(matches[j] = seed[j]);
+				}
+			}
+		});
+	});
+}
+
+/**
+ * Checks a node for validity as a Sizzle context
+ * @param {Element|Object=} context
+ * @returns {Element|Object|Boolean} The input node if acceptable, otherwise a falsy value
+ */
+function testContext( context ) {
+	return context && typeof context.getElementsByTagName !== "undefined" && context;
+}
+
+// Expose support vars for convenience
+support = Sizzle.support = {};
+
+/**
+ * Detects XML nodes
+ * @param {Element|Object} elem An element or a document
+ * @returns {Boolean} True iff elem is a non-HTML XML node
+ */
+isXML = Sizzle.isXML = function( elem ) {
+	// documentElement is verified for cases where it doesn't yet exist
+	// (such as loading iframes in IE - #4833)
+	var documentElement = elem && (elem.ownerDocument || elem).documentElement;
+	return documentElement ? documentElement.nodeName !== "HTML" : false;
+};
+
+/**
+ * Sets document-related variables once based on the current document
+ * @param {Element|Object} [doc] An element or document object to use to set the document
+ * @returns {Object} Returns the current document
+ */
+setDocument = Sizzle.setDocument = function( node ) {
+	var hasCompare, parent,
+		doc = node ? node.ownerDocument || node : preferredDoc;
+
+	// If no document and documentElement is available, return
+	if ( doc === document || doc.nodeType !== 9 || !doc.documentElement ) {
+		return document;
+	}
+
+	// Set our document
+	document = doc;
+	docElem = doc.documentElement;
+	parent = doc.defaultView;
+
+	// Support: IE>8
+	// If iframe document is assigned to "document" variable and if iframe has been reloaded,
+	// IE will throw "permission denied" error when accessing "document" variable, see jQuery #13936
+	// IE6-8 do not support the defaultView property so parent will be undefined
+	if ( parent && parent !== parent.top ) {
+		// IE11 does not have attachEvent, so all must suffer
+		if ( parent.addEventListener ) {
+			parent.addEventListener( "unload", unloadHandler, false );
+		} else if ( parent.attachEvent ) {
+			parent.attachEvent( "onunload", unloadHandler );
+		}
+	}
+
+	/* Support tests
+	---------------------------------------------------------------------- */
+	documentIsHTML = !isXML( doc );
+
+	/* Attributes
+	---------------------------------------------------------------------- */
+
+	// Support: IE<8
+	// Verify that getAttribute really returns attributes and not properties
+	// (excepting IE8 booleans)
+	support.attributes = assert(function( div ) {
+		div.className = "i";
+		return !div.getAttribute("className");
+	});
+
+	/* getElement(s)By*
+	---------------------------------------------------------------------- */
+
+	// Check if getElementsByTagName("*") returns only elements
+	support.getElementsByTagName = assert(function( div ) {
+		div.appendChild( doc.createComment("") );
+		return !div.getElementsByTagName("*").length;
+	});
+
+	// Support: IE<9
+	support.getElementsByClassName = rnative.test( doc.getElementsByClassName );
+
+	// Support: IE<10
+	// Check if getElementById returns elements by name
+	// The broken getElementById methods don't pick up programatically-set names,
+	// so use a roundabout getElementsByName test
+	support.getById = assert(function( div ) {
+		docElem.appendChild( div ).id = expando;
+		return !doc.getElementsByName || !doc.getElementsByName( expando ).length;
+	});
+
+	// ID find and filter
+	if ( support.getById ) {
+		Expr.find["ID"] = function( id, context ) {
+			if ( typeof context.getElementById !== "undefined" && documentIsHTML ) {
+				var m = context.getElementById( id );
+				// Check parentNode to catch when Blackberry 4.6 returns
+				// nodes that are no longer in the document #6963
+				return m && m.parentNode ? [ m ] : [];
+			}
+		};
+		Expr.filter["ID"] = function( id ) {
+			var attrId = id.replace( runescape, funescape );
+			return function( elem ) {
+				return elem.getAttribute("id") === attrId;
+			};
+		};
+	} else {
+		// Support: IE6/7
+		// getElementById is not reliable as a find shortcut
+		delete Expr.find["ID"];
+
+		Expr.filter["ID"] =  function( id ) {
+			var attrId = id.replace( runescape, funescape );
+			return function( elem ) {
+				var node = typeof elem.getAttributeNode !== "undefined" && elem.getAttributeNode("id");
+				return node && node.value === attrId;
+			};
+		};
+	}
+
+	// Tag
+	Expr.find["TAG"] = support.getElementsByTagName ?
+		function( tag, context ) {
+			if ( typeof context.getElementsByTagName !== "undefined" ) {
+				return context.getElementsByTagName( tag );
+
+			// DocumentFragment nodes don't have gEBTN
+			} else if ( support.qsa ) {
+				return context.querySelectorAll( tag );
+			}
+		} :
+
+		function( tag, context ) {
+			var elem,
+				tmp = [],
+				i = 0,
+				// By happy coincidence, a (broken) gEBTN appears on DocumentFragment nodes too
+				results = context.getElementsByTagName( tag );
+
+			// Filter out possible comments
+			if ( tag === "*" ) {
+				while ( (elem = results[i++]) ) {
+					if ( elem.nodeType === 1 ) {
+						tmp.push( elem );
+					}
+				}
+
+				return tmp;
+			}
+			return results;
+		};
+
+	// Class
+	Expr.find["CLASS"] = support.getElementsByClassName && function( className, context ) {
+		if ( documentIsHTML ) {
+			return context.getElementsByClassName( className );
+		}
+	};
+
+	/* QSA/matchesSelector
+	---------------------------------------------------------------------- */
+
+	// QSA and matchesSelector support
+
+	// matchesSelector(:active) reports false when true (IE9/Opera 11.5)
+	rbuggyMatches = [];
+
+	// qSa(:focus) reports false when true (Chrome 21)
+	// We allow this because of a bug in IE8/9 that throws an error
+	// whenever `document.activeElement` is accessed on an iframe
+	// So, we allow :focus to pass through QSA all the time to avoid the IE error
+	// See http://bugs.jquery.com/ticket/13378
+	rbuggyQSA = [];
+
+	if ( (support.qsa = rnative.test( doc.querySelectorAll )) ) {
+		// Build QSA regex
+		// Regex strategy adopted from Diego Perini
+		assert(function( div ) {
+			// Select is set to empty string on purpose
+			// This is to test IE's treatment of not explicitly
+			// setting a boolean content attribute,
+			// since its presence should be enough
+			// http://bugs.jquery.com/ticket/12359
+			docElem.appendChild( div ).innerHTML = "<a id='" + expando + "'></a>" +
+				"<select id='" + expando + "-\f]' msallowcapture=''>" +
+				"<option selected=''></option></select>";
+
+			// Support: IE8, Opera 11-12.16
+			// Nothing should be selected when empty strings follow ^= or $= or *=
+			// The test attribute must be unknown in Opera but "safe" for WinRT
+			// http://msdn.microsoft.com/en-us/library/ie/hh465388.aspx#attribute_section
+			if ( div.querySelectorAll("[msallowcapture^='']").length ) {
+				rbuggyQSA.push( "[*^$]=" + whitespace + "*(?:''|\"\")" );
+			}
+
+			// Support: IE8
+			// Boolean attributes and "value" are not treated correctly
+			if ( !div.querySelectorAll("[selected]").length ) {
+				rbuggyQSA.push( "\\[" + whitespace + "*(?:value|" + booleans + ")" );
+			}
+
+			// Support: Chrome<29, Android<4.2+, Safari<7.0+, iOS<7.0+, PhantomJS<1.9.7+
+			if ( !div.querySelectorAll( "[id~=" + expando + "-]" ).length ) {
+				rbuggyQSA.push("~=");
+			}
+
+			// Webkit/Opera - :checked should return selected option elements
+			// http://www.w3.org/TR/2011/REC-css3-selectors-20110929/#checked
+			// IE8 throws error here and will not see later tests
+			if ( !div.querySelectorAll(":checked").length ) {
+				rbuggyQSA.push(":checked");
+			}
+
+			// Support: Safari 8+, iOS 8+
+			// https://bugs.webkit.org/show_bug.cgi?id=136851
+			// In-page `selector#id sibing-combinator selector` fails
+			if ( !div.querySelectorAll( "a#" + expando + "+*" ).length ) {
+				rbuggyQSA.push(".#.+[+~]");
+			}
+		});
+
+		assert(function( div ) {
+			// Support: Windows 8 Native Apps
+			// The type and name attributes are restricted during .innerHTML assignment
+			var input = doc.createElement("input");
+			input.setAttribute( "type", "hidden" );
+			div.appendChild( input ).setAttribute( "name", "D" );
+
+			// Support: IE8
+			// Enforce case-sensitivity of name attribute
+			if ( div.querySelectorAll("[name=d]").length ) {
+				rbuggyQSA.push( "name" + whitespace + "*[*^$|!~]?=" );
+			}
+
+			// FF 3.5 - :enabled/:disabled and hidden elements (hidden elements are still enabled)
+			// IE8 throws error here and will not see later tests
+			if ( !div.querySelectorAll(":enabled").length ) {
+				rbuggyQSA.push( ":enabled", ":disabled" );
+			}
+
+			// Opera 10-11 does not throw on post-comma invalid pseudos
+			div.querySelectorAll("*,:x");
+			rbuggyQSA.push(",.*:");
+		});
+	}
+
+	if ( (support.matchesSelector = rnative.test( (matches = docElem.matches ||
+		docElem.webkitMatchesSelector ||
+		docElem.mozMatchesSelector ||
+		docElem.oMatchesSelector ||
+		docElem.msMatchesSelector) )) ) {
+
+		assert(function( div ) {
+			// Check to see if it's possible to do matchesSelector
+			// on a disconnected node (IE 9)
+			support.disconnectedMatch = matches.call( div, "div" );
+
+			// This should fail with an exception
+			// Gecko does not error, returns false instead
+			matches.call( div, "[s!='']:x" );
+			rbuggyMatches.push( "!=", pseudos );
+		});
+	}
+
+	rbuggyQSA = rbuggyQSA.length && new RegExp( rbuggyQSA.join("|") );
+	rbuggyMatches = rbuggyMatches.length && new RegExp( rbuggyMatches.join("|") );
+
+	/* Contains
+	---------------------------------------------------------------------- */
+	hasCompare = rnative.test( docElem.compareDocumentPosition );
+
+	// Element contains another
+	// Purposefully does not implement inclusive descendent
+	// As in, an element does not contain itself
+	contains = hasCompare || rnative.test( docElem.contains ) ?
+		function( a, b ) {
+			var adown = a.nodeType === 9 ? a.documentElement : a,
+				bup = b && b.parentNode;
+			return a === bup || !!( bup && bup.nodeType === 1 && (
+				adown.contains ?
+					adown.contains( bup ) :
+					a.compareDocumentPosition && a.compareDocumentPosition( bup ) & 16
+			));
+		} :
+		function( a, b ) {
+			if ( b ) {
+				while ( (b = b.parentNode) ) {
+					if ( b === a ) {
+						return true;
+					}
+				}
+			}
+			return false;
+		};
+
+	/* Sorting
+	---------------------------------------------------------------------- */
+
+	// Document order sorting
+	sortOrder = hasCompare ?
+	function( a, b ) {
+
+		// Flag for duplicate removal
+		if ( a === b ) {
+			hasDuplicate = true;
+			return 0;
+		}
+
+		// Sort on method existence if only one input has compareDocumentPosition
+		var compare = !a.compareDocumentPosition - !b.compareDocumentPosition;
+		if ( compare ) {
+			return compare;
+		}
+
+		// Calculate position if both inputs belong to the same document
+		compare = ( a.ownerDocument || a ) === ( b.ownerDocument || b ) ?
+			a.compareDocumentPosition( b ) :
+
+			// Otherwise we know they are disconnected
+			1;
+
+		// Disconnected nodes
+		if ( compare & 1 ||
+			(!support.sortDetached && b.compareDocumentPosition( a ) === compare) ) {
+
+			// Choose the first element that is related to our preferred document
+			if ( a === doc || a.ownerDocument === preferredDoc && contains(preferredDoc, a) ) {
+				return -1;
+			}
+			if ( b === doc || b.ownerDocument === preferredDoc && contains(preferredDoc, b) ) {
+				return 1;
+			}
+
+			// Maintain original order
+			return sortInput ?
+				( indexOf( sortInput, a ) - indexOf( sortInput, b ) ) :
+				0;
+		}
+
+		return compare & 4 ? -1 : 1;
+	} :
+	function( a, b ) {
+		// Exit early if the nodes are identical
+		if ( a === b ) {
+			hasDuplicate = true;
+			return 0;
+		}
+
+		var cur,
+			i = 0,
+			aup = a.parentNode,
+			bup = b.parentNode,
+			ap = [ a ],
+			bp = [ b ];
+
+		// Parentless nodes are either documents or disconnected
+		if ( !aup || !bup ) {
+			return a === doc ? -1 :
+				b === doc ? 1 :
+				aup ? -1 :
+				bup ? 1 :
+				sortInput ?
+				( indexOf( sortInput, a ) - indexOf( sortInput, b ) ) :
+				0;
+
+		// If the nodes are siblings, we can do a quick check
+		} else if ( aup === bup ) {
+			return siblingCheck( a, b );
+		}
+
+		// Otherwise we need full lists of their ancestors for comparison
+		cur = a;
+		while ( (cur = cur.parentNode) ) {
+			ap.unshift( cur );
+		}
+		cur = b;
+		while ( (cur = cur.parentNode) ) {
+			bp.unshift( cur );
+		}
+
+		// Walk down the tree looking for a discrepancy
+		while ( ap[i] === bp[i] ) {
+			i++;
+		}
+
+		return i ?
+			// Do a sibling check if the nodes have a common ancestor
+			siblingCheck( ap[i], bp[i] ) :
+
+			// Otherwise nodes in our document sort first
+			ap[i] === preferredDoc ? -1 :
+			bp[i] === preferredDoc ? 1 :
+			0;
+	};
+
+	return doc;
+};
+
+Sizzle.matches = function( expr, elements ) {
+	return Sizzle( expr, null, null, elements );
+};
+
+Sizzle.matchesSelector = function( elem, expr ) {
+	// Set document vars if needed
+	if ( ( elem.ownerDocument || elem ) !== document ) {
+		setDocument( elem );
+	}
+
+	// Make sure that attribute selectors are quoted
+	expr = expr.replace( rattributeQuotes, "='$1']" );
+
+	if ( support.matchesSelector && documentIsHTML &&
+		( !rbuggyMatches || !rbuggyMatches.test( expr ) ) &&
+		( !rbuggyQSA     || !rbuggyQSA.test( expr ) ) ) {
+
+		try {
+			var ret = matches.call( elem, expr );
+
+			// IE 9's matchesSelector returns false on disconnected nodes
+			if ( ret || support.disconnectedMatch ||
+					// As well, disconnected nodes are said to be in a document
+					// fragment in IE 9
+					elem.document && elem.document.nodeType !== 11 ) {
+				return ret;
+			}
+		} catch (e) {}
+	}
+
+	return Sizzle( expr, document, null, [ elem ] ).length > 0;
+};
+
+Sizzle.contains = function( context, elem ) {
+	// Set document vars if needed
+	if ( ( context.ownerDocument || context ) !== document ) {
+		setDocument( context );
+	}
+	return contains( context, elem );
+};
+
+Sizzle.attr = function( elem, name ) {
+	// Set document vars if needed
+	if ( ( elem.ownerDocument || elem ) !== document ) {
+		setDocument( elem );
+	}
+
+	var fn = Expr.attrHandle[ name.toLowerCase() ],
+		// Don't get fooled by Object.prototype properties (jQuery #13807)
+		val = fn && hasOwn.call( Expr.attrHandle, name.toLowerCase() ) ?
+			fn( elem, name, !documentIsHTML ) :
+			undefined;
+
+	return val !== undefined ?
+		val :
+		support.attributes || !documentIsHTML ?
+			elem.getAttribute( name ) :
+			(val = elem.getAttributeNode(name)) && val.specified ?
+				val.value :
+				null;
+};
+
+Sizzle.error = function( msg ) {
+	throw new Error( "Syntax error, unrecognized expression: " + msg );
+};
+
+/**
+ * Document sorting and removing duplicates
+ * @param {ArrayLike} results
+ */
+Sizzle.uniqueSort = function( results ) {
+	var elem,
+		duplicates = [],
+		j = 0,
+		i = 0;
+
+	// Unless we *know* we can detect duplicates, assume their presence
+	hasDuplicate = !support.detectDuplicates;
+	sortInput = !support.sortStable && results.slice( 0 );
+	results.sort( sortOrder );
+
+	if ( hasDuplicate ) {
+		while ( (elem = results[i++]) ) {
+			if ( elem === results[ i ] ) {
+				j = duplicates.push( i );
+			}
+		}
+		while ( j-- ) {
+			results.splice( duplicates[ j ], 1 );
+		}
+	}
+
+	// Clear input after sorting to release objects
+	// See https://github.com/jquery/sizzle/pull/225
+	sortInput = null;
+
+	return results;
+};
+
+/**
+ * Utility function for retrieving the text value of an array of DOM nodes
+ * @param {Array|Element} elem
+ */
+getText = Sizzle.getText = function( elem ) {
+	var node,
+		ret = "",
+		i = 0,
+		nodeType = elem.nodeType;
+
+	if ( !nodeType ) {
+		// If no nodeType, this is expected to be an array
+		while ( (node = elem[i++]) ) {
+			// Do not traverse comment nodes
+			ret += getText( node );
+		}
+	} else if ( nodeType === 1 || nodeType === 9 || nodeType === 11 ) {
+		// Use textContent for elements
+		// innerText usage removed for consistency of new lines (jQuery #11153)
+		if ( typeof elem.textContent === "string" ) {
+			return elem.textContent;
+		} else {
+			// Traverse its children
+			for ( elem = elem.firstChild; elem; elem = elem.nextSibling ) {
+				ret += getText( elem );
+			}
+		}
+	} else if ( nodeType === 3 || nodeType === 4 ) {
+		return elem.nodeValue;
+	}
+	// Do not include comment or processing instruction nodes
+
+	return ret;
+};
+
+Expr = Sizzle.selectors = {
+
+	// Can be adjusted by the user
+	cacheLength: 50,
+
+	createPseudo: markFunction,
+
+	match: matchExpr,
+
+	attrHandle: {},
+
+	find: {},
+
+	relative: {
+		">": { dir: "parentNode", first: true },
+		" ": { dir: "parentNode" },
+		"+": { dir: "previousSibling", first: true },
+		"~": { dir: "previousSibling" }
+	},
+
+	preFilter: {
+		"ATTR": function( match ) {
+			match[1] = match[1].replace( runescape, funescape );
+
+			// Move the given value to match[3] whether quoted or unquoted
+			match[3] = ( match[3] || match[4] || match[5] || "" ).replace( runescape, funescape );
+
+			if ( match[2] === "~=" ) {
+				match[3] = " " + match[3] + " ";
+			}
+
+			return match.slice( 0, 4 );
+		},
+
+		"CHILD": function( match ) {
+			/* matches from matchExpr["CHILD"]
+				1 type (only|nth|...)
+				2 what (child|of-type)
+				3 argument (even|odd|\d*|\d*n([+-]\d+)?|...)
+				4 xn-component of xn+y argument ([+-]?\d*n|)
+				5 sign of xn-component
+				6 x of xn-component
+				7 sign of y-component
+				8 y of y-component
+			*/
+			match[1] = match[1].toLowerCase();
+
+			if ( match[1].slice( 0, 3 ) === "nth" ) {
+				// nth-* requires argument
+				if ( !match[3] ) {
+					Sizzle.error( match[0] );
+				}
+
+				// numeric x and y parameters for Expr.filter.CHILD
+				// remember that false/true cast respectively to 0/1
+				match[4] = +( match[4] ? match[5] + (match[6] || 1) : 2 * ( match[3] === "even" || match[3] === "odd" ) );
+				match[5] = +( ( match[7] + match[8] ) || match[3] === "odd" );
+
+			// other types prohibit arguments
+			} else if ( match[3] ) {
+				Sizzle.error( match[0] );
+			}
+
+			return match;
+		},
+
+		"PSEUDO": function( match ) {
+			var excess,
+				unquoted = !match[6] && match[2];
+
+			if ( matchExpr["CHILD"].test( match[0] ) ) {
+				return null;
+			}
+
+			// Accept quoted arguments as-is
+			if ( match[3] ) {
+				match[2] = match[4] || match[5] || "";
+
+			// Strip excess characters from unquoted arguments
+			} else if ( unquoted && rpseudo.test( unquoted ) &&
+				// Get excess from tokenize (recursively)
+				(excess = tokenize( unquoted, true )) &&
+				// advance to the next closing parenthesis
+				(excess = unquoted.indexOf( ")", unquoted.length - excess ) - unquoted.length) ) {
+
+				// excess is a negative index
+				match[0] = match[0].slice( 0, excess );
+				match[2] = unquoted.slice( 0, excess );
+			}
+
+			// Return only captures needed by the pseudo filter method (type and argument)
+			return match.slice( 0, 3 );
+		}
+	},
+
+	filter: {
+
+		"TAG": function( nodeNameSelector ) {
+			var nodeName = nodeNameSelector.replace( runescape, funescape ).toLowerCase();
+			return nodeNameSelector === "*" ?
+				function() { return true; } :
+				function( elem ) {
+					return elem.nodeName && elem.nodeName.toLowerCase() === nodeName;
+				};
+		},
+
+		"CLASS": function( className ) {
+			var pattern = classCache[ className + " " ];
+
+			return pattern ||
+				(pattern = new RegExp( "(^|" + whitespace + ")" + className + "(" + whitespace + "|$)" )) &&
+				classCache( className, function( elem ) {
+					return pattern.test( typeof elem.className === "string" && elem.className || typeof elem.getAttribute !== "undefined" && elem.getAttribute("class") || "" );
+				});
+		},
+
+		"ATTR": function( name, operator, check ) {
+			return function( elem ) {
+				var result = Sizzle.attr( elem, name );
+
+				if ( result == null ) {
+					return operator === "!=";
+				}
+				if ( !operator ) {
+					return true;
+				}
+
+				result += "";
+
+				return operator === "=" ? result === check :
+					operator === "!=" ? result !== check :
+					operator === "^=" ? check && result.indexOf( check ) === 0 :
+					operator === "*=" ? check && result.indexOf( check ) > -1 :
+					operator === "$=" ? check && result.slice( -check.length ) === check :
+					operator === "~=" ? ( " " + result.replace( rwhitespace, " " ) + " " ).indexOf( check ) > -1 :
+					operator === "|=" ? result === check || result.slice( 0, check.length + 1 ) === check + "-" :
+					false;
+			};
+		},
+
+		"CHILD": function( type, what, argument, first, last ) {
+			var simple = type.slice( 0, 3 ) !== "nth",
+				forward = type.slice( -4 ) !== "last",
+				ofType = what === "of-type";
+
+			return first === 1 && last === 0 ?
+
+				// Shortcut for :nth-*(n)
+				function( elem ) {
+					return !!elem.parentNode;
+				} :
+
+				function( elem, context, xml ) {
+					var cache, outerCache, node, diff, nodeIndex, start,
+						dir = simple !== forward ? "nextSibling" : "previousSibling",
+						parent = elem.parentNode,
+						name = ofType && elem.nodeName.toLowerCase(),
+						useCache = !xml && !ofType;
+
+					if ( parent ) {
+
+						// :(first|last|only)-(child|of-type)
+						if ( simple ) {
+							while ( dir ) {
+								node = elem;
+								while ( (node = node[ dir ]) ) {
+									if ( ofType ? node.nodeName.toLowerCase() === name : node.nodeType === 1 ) {
+										return false;
+									}
+								}
+								// Reverse direction for :only-* (if we haven't yet done so)
+								start = dir = type === "only" && !start && "nextSibling";
+							}
+							return true;
+						}
+
+						start = [ forward ? parent.firstChild : parent.lastChild ];
+
+						// non-xml :nth-child(...) stores cache data on `parent`
+						if ( forward && useCache ) {
+							// Seek `elem` from a previously-cached index
+							outerCache = parent[ expando ] || (parent[ expando ] = {});
+							cache = outerCache[ type ] || [];
+							nodeIndex = cache[0] === dirruns && cache[1];
+							diff = cache[0] === dirruns && cache[2];
+							node = nodeIndex && parent.childNodes[ nodeIndex ];
+
+							while ( (node = ++nodeIndex && node && node[ dir ] ||
+
+								// Fallback to seeking `elem` from the start
+								(diff = nodeIndex = 0) || start.pop()) ) {
+
+								// When found, cache indexes on `parent` and break
+								if ( node.nodeType === 1 && ++diff && node === elem ) {
+									outerCache[ type ] = [ dirruns, nodeIndex, diff ];
+									break;
+								}
+							}
+
+						// Use previously-cached element index if available
+						} else if ( useCache && (cache = (elem[ expando ] || (elem[ expando ] = {}))[ type ]) && cache[0] === dirruns ) {
+							diff = cache[1];
+
+						// xml :nth-child(...) or :nth-last-child(...) or :nth(-last)?-of-type(...)
+						} else {
+							// Use the same loop as above to seek `elem` from the start
+							while ( (node = ++nodeIndex && node && node[ dir ] ||
+								(diff = nodeIndex = 0) || start.pop()) ) {
+
+								if ( ( ofType ? node.nodeName.toLowerCase() === name : node.nodeType === 1 ) && ++diff ) {
+									// Cache the index of each encountered element
+									if ( useCache ) {
+										(node[ expando ] || (node[ expando ] = {}))[ type ] = [ dirruns, diff ];
+									}
+
+									if ( node === elem ) {
+										break;
+									}
+								}
+							}
+						}
+
+						// Incorporate the offset, then check against cycle size
+						diff -= last;
+						return diff === first || ( diff % first === 0 && diff / first >= 0 );
+					}
+				};
+		},
+
+		"PSEUDO": function( pseudo, argument ) {
+			// pseudo-class names are case-insensitive
+			// http://www.w3.org/TR/selectors/#pseudo-classes
+			// Prioritize by case sensitivity in case custom pseudos are added with uppercase letters
+			// Remember that setFilters inherits from pseudos
+			var args,
+				fn = Expr.pseudos[ pseudo ] || Expr.setFilters[ pseudo.toLowerCase() ] ||
+					Sizzle.error( "unsupported pseudo: " + pseudo );
+
+			// The user may use createPseudo to indicate that
+			// arguments are needed to create the filter function
+			// just as Sizzle does
+			if ( fn[ expando ] ) {
+				return fn( argument );
+			}
+
+			// But maintain support for old signatures
+			if ( fn.length > 1 ) {
+				args = [ pseudo, pseudo, "", argument ];
+				return Expr.setFilters.hasOwnProperty( pseudo.toLowerCase() ) ?
+					markFunction(function( seed, matches ) {
+						var idx,
+							matched = fn( seed, argument ),
+							i = matched.length;
+						while ( i-- ) {
+							idx = indexOf( seed, matched[i] );
+							seed[ idx ] = !( matches[ idx ] = matched[i] );
+						}
+					}) :
+					function( elem ) {
+						return fn( elem, 0, args );
+					};
+			}
+
+			return fn;
+		}
+	},
+
+	pseudos: {
+		// Potentially complex pseudos
+		"not": markFunction(function( selector ) {
+			// Trim the selector passed to compile
+			// to avoid treating leading and trailing
+			// spaces as combinators
+			var input = [],
+				results = [],
+				matcher = compile( selector.replace( rtrim, "$1" ) );
+
+			return matcher[ expando ] ?
+				markFunction(function( seed, matches, context, xml ) {
+					var elem,
+						unmatched = matcher( seed, null, xml, [] ),
+						i = seed.length;
+
+					// Match elements unmatched by `matcher`
+					while ( i-- ) {
+						if ( (elem = unmatched[i]) ) {
+							seed[i] = !(matches[i] = elem);
+						}
+					}
+				}) :
+				function( elem, context, xml ) {
+					input[0] = elem;
+					matcher( input, null, xml, results );
+					// Don't keep the element (issue #299)
+					input[0] = null;
+					return !results.pop();
+				};
+		}),
+
+		"has": markFunction(function( selector ) {
+			return function( elem ) {
+				return Sizzle( selector, elem ).length > 0;
+			};
+		}),
+
+		"contains": markFunction(function( text ) {
+			text = text.replace( runescape, funescape );
+			return function( elem ) {
+				return ( elem.textContent || elem.innerText || getText( elem ) ).indexOf( text ) > -1;
+			};
+		}),
+
+		// "Whether an element is represented by a :lang() selector
+		// is based solely on the element's language value
+		// being equal to the identifier C,
+		// or beginning with the identifier C immediately followed by "-".
+		// The matching of C against the element's language value is performed case-insensitively.
+		// The identifier C does not have to be a valid language name."
+		// http://www.w3.org/TR/selectors/#lang-pseudo
+		"lang": markFunction( function( lang ) {
+			// lang value must be a valid identifier
+			if ( !ridentifier.test(lang || "") ) {
+				Sizzle.error( "unsupported lang: " + lang );
+			}
+			lang = lang.replace( runescape, funescape ).toLowerCase();
+			return function( elem ) {
+				var elemLang;
+				do {
+					if ( (elemLang = documentIsHTML ?
+						elem.lang :
+						elem.getAttribute("xml:lang") || elem.getAttribute("lang")) ) {
+
+						elemLang = elemLang.toLowerCase();
+						return elemLang === lang || elemLang.indexOf( lang + "-" ) === 0;
+					}
+				} while ( (elem = elem.parentNode) && elem.nodeType === 1 );
+				return false;
+			};
+		}),
+
+		// Miscellaneous
+		"target": function( elem ) {
+			var hash = window.location && window.location.hash;
+			return hash && hash.slice( 1 ) === elem.id;
+		},
+
+		"root": function( elem ) {
+			return elem === docElem;
+		},
+
+		"focus": function( elem ) {
+			return elem === document.activeElement && (!document.hasFocus || document.hasFocus()) && !!(elem.type || elem.href || ~elem.tabIndex);
+		},
+
+		// Boolean properties
+		"enabled": function( elem ) {
+			return elem.disabled === false;
+		},
+
+		"disabled": function( elem ) {
+			return elem.disabled === true;
+		},
+
+		"checked": function( elem ) {
+			// In CSS3, :checked should return both checked and selected elements
+			// http://www.w3.org/TR/2011/REC-css3-selectors-20110929/#checked
+			var nodeName = elem.nodeName.toLowerCase();
+			return (nodeName === "input" && !!elem.checked) || (nodeName === "option" && !!elem.selected);
+		},
+
+		"selected": function( elem ) {
+			// Accessing this property makes selected-by-default
+			// options in Safari work properly
+			if ( elem.parentNode ) {
+				elem.parentNode.selectedIndex;
+			}
+
+			return elem.selected === true;
+		},
+
+		// Contents
+		"empty": function( elem ) {
+			// http://www.w3.org/TR/selectors/#empty-pseudo
+			// :empty is negated by element (1) or content nodes (text: 3; cdata: 4; entity ref: 5),
+			//   but not by others (comment: 8; processing instruction: 7; etc.)
+			// nodeType < 6 works because attributes (2) do not appear as children
+			for ( elem = elem.firstChild; elem; elem = elem.nextSibling ) {
+				if ( elem.nodeType < 6 ) {
+					return false;
+				}
+			}
+			return true;
+		},
+
+		"parent": function( elem ) {
+			return !Expr.pseudos["empty"]( elem );
+		},
+
+		// Element/input types
+		"header": function( elem ) {
+			return rheader.test( elem.nodeName );
+		},
+
+		"input": function( elem ) {
+			return rinputs.test( elem.nodeName );
+		},
+
+		"button": function( elem ) {
+			var name = elem.nodeName.toLowerCase();
+			return name === "input" && elem.type === "button" || name === "button";
+		},
+
+		"text": function( elem ) {
+			var attr;
+			return elem.nodeName.toLowerCase() === "input" &&
+				elem.type === "text" &&
+
+				// Support: IE<8
+				// New HTML5 attribute values (e.g., "search") appear with elem.type === "text"
+				( (attr = elem.getAttribute("type")) == null || attr.toLowerCase() === "text" );
+		},
+
+		// Position-in-collection
+		"first": createPositionalPseudo(function() {
+			return [ 0 ];
+		}),
+
+		"last": createPositionalPseudo(function( matchIndexes, length ) {
+			return [ length - 1 ];
+		}),
+
+		"eq": createPositionalPseudo(function( matchIndexes, length, argument ) {
+			return [ argument < 0 ? argument + length : argument ];
+		}),
+
+		"even": createPositionalPseudo(function( matchIndexes, length ) {
+			var i = 0;
+			for ( ; i < length; i += 2 ) {
+				matchIndexes.push( i );
+			}
+			return matchIndexes;
+		}),
+
+		"odd": createPositionalPseudo(function( matchIndexes, length ) {
+			var i = 1;
+			for ( ; i < length; i += 2 ) {
+				matchIndexes.push( i );
+			}
+			return matchIndexes;
+		}),
+
+		"lt": createPositionalPseudo(function( matchIndexes, length, argument ) {
+			var i = argument < 0 ? argument + length : argument;
+			for ( ; --i >= 0; ) {
+				matchIndexes.push( i );
+			}
+			return matchIndexes;
+		}),
+
+		"gt": createPositionalPseudo(function( matchIndexes, length, argument ) {
+			var i = argument < 0 ? argument + length : argument;
+			for ( ; ++i < length; ) {
+				matchIndexes.push( i );
+			}
+			return matchIndexes;
+		})
+	}
+};
+
+Expr.pseudos["nth"] = Expr.pseudos["eq"];
+
+// Add button/input type pseudos
+for ( i in { radio: true, checkbox: true, file: true, password: true, image: true } ) {
+	Expr.pseudos[ i ] = createInputPseudo( i );
+}
+for ( i in { submit: true, reset: true } ) {
+	Expr.pseudos[ i ] = createButtonPseudo( i );
+}
+
+// Easy API for creating new setFilters
+function setFilters() {}
+setFilters.prototype = Expr.filters = Expr.pseudos;
+Expr.setFilters = new setFilters();
+
+tokenize = Sizzle.tokenize = function( selector, parseOnly ) {
+	var matched, match, tokens, type,
+		soFar, groups, preFilters,
+		cached = tokenCache[ selector + " " ];
+
+	if ( cached ) {
+		return parseOnly ? 0 : cached.slice( 0 );
+	}
+
+	soFar = selector;
+	groups = [];
+	preFilters = Expr.preFilter;
+
+	while ( soFar ) {
+
+		// Comma and first run
+		if ( !matched || (match = rcomma.exec( soFar )) ) {
+			if ( match ) {
+				// Don't consume trailing commas as valid
+				soFar = soFar.slice( match[0].length ) || soFar;
+			}
+			groups.push( (tokens = []) );
+		}
+
+		matched = false;
+
+		// Combinators
+		if ( (match = rcombinators.exec( soFar )) ) {
+			matched = match.shift();
+			tokens.push({
+				value: matched,
+				// Cast descendant combinators to space
+				type: match[0].replace( rtrim, " " )
+			});
+			soFar = soFar.slice( matched.length );
+		}
+
+		// Filters
+		for ( type in Expr.filter ) {
+			if ( (match = matchExpr[ type ].exec( soFar )) && (!preFilters[ type ] ||
+				(match = preFilters[ type ]( match ))) ) {
+				matched = match.shift();
+				tokens.push({
+					value: matched,
+					type: type,
+					matches: match
+				});
+				soFar = soFar.slice( matched.length );
+			}
+		}
+
+		if ( !matched ) {
+			break;
+		}
+	}
+
+	// Return the length of the invalid excess
+	// if we're just parsing
+	// Otherwise, throw an error or return tokens
+	return parseOnly ?
+		soFar.length :
+		soFar ?
+			Sizzle.error( selector ) :
+			// Cache the tokens
+			tokenCache( selector, groups ).slice( 0 );
+};
+
+function toSelector( tokens ) {
+	var i = 0,
+		len = tokens.length,
+		selector = "";
+	for ( ; i < len; i++ ) {
+		selector += tokens[i].value;
+	}
+	return selector;
+}
+
+function addCombinator( matcher, combinator, base ) {
+	var dir = combinator.dir,
+		checkNonElements = base && dir === "parentNode",
+		doneName = done++;
+
+	return combinator.first ?
+		// Check against closest ancestor/preceding element
+		function( elem, context, xml ) {
+			while ( (elem = elem[ dir ]) ) {
+				if ( elem.nodeType === 1 || checkNonElements ) {
+					return matcher( elem, context, xml );
+				}
+			}
+		} :
+
+		// Check against all ancestor/preceding elements
+		function( elem, context, xml ) {
+			var oldCache, outerCache,
+				newCache = [ dirruns, doneName ];
+
+			// We can't set arbitrary data on XML nodes, so they don't benefit from dir caching
+			if ( xml ) {
+				while ( (elem = elem[ dir ]) ) {
+					if ( elem.nodeType === 1 || checkNonElements ) {
+						if ( matcher( elem, context, xml ) ) {
+							return true;
+						}
+					}
+				}
+			} else {
+				while ( (elem = elem[ dir ]) ) {
+					if ( elem.nodeType === 1 || checkNonElements ) {
+						outerCache = elem[ expando ] || (elem[ expando ] = {});
+						if ( (oldCache = outerCache[ dir ]) &&
+							oldCache[ 0 ] === dirruns && oldCache[ 1 ] === doneName ) {
+
+							// Assign to newCache so results back-propagate to previous elements
+							return (newCache[ 2 ] = oldCache[ 2 ]);
+						} else {
+							// Reuse newcache so results back-propagate to previous elements
+							outerCache[ dir ] = newCache;
+
+							// A match means we're done; a fail means we have to keep checking
+							if ( (newCache[ 2 ] = matcher( elem, context, xml )) ) {
+								return true;
+							}
+						}
+					}
+				}
+			}
+		};
+}
+
+function elementMatcher( matchers ) {
+	return matchers.length > 1 ?
+		function( elem, context, xml ) {
+			var i = matchers.length;
+			while ( i-- ) {
+				if ( !matchers[i]( elem, context, xml ) ) {
+					return false;
+				}
+			}
+			return true;
+		} :
+		matchers[0];
+}
+
+function multipleContexts( selector, contexts, results ) {
+	var i = 0,
+		len = contexts.length;
+	for ( ; i < len; i++ ) {
+		Sizzle( selector, contexts[i], results );
+	}
+	return results;
+}
+
+function condense( unmatched, map, filter, context, xml ) {
+	var elem,
+		newUnmatched = [],
+		i = 0,
+		len = unmatched.length,
+		mapped = map != null;
+
+	for ( ; i < len; i++ ) {
+		if ( (elem = unmatched[i]) ) {
+			if ( !filter || filter( elem, context, xml ) ) {
+				newUnmatched.push( elem );
+				if ( mapped ) {
+					map.push( i );
+				}
+			}
+		}
+	}
+
+	return newUnmatched;
+}
+
+function setMatcher( preFilter, selector, matcher, postFilter, postFinder, postSelector ) {
+	if ( postFilter && !postFilter[ expando ] ) {
+		postFilter = setMatcher( postFilter );
+	}
+	if ( postFinder && !postFinder[ expando ] ) {
+		postFinder = setMatcher( postFinder, postSelector );
+	}
+	return markFunction(function( seed, results, context, xml ) {
+		var temp, i, elem,
+			preMap = [],
+			postMap = [],
+			preexisting = results.length,
+
+			// Get initial elements from seed or context
+			elems = seed || multipleContexts( selector || "*", context.nodeType ? [ context ] : context, [] ),
+
+			// Prefilter to get matcher input, preserving a map for seed-results synchronization
+			matcherIn = preFilter && ( seed || !selector ) ?
+				condense( elems, preMap, preFilter, context, xml ) :
+				elems,
+
+			matcherOut = matcher ?
+				// If we have a postFinder, or filtered seed, or non-seed postFilter or preexisting results,
+				postFinder || ( seed ? preFilter : preexisting || postFilter ) ?
+
+					// ...intermediate processing is necessary
+					[] :
+
+					// ...otherwise use results directly
+					results :
+				matcherIn;
+
+		// Find primary matches
+		if ( matcher ) {
+			matcher( matcherIn, matcherOut, context, xml );
+		}
+
+		// Apply postFilter
+		if ( postFilter ) {
+			temp = condense( matcherOut, postMap );
+			postFilter( temp, [], context, xml );
+
+			// Un-match failing elements by moving them back to matcherIn
+			i = temp.length;
+			while ( i-- ) {
+				if ( (elem = temp[i]) ) {
+					matcherOut[ postMap[i] ] = !(matcherIn[ postMap[i] ] = elem);
+				}
+			}
+		}
+
+		if ( seed ) {
+			if ( postFinder || preFilter ) {
+				if ( postFinder ) {
+					// Get the final matcherOut by condensing this intermediate into postFinder contexts
+					temp = [];
+					i = matcherOut.length;
+					while ( i-- ) {
+						if ( (elem = matcherOut[i]) ) {
+							// Restore matcherIn since elem is not yet a final match
+							temp.push( (matcherIn[i] = elem) );
+						}
+					}
+					postFinder( null, (matcherOut = []), temp, xml );
+				}
+
+				// Move matched elements from seed to results to keep them synchronized
+				i = matcherOut.length;
+				while ( i-- ) {
+					if ( (elem = matcherOut[i]) &&
+						(temp = postFinder ? indexOf( seed, elem ) : preMap[i]) > -1 ) {
+
+						seed[temp] = !(results[temp] = elem);
+					}
+				}
+			}
+
+		// Add elements to results, through postFinder if defined
+		} else {
+			matcherOut = condense(
+				matcherOut === results ?
+					matcherOut.splice( preexisting, matcherOut.length ) :
+					matcherOut
+			);
+			if ( postFinder ) {
+				postFinder( null, results, matcherOut, xml );
+			} else {
+				push.apply( results, matcherOut );
+			}
+		}
+	});
+}
+
+function matcherFromTokens( tokens ) {
+	var checkContext, matcher, j,
+		len = tokens.length,
+		leadingRelative = Expr.relative[ tokens[0].type ],
+		implicitRelative = leadingRelative || Expr.relative[" "],
+		i = leadingRelative ? 1 : 0,
+
+		// The foundational matcher ensures that elements are reachable from top-level context(s)
+		matchContext = addCombinator( function( elem ) {
+			return elem === checkContext;
+		}, implicitRelative, true ),
+		matchAnyContext = addCombinator( function( elem ) {
+			return indexOf( checkContext, elem ) > -1;
+		}, implicitRelative, true ),
+		matchers = [ function( elem, context, xml ) {
+			var ret = ( !leadingRelative && ( xml || context !== outermostContext ) ) || (
+				(checkContext = context).nodeType ?
+					matchContext( elem, context, xml ) :
+					matchAnyContext( elem, context, xml ) );
+			// Avoid hanging onto element (issue #299)
+			checkContext = null;
+			return ret;
+		} ];
+
+	for ( ; i < len; i++ ) {
+		if ( (matcher = Expr.relative[ tokens[i].type ]) ) {
+			matchers = [ addCombinator(elementMatcher( matchers ), matcher) ];
+		} else {
+			matcher = Expr.filter[ tokens[i].type ].apply( null, tokens[i].matches );
+
+			// Return special upon seeing a positional matcher
+			if ( matcher[ expando ] ) {
+				// Find the next relative operator (if any) for proper handling
+				j = ++i;
+				for ( ; j < len; j++ ) {
+					if ( Expr.relative[ tokens[j].type ] ) {
+						break;
+					}
+				}
+				return setMatcher(
+					i > 1 && elementMatcher( matchers ),
+					i > 1 && toSelector(
+						// If the preceding token was a descendant combinator, insert an implicit any-element `*`
+						tokens.slice( 0, i - 1 ).concat({ value: tokens[ i - 2 ].type === " " ? "*" : "" })
+					).replace( rtrim, "$1" ),
+					matcher,
+					i < j && matcherFromTokens( tokens.slice( i, j ) ),
+					j < len && matcherFromTokens( (tokens = tokens.slice( j )) ),
+					j < len && toSelector( tokens )
+				);
+			}
+			matchers.push( matcher );
+		}
+	}
+
+	return elementMatcher( matchers );
+}
+
+function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
+	var bySet = setMatchers.length > 0,
+		byElement = elementMatchers.length > 0,
+		superMatcher = function( seed, context, xml, results, outermost ) {
+			var elem, j, matcher,
+				matchedCount = 0,
+				i = "0",
+				unmatched = seed && [],
+				setMatched = [],
+				contextBackup = outermostContext,
+				// We must always have either seed elements or outermost context
+				elems = seed || byElement && Expr.find["TAG"]( "*", outermost ),
+				// Use integer dirruns iff this is the outermost matcher
+				dirrunsUnique = (dirruns += contextBackup == null ? 1 : Math.random() || 0.1),
+				len = elems.length;
+
+			if ( outermost ) {
+				outermostContext = context !== document && context;
+			}
+
+			// Add elements passing elementMatchers directly to results
+			// Keep `i` a string if there are no elements so `matchedCount` will be "00" below
+			// Support: IE<9, Safari
+			// Tolerate NodeList properties (IE: "length"; Safari: <number>) matching elements by id
+			for ( ; i !== len && (elem = elems[i]) != null; i++ ) {
+				if ( byElement && elem ) {
+					j = 0;
+					while ( (matcher = elementMatchers[j++]) ) {
+						if ( matcher( elem, context, xml ) ) {
+							results.push( elem );
+							break;
+						}
+					}
+					if ( outermost ) {
+						dirruns = dirrunsUnique;
+					}
+				}
+
+				// Track unmatched elements for set filters
+				if ( bySet ) {
+					// They will have gone through all possible matchers
+					if ( (elem = !matcher && elem) ) {
+						matchedCount--;
+					}
+
+					// Lengthen the array for every element, matched or not
+					if ( seed ) {
+						unmatched.push( elem );
+					}
+				}
+			}
+
+			// Apply set filters to unmatched elements
+			matchedCount += i;
+			if ( bySet && i !== matchedCount ) {
+				j = 0;
+				while ( (matcher = setMatchers[j++]) ) {
+					matcher( unmatched, setMatched, context, xml );
+				}
+
+				if ( seed ) {
+					// Reintegrate element matches to eliminate the need for sorting
+					if ( matchedCount > 0 ) {
+						while ( i-- ) {
+							if ( !(unmatched[i] || setMatched[i]) ) {
+								setMatched[i] = pop.call( results );
+							}
+						}
+					}
+
+					// Discard index placeholder values to get only actual matches
+					setMatched = condense( setMatched );
+				}
+
+				// Add matches to results
+				push.apply( results, setMatched );
+
+				// Seedless set matches succeeding multiple successful matchers stipulate sorting
+				if ( outermost && !seed && setMatched.length > 0 &&
+					( matchedCount + setMatchers.length ) > 1 ) {
+
+					Sizzle.uniqueSort( results );
+				}
+			}
+
+			// Override manipulation of globals by nested matchers
+			if ( outermost ) {
+				dirruns = dirrunsUnique;
+				outermostContext = contextBackup;
+			}
+
+			return unmatched;
+		};
+
+	return bySet ?
+		markFunction( superMatcher ) :
+		superMatcher;
+}
+
+compile = Sizzle.compile = function( selector, match /* Internal Use Only */ ) {
+	var i,
+		setMatchers = [],
+		elementMatchers = [],
+		cached = compilerCache[ selector + " " ];
+
+	if ( !cached ) {
+		// Generate a function of recursive functions that can be used to check each element
+		if ( !match ) {
+			match = tokenize( selector );
+		}
+		i = match.length;
+		while ( i-- ) {
+			cached = matcherFromTokens( match[i] );
+			if ( cached[ expando ] ) {
+				setMatchers.push( cached );
+			} else {
+				elementMatchers.push( cached );
+			}
+		}
+
+		// Cache the compiled function
+		cached = compilerCache( selector, matcherFromGroupMatchers( elementMatchers, setMatchers ) );
+
+		// Save selector and tokenization
+		cached.selector = selector;
+	}
+	return cached;
+};
+
+/**
+ * A low-level selection function that works with Sizzle's compiled
+ *  selector functions
+ * @param {String|Function} selector A selector or a pre-compiled
+ *  selector function built with Sizzle.compile
+ * @param {Element} context
+ * @param {Array} [results]
+ * @param {Array} [seed] A set of elements to match against
+ */
+select = Sizzle.select = function( selector, context, results, seed ) {
+	var i, tokens, token, type, find,
+		compiled = typeof selector === "function" && selector,
+		match = !seed && tokenize( (selector = compiled.selector || selector) );
+
+	results = results || [];
+
+	// Try to minimize operations if there is no seed and only one group
+	if ( match.length === 1 ) {
+
+		// Take a shortcut and set the context if the root selector is an ID
+		tokens = match[0] = match[0].slice( 0 );
+		if ( tokens.length > 2 && (token = tokens[0]).type === "ID" &&
+				support.getById && context.nodeType === 9 && documentIsHTML &&
+				Expr.relative[ tokens[1].type ] ) {
+
+			context = ( Expr.find["ID"]( token.matches[0].replace(runescape, funescape), context ) || [] )[0];
+			if ( !context ) {
+				return results;
+
+			// Precompiled matchers will still verify ancestry, so step up a level
+			} else if ( compiled ) {
+				context = context.parentNode;
+			}
+
+			selector = selector.slice( tokens.shift().value.length );
+		}
+
+		// Fetch a seed set for right-to-left matching
+		i = matchExpr["needsContext"].test( selector ) ? 0 : tokens.length;
+		while ( i-- ) {
+			token = tokens[i];
+
+			// Abort if we hit a combinator
+			if ( Expr.relative[ (type = token.type) ] ) {
+				break;
+			}
+			if ( (find = Expr.find[ type ]) ) {
+				// Search, expanding context for leading sibling combinators
+				if ( (seed = find(
+					token.matches[0].replace( runescape, funescape ),
+					rsibling.test( tokens[0].type ) && testContext( context.parentNode ) || context
+				)) ) {
+
+					// If seed is empty or no tokens remain, we can return early
+					tokens.splice( i, 1 );
+					selector = seed.length && toSelector( tokens );
+					if ( !selector ) {
+						push.apply( results, seed );
+						return results;
+					}
+
+					break;
+				}
+			}
+		}
+	}
+
+	// Compile and execute a filtering function if one is not provided
+	// Provide `match` to avoid retokenization if we modified the selector above
+	( compiled || compile( selector, match ) )(
+		seed,
+		context,
+		!documentIsHTML,
+		results,
+		rsibling.test( selector ) && testContext( context.parentNode ) || context
+	);
+	return results;
+};
+
+// One-time assignments
+
+// Sort stability
+support.sortStable = expando.split("").sort( sortOrder ).join("") === expando;
+
+// Support: Chrome 14-35+
+// Always assume duplicates if they aren't passed to the comparison function
+support.detectDuplicates = !!hasDuplicate;
+
+// Initialize against the default document
+setDocument();
+
+// Support: Webkit<537.32 - Safari 6.0.3/Chrome 25 (fixed in Chrome 27)
+// Detached nodes confoundingly follow *each other*
+support.sortDetached = assert(function( div1 ) {
+	// Should return 1, but returns 4 (following)
+	return div1.compareDocumentPosition( document.createElement("div") ) & 1;
+});
+
+// Support: IE<8
+// Prevent attribute/property "interpolation"
+// http://msdn.microsoft.com/en-us/library/ms536429%28VS.85%29.aspx
+if ( !assert(function( div ) {
+	div.innerHTML = "<a href='#'></a>";
+	return div.firstChild.getAttribute("href") === "#" ;
+}) ) {
+	addHandle( "type|href|height|width", function( elem, name, isXML ) {
+		if ( !isXML ) {
+			return elem.getAttribute( name, name.toLowerCase() === "type" ? 1 : 2 );
+		}
+	});
+}
+
+// Support: IE<9
+// Use defaultValue in place of getAttribute("value")
+if ( !support.attributes || !assert(function( div ) {
+	div.innerHTML = "<input/>";
+	div.firstChild.setAttribute( "value", "" );
+	return div.firstChild.getAttribute( "value" ) === "";
+}) ) {
+	addHandle( "value", function( elem, name, isXML ) {
+		if ( !isXML && elem.nodeName.toLowerCase() === "input" ) {
+			return elem.defaultValue;
+		}
+	});
+}
+
+// Support: IE<9
+// Use getAttributeNode to fetch booleans when getAttribute lies
+if ( !assert(function( div ) {
+	return div.getAttribute("disabled") == null;
+}) ) {
+	addHandle( booleans, function( elem, name, isXML ) {
+		var val;
+		if ( !isXML ) {
+			return elem[ name ] === true ? name.toLowerCase() :
+					(val = elem.getAttributeNode( name )) && val.specified ?
+					val.value :
+				null;
+		}
+	});
+}
+
+return Sizzle;
+
+})( window );
+
+
+
+jQuery.find = Sizzle;
+jQuery.expr = Sizzle.selectors;
+jQuery.expr[":"] = jQuery.expr.pseudos;
+jQuery.unique = Sizzle.uniqueSort;
+jQuery.text = Sizzle.getText;
+jQuery.isXMLDoc = Sizzle.isXML;
+jQuery.contains = Sizzle.contains;
+
+
+
+var rneedsContext = jQuery.expr.match.needsContext;
+
+var rsingleTag = (/^<(\w+)\s*\/?>(?:<\/\1>|)$/);
+
+
+
+var risSimple = /^.[^:#\[\.,]*$/;
+
+// Implement the identical functionality for filter and not
+function winnow( elements, qualifier, not ) {
+	if ( jQuery.isFunction( qualifier ) ) {
+		return jQuery.grep( elements, function( elem, i ) {
+			/* jshint -W018 */
+			return !!qualifier.call( elem, i, elem ) !== not;
+		});
+
+	}
+
+	if ( qualifier.nodeType ) {
+		return jQuery.grep( elements, function( elem ) {
+			return ( elem === qualifier ) !== not;
+		});
+
+	}
+
+	if ( typeof qualifier === "string" ) {
+		if ( risSimple.test( qualifier ) ) {
+			return jQuery.filter( qualifier, elements, not );
+		}
+
+		qualifier = jQuery.filter( qualifier, elements );
+	}
+
+	return jQuery.grep( elements, function( elem ) {
+		return ( indexOf.call( qualifier, elem ) >= 0 ) !== not;
+	});
+}
+
+jQuery.filter = function( expr, elems, not ) {
+	var elem = elems[ 0 ];
+
+	if ( not ) {
+		expr = ":not(" + expr + ")";
+	}
+
+	return elems.length === 1 && elem.nodeType === 1 ?
+		jQuery.find.matchesSelector( elem, expr ) ? [ elem ] : [] :
+		jQuery.find.matches( expr, jQuery.grep( elems, function( elem ) {
+			return elem.nodeType === 1;
+		}));
+};
+
+jQuery.fn.extend({
+	find: function( selector ) {
+		var i,
+			len = this.length,
+			ret = [],
+			self = this;
+
+		if ( typeof selector !== "string" ) {
+			return this.pushStack( jQuery( selector ).filter(function() {
+				for ( i = 0; i < len; i++ ) {
+					if ( jQuery.contains( self[ i ], this ) ) {
+						return true;
+					}
+				}
+			}) );
+		}
+
+		for ( i = 0; i < len; i++ ) {
+			jQuery.find( selector, self[ i ], ret );
+		}
+
+		// Needed because $( selector, context ) becomes $( context ).find( selector )
+		ret = this.pushStack( len > 1 ? jQuery.unique( ret ) : ret );
+		ret.selector = this.selector ? this.selector + " " + selector : selector;
+		return ret;
+	},
+	filter: function( selector ) {
+		return this.pushStack( winnow(this, selector || [], false) );
+	},
+	not: function( selector ) {
+		return this.pushStack( winnow(this, selector || [], true) );
+	},
+	is: function( selector ) {
+		return !!winnow(
+			this,
+
+			// If this is a positional/relative selector, check membership in the returned set
+			// so $("p:first").is("p:last") won't return true for a doc with two "p".
+			typeof selector === "string" && rneedsContext.test( selector ) ?
+				jQuery( selector ) :
+				selector || [],
+			false
+		).length;
+	}
+});
+
+
+// Initialize a jQuery object
+
+
+// A central reference to the root jQuery(document)
+var rootjQuery,
+
+	// A simple way to check for HTML strings
+	// Prioritize #id over <tag> to avoid XSS via location.hash (#9521)
+	// Strict HTML recognition (#11290: must start with <)
+	rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]*))$/,
+
+	init = jQuery.fn.init = function( selector, context ) {
+		var match, elem;
+
+		// HANDLE: $(""), $(null), $(undefined), $(false)
+		if ( !selector ) {
+			return this;
+		}
+
+		// Handle HTML strings
+		if ( typeof selector === "string" ) {
+			if ( selector[0] === "<" && selector[ selector.length - 1 ] === ">" && selector.length >= 3 ) {
+				// Assume that strings that start and end with <> are HTML and skip the regex check
+				match = [ null, selector, null ];
+
+			} else {
+				match = rquickExpr.exec( selector );
+			}
+
+			// Match html or make sure no context is specified for #id
+			if ( match && (match[1] || !context) ) {
+
+				// HANDLE: $(html) -> $(array)
+				if ( match[1] ) {
+					context = context instanceof jQuery ? context[0] : context;
+
+					// Option to run scripts is true for back-compat
+					// Intentionally let the error be thrown if parseHTML is not present
+					jQuery.merge( this, jQuery.parseHTML(
+						match[1],
+						context && context.nodeType ? context.ownerDocument || context : document,
+						true
+					) );
+
+					// HANDLE: $(html, props)
+					if ( rsingleTag.test( match[1] ) && jQuery.isPlainObject( context ) ) {
+						for ( match in context ) {
+							// Properties of context are called as methods if possible
+							if ( jQuery.isFunction( this[ match ] ) ) {
+								this[ match ]( context[ match ] );
+
+							// ...and otherwise set as attributes
+							} else {
+								this.attr( match, context[ match ] );
+							}
+						}
+					}
+
+					return this;
+
+				// HANDLE: $(#id)
+				} else {
+					elem = document.getElementById( match[2] );
+
+					// Support: Blackberry 4.6
+					// gEBID returns nodes no longer in the document (#6963)
+					if ( elem && elem.parentNode ) {
+						// Inject the element directly into the jQuery object
+						this.length = 1;
+						this[0] = elem;
+					}
+
+					this.context = document;
+					this.selector = selector;
+					return this;
+				}
+
+			// HANDLE: $(expr, $(...))
+			} else if ( !context || context.jquery ) {
+				return ( context || rootjQuery ).find( selector );
+
+			// HANDLE: $(expr, context)
+			// (which is just equivalent to: $(context).find(expr)
+			} else {
+				return this.constructor( context ).find( selector );
+			}
+
+		// HANDLE: $(DOMElement)
+		} else if ( selector.nodeType ) {
+			this.context = this[0] = selector;
+			this.length = 1;
+			return this;
+
+		// HANDLE: $(function)
+		// Shortcut for document ready
+		} else if ( jQuery.isFunction( selector ) ) {
+			return typeof rootjQuery.ready !== "undefined" ?
+				rootjQuery.ready( selector ) :
+				// Execute immediately if ready is not present
+				selector( jQuery );
+		}
+
+		if ( selector.selector !== undefined ) {
+			this.selector = selector.selector;
+			this.context = selector.context;
+		}
+
+		return jQuery.makeArray( selector, this );
+	};
+
+// Give the init function the jQuery prototype for later instantiation
+init.prototype = jQuery.fn;
+
+// Initialize central reference
+rootjQuery = jQuery( document );
+
+
+var rparentsprev = /^(?:parents|prev(?:Until|All))/,
+	// Methods guaranteed to produce a unique set when starting from a unique set
+	guaranteedUnique = {
+		children: true,
+		contents: true,
+		next: true,
+		prev: true
+	};
+
+jQuery.extend({
+	dir: function( elem, dir, until ) {
+		var matched = [],
+			truncate = until !== undefined;
+
+		while ( (elem = elem[ dir ]) && elem.nodeType !== 9 ) {
+			if ( elem.nodeType === 1 ) {
+				if ( truncate && jQuery( elem ).is( until ) ) {
+					break;
+				}
+				matched.push( elem );
+			}
+		}
+		return matched;
+	},
+
+	sibling: function( n, elem ) {
+		var matched = [];
+
+		for ( ; n; n = n.nextSibling ) {
+			if ( n.nodeType === 1 && n !== elem ) {
+				matched.push( n );
+			}
+		}
+
+		return matched;
+	}
+});
+
+jQuery.fn.extend({
+	has: function( target ) {
+		var targets = jQuery( target, this ),
+			l = targets.length;
+
+		return this.filter(function() {
+			var i = 0;
+			for ( ; i < l; i++ ) {
+				if ( jQuery.contains( this, targets[i] ) ) {
+					return true;
+				}
+			}
+		});
+	},
+
+	closest: function( selectors, context ) {
+		var cur,
+			i = 0,
+			l = this.length,
+			matched = [],
+			pos = rneedsContext.test( selectors ) || typeof selectors !== "string" ?
+				jQuery( selectors, context || this.context ) :
+				0;
+
+		for ( ; i < l; i++ ) {
+			for ( cur = this[i]; cur && cur !== context; cur = cur.parentNode ) {
+				// Always skip document fragments
+				if ( cur.nodeType < 11 && (pos ?
+					pos.index(cur) > -1 :
+
+					// Don't pass non-elements to Sizzle
+					cur.nodeType === 1 &&
+						jQuery.find.matchesSelector(cur, selectors)) ) {
+
+					matched.push( cur );
+					break;
+				}
+			}
+		}
+
+		return this.pushStack( matched.length > 1 ? jQuery.unique( matched ) : matched );
+	},
+
+	// Determine the position of an element within the set
+	index: function( elem ) {
+
+		// No argument, return index in parent
+		if ( !elem ) {
+			return ( this[ 0 ] && this[ 0 ].parentNode ) ? this.first().prevAll().length : -1;
+		}
+
+		// Index in selector
+		if ( typeof elem === "string" ) {
+			return indexOf.call( jQuery( elem ), this[ 0 ] );
+		}
+
+		// Locate the position of the desired element
+		return indexOf.call( this,
+
+			// If it receives a jQuery object, the first element is used
+			elem.jquery ? elem[ 0 ] : elem
+		);
+	},
+
+	add: function( selector, context ) {
+		return this.pushStack(
+			jQuery.unique(
+				jQuery.merge( this.get(), jQuery( selector, context ) )
+			)
+		);
+	},
+
+	addBack: function( selector ) {
+		return this.add( selector == null ?
+			this.prevObject : this.prevObject.filter(selector)
+		);
+	}
+});
+
+function sibling( cur, dir ) {
+	while ( (cur = cur[dir]) && cur.nodeType !== 1 ) {}
+	return cur;
+}
+
+jQuery.each({
+	parent: function( elem ) {
+		var parent = elem.parentNode;
+		return parent && parent.nodeType !== 11 ? parent : null;
+	},
+	parents: function( elem ) {
+		return jQuery.dir( elem, "parentNode" );
+	},
+	parentsUntil: function( elem, i, until ) {
+		return jQuery.dir( elem, "parentNode", until );
+	},
+	next: function( elem ) {
+		return sibling( elem, "nextSibling" );
+	},
+	prev: function( elem ) {
+		return sibling( elem, "previousSibling" );
+	},
+	nextAll: function( elem ) {
+		return jQuery.dir( elem, "nextSibling" );
+	},
+	prevAll: function( elem ) {
+		return jQuery.dir( elem, "previousSibling" );
+	},
+	nextUntil: function( elem, i, until ) {
+		return jQuery.dir( elem, "nextSibling", until );
+	},
+	prevUntil: function( elem, i, until ) {
+		return jQuery.dir( elem, "previousSibling", until );
+	},
+	siblings: function( elem ) {
+		return jQuery.sibling( ( elem.parentNode || {} ).firstChild, elem );
+	},
+	children: function( elem ) {
+		return jQuery.sibling( elem.firstChild );
+	},
+	contents: function( elem ) {
+		return elem.contentDocument || jQuery.merge( [], elem.childNodes );
+	}
+}, function( name, fn ) {
+	jQuery.fn[ name ] = function( until, selector ) {
+		var matched = jQuery.map( this, fn, until );
+
+		if ( name.slice( -5 ) !== "Until" ) {
+			selector = until;
+		}
+
+		if ( selector && typeof selector === "string" ) {
+			matched = jQuery.filter( selector, matched );
+		}
+
+		if ( this.length > 1 ) {
+			// Remove duplicates
+			if ( !guaranteedUnique[ name ] ) {
+				jQuery.unique( matched );
+			}
+
+			// Reverse order for parents* and prev-derivatives
+			if ( rparentsprev.test( name ) ) {
+				matched.reverse();
+			}
+		}
+
+		return this.pushStack( matched );
+	};
+});
+var rnotwhite = (/\S+/g);
+
+
+
+// String to Object options format cache
+var optionsCache = {};
+
+// Convert String-formatted options into Object-formatted ones and store in cache
+function createOptions( options ) {
+	var object = optionsCache[ options ] = {};
+	jQuery.each( options.match( rnotwhite ) || [], function( _, flag ) {
+		object[ flag ] = true;
+	});
+	return object;
+}
+
+/*
+ * Create a callback list using the following parameters:
+ *
+ *	options: an optional list of space-separated options that will change how
+ *			the callback list behaves or a more traditional option object
+ *
+ * By default a callback list will act like an event callback list and can be
+ * "fired" multiple times.
+ *
+ * Possible options:
+ *
+ *	once:			will ensure the callback list can only be fired once (like a Deferred)
+ *
+ *	memory:			will keep track of previous values and will call any callback added
+ *					after the list has been fired right away with the latest "memorized"
+ *					values (like a Deferred)
+ *
+ *	unique:			will ensure a callback can only be added once (no duplicate in the list)
+ *
+ *	stopOnFalse:	interrupt callings when a callback returns false
+ *
+ */
+jQuery.Callbacks = function( options ) {
+
+	// Convert options from String-formatted to Object-formatted if needed
+	// (we check in cache first)
+	options = typeof options === "string" ?
+		( optionsCache[ options ] || createOptions( options ) ) :
+		jQuery.extend( {}, options );
+
+	var // Last fire value (for non-forgettable lists)
+		memory,
+		// Flag to know if list was already fired
+		fired,
+		// Flag to know if list is currently firing
+		firing,
+		// First callback to fire (used internally by add and fireWith)
+		firingStart,
+		// End of the loop when firing
+		firingLength,
+		// Index of currently firing callback (modified by remove if needed)
+		firingIndex,
+		// Actual callback list
+		list = [],
+		// Stack of fire calls for repeatable lists
+		stack = !options.once && [],
+		// Fire callbacks
+		fire = function( data ) {
+			memory = options.memory && data;
+			fired = true;
+			firingIndex = firingStart || 0;
+			firingStart = 0;
+			firingLength = list.length;
+			firing = true;
+			for ( ; list && firingIndex < firingLength; firingIndex++ ) {
+				if ( list[ firingIndex ].apply( data[ 0 ], data[ 1 ] ) === false && options.stopOnFalse ) {
+					memory = false; // To prevent further calls using add
+					break;
+				}
+			}
+			firing = false;
+			if ( list ) {
+				if ( stack ) {
+					if ( stack.length ) {
+						fire( stack.shift() );
+					}
+				} else if ( memory ) {
+					list = [];
+				} else {
+					self.disable();
+				}
+			}
+		},
+		// Actual Callbacks object
+		self = {
+			// Add a callback or a collection of callbacks to the list
+			add: function() {
+				if ( list ) {
+					// First, we save the current length
+					var start = list.length;
+					(function add( args ) {
+						jQuery.each( args, function( _, arg ) {
+							var type = jQuery.type( arg );
+							if ( type === "function" ) {
+								if ( !options.unique || !self.has( arg ) ) {
+									list.push( arg );
+								}
+							} else if ( arg && arg.length && type !== "string" ) {
+								// Inspect recursively
+								add( arg );
+							}
+						});
+					})( arguments );
+					// Do we need to add the callbacks to the
+					// current firing batch?
+					if ( firing ) {
+						firingLength = list.length;
+					// With memory, if we're not firing then
+					// we should call right away
+					} else if ( memory ) {
+						firingStart = start;
+						fire( memory );
+					}
+				}
+				return this;
+			},
+			// Remove a callback from the list
+			remove: function() {
+				if ( list ) {
+					jQuery.each( arguments, function( _, arg ) {
+						var index;
+						while ( ( index = jQuery.inArray( arg, list, index ) ) > -1 ) {
+							list.splice( index, 1 );
+							// Handle firing indexes
+							if ( firing ) {
+								if ( index <= firingLength ) {
+									firingLength--;
+								}
+								if ( index <= firingIndex ) {
+									firingIndex--;
+								}
+							}
+						}
+					});
+				}
+				return this;
+			},
+			// Check if a given callback is in the list.
+			// If no argument is given, return whether or not list has callbacks attached.
+			has: function( fn ) {
+				return fn ? jQuery.inArray( fn, list ) > -1 : !!( list && list.length );
+			},
+			// Remove all callbacks from the list
+			empty: function() {
+				list = [];
+				firingLength = 0;
+				return this;
+			},
+			// Have the list do nothing anymore
+			disable: function() {
+				list = stack = memory = undefined;
+				return this;
+			},
+			// Is it disabled?
+			disabled: function() {
+				return !list;
+			},
+			// Lock the list in its current state
+			lock: function() {
+				stack = undefined;
+				if ( !memory ) {
+					self.disable();
+				}
+				return this;
+			},
+			// Is it locked?
+			locked: function() {
+				return !stack;
+			},
+			// Call all callbacks with the given context and arguments
+			fireWith: function( context, args ) {
+				if ( list && ( !fired || stack ) ) {
+					args = args || [];
+					args = [ context, args.slice ? args.slice() : args ];
+					if ( firing ) {
+						stack.push( args );
+					} else {
+						fire( args );
+					}
+				}
+				return this;
+			},
+			// Call all the callbacks with the given arguments
+			fire: function() {
+				self.fireWith( this, arguments );
+				return this;
+			},
+			// To know if the callbacks have already been called at least once
+			fired: function() {
+				return !!fired;
+			}
+		};
+
+	return self;
+};
+
+
+jQuery.extend({
+
+	Deferred: function( func ) {
+		var tuples = [
+				// action, add listener, listener list, final state
+				[ "resolve", "done", jQuery.Callbacks("once memory"), "resolved" ],
+				[ "reject", "fail", jQuery.Callbacks("once memory"), "rejected" ],
+				[ "notify", "progress", jQuery.Callbacks("memory") ]
+			],
+			state = "pending",
+			promise = {
+				state: function() {
+					return state;
+				},
+				always: function() {
+					deferred.done( arguments ).fail( arguments );
+					return this;
+				},
+				then: function( /* fnDone, fnFail, fnProgress */ ) {
+					var fns = arguments;
+					return jQuery.Deferred(function( newDefer ) {
+						jQuery.each( tuples, function( i, tuple ) {
+							var fn = jQuery.isFunction( fns[ i ] ) && fns[ i ];
+							// deferred[ done | fail | progress ] for forwarding actions to newDefer
+							deferred[ tuple[1] ](function() {
+								var returned = fn && fn.apply( this, arguments );
+								if ( returned && jQuery.isFunction( returned.promise ) ) {
+									returned.promise()
+										.done( newDefer.resolve )
+										.fail( newDefer.reject )
+										.progress( newDefer.notify );
+								} else {
+									newDefer[ tuple[ 0 ] + "With" ]( this === promise ? newDefer.promise() : this, fn ? [ returned ] : arguments );
+								}
+							});
+						});
+						fns = null;
+					}).promise();
+				},
+				// Get a promise for this deferred
+				// If obj is provided, the promise aspect is added to the object
+				promise: function( obj ) {
+					return obj != null ? jQuery.extend( obj, promise ) : promise;
+				}
+			},
+			deferred = {};
+
+		// Keep pipe for back-compat
+		promise.pipe = promise.then;
+
+		// Add list-specific methods
+		jQuery.each( tuples, function( i, tuple ) {
+			var list = tuple[ 2 ],
+				stateString = tuple[ 3 ];
+
+			// promise[ done | fail | progress ] = list.add
+			promise[ tuple[1] ] = list.add;
+
+			// Handle state
+			if ( stateString ) {
+				list.add(function() {
+					// state = [ resolved | rejected ]
+					state = stateString;
+
+				// [ reject_list | resolve_list ].disable; progress_list.lock
+				}, tuples[ i ^ 1 ][ 2 ].disable, tuples[ 2 ][ 2 ].lock );
+			}
+
+			// deferred[ resolve | reject | notify ]
+			deferred[ tuple[0] ] = function() {
+				deferred[ tuple[0] + "With" ]( this === deferred ? promise : this, arguments );
+				return this;
+			};
+			deferred[ tuple[0] + "With" ] = list.fireWith;
+		});
+
+		// Make the deferred a promise
+		promise.promise( deferred );
+
+		// Call given func if any
+		if ( func ) {
+			func.call( deferred, deferred );
+		}
+
+		// All done!
+		return deferred;
+	},
+
+	// Deferred helper
+	when: function( subordinate /* , ..., subordinateN */ ) {
+		var i = 0,
+			resolveValues = slice.call( arguments ),
+			length = resolveValues.length,
+
+			// the count of uncompleted subordinates
+			remaining = length !== 1 || ( subordinate && jQuery.isFunction( subordinate.promise ) ) ? length : 0,
+
+			// the master Deferred. If resolveValues consist of only a single Deferred, just use that.
+			deferred = remaining === 1 ? subordinate : jQuery.Deferred(),
+
+			// Update function for both resolve and progress values
+			updateFunc = function( i, contexts, values ) {
+				return function( value ) {
+					contexts[ i ] = this;
+					values[ i ] = arguments.length > 1 ? slice.call( arguments ) : value;
+					if ( values === progressValues ) {
+						deferred.notifyWith( contexts, values );
+					} else if ( !( --remaining ) ) {
+						deferred.resolveWith( contexts, values );
+					}
+				};
+			},
+
+			progressValues, progressContexts, resolveContexts;
+
+		// Add listeners to Deferred subordinates; treat others as resolved
+		if ( length > 1 ) {
+			progressValues = new Array( length );
+			progressContexts = new Array( length );
+			resolveContexts = new Array( length );
+			for ( ; i < length; i++ ) {
+				if ( resolveValues[ i ] && jQuery.isFunction( resolveValues[ i ].promise ) ) {
+					resolveValues[ i ].promise()
+						.done( updateFunc( i, resolveContexts, resolveValues ) )
+						.fail( deferred.reject )
+						.progress( updateFunc( i, progressContexts, progressValues ) );
+				} else {
+					--remaining;
+				}
+			}
+		}
+
+		// If we're not waiting on anything, resolve the master
+		if ( !remaining ) {
+			deferred.resolveWith( resolveContexts, resolveValues );
+		}
+
+		return deferred.promise();
+	}
+});
+
+
+// The deferred used on DOM ready
+var readyList;
+
+jQuery.fn.ready = function( fn ) {
+	// Add the callback
+	jQuery.ready.promise().done( fn );
+
+	return this;
+};
+
+jQuery.extend({
+	// Is the DOM ready to be used? Set to true once it occurs.
+	isReady: false,
+
+	// A counter to track how many items to wait for before
+	// the ready event fires. See #6781
+	readyWait: 1,
+
+	// Hold (or release) the ready event
+	holdReady: function( hold ) {
+		if ( hold ) {
+			jQuery.readyWait++;
+		} else {
+			jQuery.ready( true );
+		}
+	},
+
+	// Handle when the DOM is ready
+	ready: function( wait ) {
+
+		// Abort if there are pending holds or we're already ready
+		if ( wait === true ? --jQuery.readyWait : jQuery.isReady ) {
+			return;
+		}
+
+		// Remember that the DOM is ready
+		jQuery.isReady = true;
+
+		// If a normal DOM Ready event fired, decrement, and wait if need be
+		if ( wait !== true && --jQuery.readyWait > 0 ) {
+			return;
+		}
+
+		// If there are functions bound, to execute
+		readyList.resolveWith( document, [ jQuery ] );
+
+		// Trigger any bound ready events
+		if ( jQuery.fn.triggerHandler ) {
+			jQuery( document ).triggerHandler( "ready" );
+			jQuery( document ).off( "ready" );
+		}
+	}
+});
+
+/**
+ * The ready event handler and self cleanup method
+ */
+function completed() {
+	document.removeEventListener( "DOMContentLoaded", completed, false );
+	window.removeEventListener( "load", completed, false );
+	jQuery.ready();
+}
+
+jQuery.ready.promise = function( obj ) {
+	if ( !readyList ) {
+
+		readyList = jQuery.Deferred();
+
+		// Catch cases where $(document).ready() is called after the browser event has already occurred.
+		// We once tried to use readyState "interactive" here, but it caused issues like the one
+		// discovered by ChrisS here: http://bugs.jquery.com/ticket/12282#comment:15
+		if ( document.readyState === "complete" ) {
+			// Handle it asynchronously to allow scripts the opportunity to delay ready
+			setTimeout( jQuery.ready );
+
+		} else {
+
+			// Use the handy event callback
+			document.addEventListener( "DOMContentLoaded", completed, false );
+
+			// A fallback to window.onload, that will always work
+			window.addEventListener( "load", completed, false );
+		}
+	}
+	return readyList.promise( obj );
+};
+
+// Kick off the DOM ready check even if the user does not
+jQuery.ready.promise();
+
+
+
+
+// Multifunctional method to get and set values of a collection
+// The value/s can optionally be executed if it's a function
+var access = jQuery.access = function( elems, fn, key, value, chainable, emptyGet, raw ) {
+	var i = 0,
+		len = elems.length,
+		bulk = key == null;
+
+	// Sets many values
+	if ( jQuery.type( key ) === "object" ) {
+		chainable = true;
+		for ( i in key ) {
+			jQuery.access( elems, fn, i, key[i], true, emptyGet, raw );
+		}
+
+	// Sets one value
+	} else if ( value !== undefined ) {
+		chainable = true;
+
+		if ( !jQuery.isFunction( value ) ) {
+			raw = true;
+		}
+
+		if ( bulk ) {
+			// Bulk operations run against the entire set
+			if ( raw ) {
+				fn.call( elems, value );
+				fn = null;
+
+			// ...except when executing function values
+			} else {
+				bulk = fn;
+				fn = function( elem, key, value ) {
+					return bulk.call( jQuery( elem ), value );
+				};
+			}
+		}
+
+		if ( fn ) {
+			for ( ; i < len; i++ ) {
+				fn( elems[i], key, raw ? value : value.call( elems[i], i, fn( elems[i], key ) ) );
+			}
+		}
+	}
+
+	return chainable ?
+		elems :
+
+		// Gets
+		bulk ?
+			fn.call( elems ) :
+			len ? fn( elems[0], key ) : emptyGet;
+};
+
+
+/**
+ * Determines whether an object can have data
+ */
+jQuery.acceptData = function( owner ) {
+	// Accepts only:
+	//  - Node
+	//    - Node.ELEMENT_NODE
+	//    - Node.DOCUMENT_NODE
+	//  - Object
+	//    - Any
+	/* jshint -W018 */
+	return owner.nodeType === 1 || owner.nodeType === 9 || !( +owner.nodeType );
+};
+
+
+function Data() {
+	// Support: Android<4,
+	// Old WebKit does not have Object.preventExtensions/freeze method,
+	// return new empty object instead with no [[set]] accessor
+	Object.defineProperty( this.cache = {}, 0, {
+		get: function() {
+			return {};
+		}
+	});
+
+	this.expando = jQuery.expando + Data.uid++;
+}
+
+Data.uid = 1;
+Data.accepts = jQuery.acceptData;
+
+Data.prototype = {
+	key: function( owner ) {
+		// We can accept data for non-element nodes in modern browsers,
+		// but we should not, see #8335.
+		// Always return the key for a frozen object.
+		if ( !Data.accepts( owner ) ) {
+			return 0;
+		}
+
+		var descriptor = {},
+			// Check if the owner object already has a cache key
+			unlock = owner[ this.expando ];
+
+		// If not, create one
+		if ( !unlock ) {
+			unlock = Data.uid++;
+
+			// Secure it in a non-enumerable, non-writable property
+			try {
+				descriptor[ this.expando ] = { value: unlock };
+				Object.defineProperties( owner, descriptor );
+
+			// Support: Android<4
+			// Fallback to a less secure definition
+			} catch ( e ) {
+				descriptor[ this.expando ] = unlock;
+				jQuery.extend( owner, descriptor );
+			}
+		}
+
+		// Ensure the cache object
+		if ( !this.cache[ unlock ] ) {
+			this.cache[ unlock ] = {};
+		}
+
+		return unlock;
+	},
+	set: function( owner, data, value ) {
+		var prop,
+			// There may be an unlock assigned to this node,
+			// if there is no entry for this "owner", create one inline
+			// and set the unlock as though an owner entry had always existed
+			unlock = this.key( owner ),
+			cache = this.cache[ unlock ];
+
+		// Handle: [ owner, key, value ] args
+		if ( typeof data === "string" ) {
+			cache[ data ] = value;
+
+		// Handle: [ owner, { properties } ] args
+		} else {
+			// Fresh assignments by object are shallow copied
+			if ( jQuery.isEmptyObject( cache ) ) {
+				jQuery.extend( this.cache[ unlock ], data );
+			// Otherwise, copy the properties one-by-one to the cache object
+			} else {
+				for ( prop in data ) {
+					cache[ prop ] = data[ prop ];
+				}
+			}
+		}
+		return cache;
+	},
+	get: function( owner, key ) {
+		// Either a valid cache is found, or will be created.
+		// New caches will be created and the unlock returned,
+		// allowing direct access to the newly created
+		// empty data object. A valid owner object must be provided.
+		var cache = this.cache[ this.key( owner ) ];
+
+		return key === undefined ?
+			cache : cache[ key ];
+	},
+	access: function( owner, key, value ) {
+		var stored;
+		// In cases where either:
+		//
+		//   1. No key was specified
+		//   2. A string key was specified, but no value provided
+		//
+		// Take the "read" path and allow the get method to determine
+		// which value to return, respectively either:
+		//
+		//   1. The entire cache object
+		//   2. The data stored at the key
+		//
+		if ( key === undefined ||
+				((key && typeof key === "string") && value === undefined) ) {
+
+			stored = this.get( owner, key );
+
+			return stored !== undefined ?
+				stored : this.get( owner, jQuery.camelCase(key) );
+		}
+
+		// [*]When the key is not a string, or both a key and value
+		// are specified, set or extend (existing objects) with either:
+		//
+		//   1. An object of properties
+		//   2. A key and value
+		//
+		this.set( owner, key, value );
+
+		// Since the "set" path can have two possible entry points
+		// return the expected data based on which path was taken[*]
+		return value !== undefined ? value : key;
+	},
+	remove: function( owner, key ) {
+		var i, name, camel,
+			unlock = this.key( owner ),
+			cache = this.cache[ unlock ];
+
+		if ( key === undefined ) {
+			this.cache[ unlock ] = {};
+
+		} else {
+			// Support array or space separated string of keys
+			if ( jQuery.isArray( key ) ) {
+				// If "name" is an array of keys...
+				// When data is initially created, via ("key", "val") signature,
+				// keys will be converted to camelCase.
+				// Since there is no way to tell _how_ a key was added, remove
+				// both plain key and camelCase key. #12786
+				// This will only penalize the array argument path.
+				name = key.concat( key.map( jQuery.camelCase ) );
+			} else {
+				camel = jQuery.camelCase( key );
+				// Try the string as a key before any manipulation
+				if ( key in cache ) {
+					name = [ key, camel ];
+				} else {
+					// If a key with the spaces exists, use it.
+					// Otherwise, create an array by matching non-whitespace
+					name = camel;
+					name = name in cache ?
+						[ name ] : ( name.match( rnotwhite ) || [] );
+				}
+			}
+
+			i = name.length;
+			while ( i-- ) {
+				delete cache[ name[ i ] ];
+			}
+		}
+	},
+	hasData: function( owner ) {
+		return !jQuery.isEmptyObject(
+			this.cache[ owner[ this.expando ] ] || {}
+		);
+	},
+	discard: function( owner ) {
+		if ( owner[ this.expando ] ) {
+			delete this.cache[ owner[ this.expando ] ];
+		}
+	}
+};
+var data_priv = new Data();
+
+var data_user = new Data();
+
+
+
+//	Implementation Summary
+//
+//	1. Enforce API surface and semantic compatibility with 1.9.x branch
+//	2. Improve the module's maintainability by reducing the storage
+//		paths to a single mechanism.
+//	3. Use the same single mechanism to support "private" and "user" data.
+//	4. _Never_ expose "private" data to user code (TODO: Drop _data, _removeData)
+//	5. Avoid exposing implementation details on user objects (eg. expando properties)
+//	6. Provide a clear path for implementation upgrade to WeakMap in 2014
+
+var rbrace = /^(?:\{[\w\W]*\}|\[[\w\W]*\])$/,
+	rmultiDash = /([A-Z])/g;
+
+function dataAttr( elem, key, data ) {
+	var name;
+
+	// If nothing was found internally, try to fetch any
+	// data from the HTML5 data-* attribute
+	if ( data === undefined && elem.nodeType === 1 ) {
+		name = "data-" + key.replace( rmultiDash, "-$1" ).toLowerCase();
+		data = elem.getAttribute( name );
+
+		if ( typeof data === "string" ) {
+			try {
+				data = data === "true" ? true :
+					data === "false" ? false :
+					data === "null" ? null :
+					// Only convert to a number if it doesn't change the string
+					+data + "" === data ? +data :
+					rbrace.test( data ) ? jQuery.parseJSON( data ) :
+					data;
+			} catch( e ) {}
+
+			// Make sure we set the data so it isn't changed later
+			data_user.set( elem, key, data );
+		} else {
+			data = undefined;
+		}
+	}
+	return data;
+}
+
+jQuery.extend({
+	hasData: function( elem ) {
+		return data_user.hasData( elem ) || data_priv.hasData( elem );
+	},
+
+	data: function( elem, name, data ) {
+		return data_user.access( elem, name, data );
+	},
+
+	removeData: function( elem, name ) {
+		data_user.remove( elem, name );
+	},
+
+	// TODO: Now that all calls to _data and _removeData have been replaced
+	// with direct calls to data_priv methods, these can be deprecated.
+	_data: function( elem, name, data ) {
+		return data_priv.access( elem, name, data );
+	},
+
+	_removeData: function( elem, name ) {
+		data_priv.remove( elem, name );
+	}
+});
+
+jQuery.fn.extend({
+	data: function( key, value ) {
+		var i, name, data,
+			elem = this[ 0 ],
+			attrs = elem && elem.attributes;
+
+		// Gets all values
+		if ( key === undefined ) {
+			if ( this.length ) {
+				data = data_user.get( elem );
+
+				if ( elem.nodeType === 1 && !data_priv.get( elem, "hasDataAttrs" ) ) {
+					i = attrs.length;
+					while ( i-- ) {
+
+						// Support: IE11+
+						// The attrs elements can be null (#14894)
+						if ( attrs[ i ] ) {
+							name = attrs[ i ].name;
+							if ( name.indexOf( "data-" ) === 0 ) {
+								name = jQuery.camelCase( name.slice(5) );
+								dataAttr( elem, name, data[ name ] );
+							}
+						}
+					}
+					data_priv.set( elem, "hasDataAttrs", true );
+				}
+			}
+
+			return data;
+		}
+
+		// Sets multiple values
+		if ( typeof key === "object" ) {
+			return this.each(function() {
+				data_user.set( this, key );
+			});
+		}
+
+		return access( this, function( value ) {
+			var data,
+				camelKey = jQuery.camelCase( key );
+
+			// The calling jQuery object (element matches) is not empty
+			// (and therefore has an element appears at this[ 0 ]) and the
+			// `value` parameter was not undefined. An empty jQuery object
+			// will result in `undefined` for elem = this[ 0 ] which will
+			// throw an exception if an attempt to read a data cache is made.
+			if ( elem && value === undefined ) {
+				// Attempt to get data from the cache
+				// with the key as-is
+				data = data_user.get( elem, key );
+				if ( data !== undefined ) {
+					return data;
+				}
+
+				// Attempt to get data from the cache
+				// with the key camelized
+				data = data_user.get( elem, camelKey );
+				if ( data !== undefined ) {
+					return data;
+				}
+
+				// Attempt to "discover" the data in
+				// HTML5 custom data-* attrs
+				data = dataAttr( elem, camelKey, undefined );
+				if ( data !== undefined ) {
+					return data;
+				}
+
+				// We tried really hard, but the data doesn't exist.
+				return;
+			}
+
+			// Set the data...
+			this.each(function() {
+				// First, attempt to store a copy or reference of any
+				// data that might've been store with a camelCased key.
+				var data = data_user.get( this, camelKey );
+
+				// For HTML5 data-* attribute interop, we have to
+				// store property names with dashes in a camelCase form.
+				// This might not apply to all properties...*
+				data_user.set( this, camelKey, value );
+
+				// *... In the case of properties that might _actually_
+				// have dashes, we need to also store a copy of that
+				// unchanged property.
+				if ( key.indexOf("-") !== -1 && data !== undefined ) {
+					data_user.set( this, key, value );
+				}
+			});
+		}, null, value, arguments.length > 1, null, true );
+	},
+
+	removeData: function( key ) {
+		return this.each(function() {
+			data_user.remove( this, key );
+		});
+	}
+});
+
+
+jQuery.extend({
+	queue: function( elem, type, data ) {
+		var queue;
+
+		if ( elem ) {
+			type = ( type || "fx" ) + "queue";
+			queue = data_priv.get( elem, type );
+
+			// Speed up dequeue by getting out quickly if this is just a lookup
+			if ( data ) {
+				if ( !queue || jQuery.isArray( data ) ) {
+					queue = data_priv.access( elem, type, jQuery.makeArray(data) );
+				} else {
+					queue.push( data );
+				}
+			}
+			return queue || [];
+		}
+	},
+
+	dequeue: function( elem, type ) {
+		type = type || "fx";
+
+		var queue = jQuery.queue( elem, type ),
+			startLength = queue.length,
+			fn = queue.shift(),
+			hooks = jQuery._queueHooks( elem, type ),
+			next = function() {
+				jQuery.dequeue( elem, type );
+			};
+
+		// If the fx queue is dequeued, always remove the progress sentinel
+		if ( fn === "inprogress" ) {
+			fn = queue.shift();
+			startLength--;
+		}
+
+		if ( fn ) {
+
+			// Add a progress sentinel to prevent the fx queue from being
+			// automatically dequeued
+			if ( type === "fx" ) {
+				queue.unshift( "inprogress" );
+			}
+
+			// Clear up the last queue stop function
+			delete hooks.stop;
+			fn.call( elem, next, hooks );
+		}
+
+		if ( !startLength && hooks ) {
+			hooks.empty.fire();
+		}
+	},
+
+	// Not public - generate a queueHooks object, or return the current one
+	_queueHooks: function( elem, type ) {
+		var key = type + "queueHooks";
+		return data_priv.get( elem, key ) || data_priv.access( elem, key, {
+			empty: jQuery.Callbacks("once memory").add(function() {
+				data_priv.remove( elem, [ type + "queue", key ] );
+			})
+		});
+	}
+});
+
+jQuery.fn.extend({
+	queue: function( type, data ) {
+		var setter = 2;
+
+		if ( typeof type !== "string" ) {
+			data = type;
+			type = "fx";
+			setter--;
+		}
+
+		if ( arguments.length < setter ) {
+			return jQuery.queue( this[0], type );
+		}
+
+		return data === undefined ?
+			this :
+			this.each(function() {
+				var queue = jQuery.queue( this, type, data );
+
+				// Ensure a hooks for this queue
+				jQuery._queueHooks( this, type );
+
+				if ( type === "fx" && queue[0] !== "inprogress" ) {
+					jQuery.dequeue( this, type );
+				}
+			});
+	},
+	dequeue: function( type ) {
+		return this.each(function() {
+			jQuery.dequeue( this, type );
+		});
+	},
+	clearQueue: function( type ) {
+		return this.queue( type || "fx", [] );
+	},
+	// Get a promise resolved when queues of a certain type
+	// are emptied (fx is the type by default)
+	promise: function( type, obj ) {
+		var tmp,
+			count = 1,
+			defer = jQuery.Deferred(),
+			elements = this,
+			i = this.length,
+			resolve = function() {
+				if ( !( --count ) ) {
+					defer.resolveWith( elements, [ elements ] );
+				}
+			};
+
+		if ( typeof type !== "string" ) {
+			obj = type;
+			type = undefined;
+		}
+		type = type || "fx";
+
+		while ( i-- ) {
+			tmp = data_priv.get( elements[ i ], type + "queueHooks" );
+			if ( tmp && tmp.empty ) {
+				count++;
+				tmp.empty.add( resolve );
+			}
+		}
+		resolve();
+		return defer.promise( obj );
+	}
+});
+var pnum = (/[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/).source;
+
+var cssExpand = [ "Top", "Right", "Bottom", "Left" ];
+
+var isHidden = function( elem, el ) {
+		// isHidden might be called from jQuery#filter function;
+		// in that case, element will be second argument
+		elem = el || elem;
+		return jQuery.css( elem, "display" ) === "none" || !jQuery.contains( elem.ownerDocument, elem );
+	};
+
+var rcheckableType = (/^(?:checkbox|radio)$/i);
+
+
+
+(function() {
+	var fragment = document.createDocumentFragment(),
+		div = fragment.appendChild( document.createElement( "div" ) ),
+		input = document.createElement( "input" );
+
+	// Support: Safari<=5.1
+	// Check state lost if the name is set (#11217)
+	// Support: Windows Web Apps (WWA)
+	// `name` and `type` must use .setAttribute for WWA (#14901)
+	input.setAttribute( "type", "radio" );
+	input.setAttribute( "checked", "checked" );
+	input.setAttribute( "name", "t" );
+
+	div.appendChild( input );
+
+	// Support: Safari<=5.1, Android<4.2
+	// Older WebKit doesn't clone checked state correctly in fragments
+	support.checkClone = div.cloneNode( true ).cloneNode( true ).lastChild.checked;
+
+	// Support: IE<=11+
+	// Make sure textarea (and checkbox) defaultValue is properly cloned
+	div.innerHTML = "<textarea>x</textarea>";
+	support.noCloneChecked = !!div.cloneNode( true ).lastChild.defaultValue;
+})();
+var strundefined = typeof undefined;
+
+
+
+support.focusinBubbles = "onfocusin" in window;
+
+
+var
+	rkeyEvent = /^key/,
+	rmouseEvent = /^(?:mouse|pointer|contextmenu)|click/,
+	rfocusMorph = /^(?:focusinfocus|focusoutblur)$/,
+	rtypenamespace = /^([^.]*)(?:\.(.+)|)$/;
+
+function returnTrue() {
+	return true;
+}
+
+function returnFalse() {
+	return false;
+}
+
+function safeActiveElement() {
+	try {
+		return document.activeElement;
+	} catch ( err ) { }
+}
+
+/*
+ * Helper functions for managing events -- not part of the public interface.
+ * Props to Dean Edwards' addEvent library for many of the ideas.
+ */
+jQuery.event = {
+
+	global: {},
+
+	add: function( elem, types, handler, data, selector ) {
+
+		var handleObjIn, eventHandle, tmp,
+			events, t, handleObj,
+			special, handlers, type, namespaces, origType,
+			elemData = data_priv.get( elem );
+
+		// Don't attach events to noData or text/comment nodes (but allow plain objects)
+		if ( !elemData ) {
+			return;
+		}
+
+		// Caller can pass in an object of custom data in lieu of the handler
+		if ( handler.handler ) {
+			handleObjIn = handler;
+			handler = handleObjIn.handler;
+			selector = handleObjIn.selector;
+		}
+
+		// Make sure that the handler has a unique ID, used to find/remove it later
+		if ( !handler.guid ) {
+			handler.guid = jQuery.guid++;
+		}
+
+		// Init the element's event structure and main handler, if this is the first
+		if ( !(events = elemData.events) ) {
+			events = elemData.events = {};
+		}
+		if ( !(eventHandle = elemData.handle) ) {
+			eventHandle = elemData.handle = function( e ) {
+				// Discard the second event of a jQuery.event.trigger() and
+				// when an event is called after a page has unloaded
+				return typeof jQuery !== strundefined && jQuery.event.triggered !== e.type ?
+					jQuery.event.dispatch.apply( elem, arguments ) : undefined;
+			};
+		}
+
+		// Handle multiple events separated by a space
+		types = ( types || "" ).match( rnotwhite ) || [ "" ];
+		t = types.length;
+		while ( t-- ) {
+			tmp = rtypenamespace.exec( types[t] ) || [];
+			type = origType = tmp[1];
+			namespaces = ( tmp[2] || "" ).split( "." ).sort();
+
+			// There *must* be a type, no attaching namespace-only handlers
+			if ( !type ) {
+				continue;
+			}
+
+			// If event changes its type, use the special event handlers for the changed type
+			special = jQuery.event.special[ type ] || {};
+
+			// If selector defined, determine special event api type, otherwise given type
+			type = ( selector ? special.delegateType : special.bindType ) || type;
+
+			// Update special based on newly reset type
+			special = jQuery.event.special[ type ] || {};
+
+			// handleObj is passed to all event handlers
+			handleObj = jQuery.extend({
+				type: type,
+				origType: origType,
+				data: data,
+				handler: handler,
+				guid: handler.guid,
+				selector: selector,
+				needsContext: selector && jQuery.expr.match.needsContext.test( selector ),
+				namespace: namespaces.join(".")
+			}, handleObjIn );
+
+			// Init the event handler queue if we're the first
+			if ( !(handlers = events[ type ]) ) {
+				handlers = events[ type ] = [];
+				handlers.delegateCount = 0;
+
+				// Only use addEventListener if the special events handler returns false
+				if ( !special.setup || special.setup.call( elem, data, namespaces, eventHandle ) === false ) {
+					if ( elem.addEventListener ) {
+						elem.addEventListener( type, eventHandle, false );
+					}
+				}
+			}
+
+			if ( special.add ) {
+				special.add.call( elem, handleObj );
+
+				if ( !handleObj.handler.guid ) {
+					handleObj.handler.guid = handler.guid;
+				}
+			}
+
+			// Add to the element's handler list, delegates in front
+			if ( selector ) {
+				handlers.splice( handlers.delegateCount++, 0, handleObj );
+			} else {
+				handlers.push( handleObj );
+			}
+
+			// Keep track of which events have ever been used, for event optimization
+			jQuery.event.global[ type ] = true;
+		}
+
+	},
+
+	// Detach an event or set of events from an element
+	remove: function( elem, types, handler, selector, mappedTypes ) {
+
+		var j, origCount, tmp,
+			events, t, handleObj,
+			special, handlers, type, namespaces, origType,
+			elemData = data_priv.hasData( elem ) && data_priv.get( elem );
+
+		if ( !elemData || !(events = elemData.events) ) {
+			return;
+		}
+
+		// Once for each type.namespace in types; type may be omitted
+		types = ( types || "" ).match( rnotwhite ) || [ "" ];
+		t = types.length;
+		while ( t-- ) {
+			tmp = rtypenamespace.exec( types[t] ) || [];
+			type = origType = tmp[1];
+			namespaces = ( tmp[2] || "" ).split( "." ).sort();
+
+			// Unbind all events (on this namespace, if provided) for the element
+			if ( !type ) {
+				for ( type in events ) {
+					jQuery.event.remove( elem, type + types[ t ], handler, selector, true );
+				}
+				continue;
+			}
+
+			special = jQuery.event.special[ type ] || {};
+			type = ( selector ? special.delegateType : special.bindType ) || type;
+			handlers = events[ type ] || [];
+			tmp = tmp[2] && new RegExp( "(^|\\.)" + namespaces.join("\\.(?:.*\\.|)") + "(\\.|$)" );
+
+			// Remove matching events
+			origCount = j = handlers.length;
+			while ( j-- ) {
+				handleObj = handlers[ j ];
+
+				if ( ( mappedTypes || origType === handleObj.origType ) &&
+					( !handler || handler.guid === handleObj.guid ) &&
+					( !tmp || tmp.test( handleObj.namespace ) ) &&
+					( !selector || selector === handleObj.selector || selector === "**" && handleObj.selector ) ) {
+					handlers.splice( j, 1 );
+
+					if ( handleObj.selector ) {
+						handlers.delegateCount--;
+					}
+					if ( special.remove ) {
+						special.remove.call( elem, handleObj );
+					}
+				}
+			}
+
+			// Remove generic event handler if we removed something and no more handlers exist
+			// (avoids potential for endless recursion during removal of special event handlers)
+			if ( origCount && !handlers.length ) {
+				if ( !special.teardown || special.teardown.call( elem, namespaces, elemData.handle ) === false ) {
+					jQuery.removeEvent( elem, type, elemData.handle );
+				}
+
+				delete events[ type ];
+			}
+		}
+
+		// Remove the expando if it's no longer used
+		if ( jQuery.isEmptyObject( events ) ) {
+			delete elemData.handle;
+			data_priv.remove( elem, "events" );
+		}
+	},
+
+	trigger: function( event, data, elem, onlyHandlers ) {
+
+		var i, cur, tmp, bubbleType, ontype, handle, special,
+			eventPath = [ elem || document ],
+			type = hasOwn.call( event, "type" ) ? event.type : event,
+			namespaces = hasOwn.call( event, "namespace" ) ? event.namespace.split(".") : [];
+
+		cur = tmp = elem = elem || document;
+
+		// Don't do events on text and comment nodes
+		if ( elem.nodeType === 3 || elem.nodeType === 8 ) {
+			return;
+		}
+
+		// focus/blur morphs to focusin/out; ensure we're not firing them right now
+		if ( rfocusMorph.test( type + jQuery.event.triggered ) ) {
+			return;
+		}
+
+		if ( type.indexOf(".") >= 0 ) {
+			// Namespaced trigger; create a regexp to match event type in handle()
+			namespaces = type.split(".");
+			type = namespaces.shift();
+			namespaces.sort();
+		}
+		ontype = type.indexOf(":") < 0 && "on" + type;
+
+		// Caller can pass in a jQuery.Event object, Object, or just an event type string
+		event = event[ jQuery.expando ] ?
+			event :
+			new jQuery.Event( type, typeof event === "object" && event );
+
+		// Trigger bitmask: & 1 for native handlers; & 2 for jQuery (always true)
+		event.isTrigger = onlyHandlers ? 2 : 3;
+		event.namespace = namespaces.join(".");
+		event.namespace_re = event.namespace ?
+			new RegExp( "(^|\\.)" + namespaces.join("\\.(?:.*\\.|)") + "(\\.|$)" ) :
+			null;
+
+		// Clean up the event in case it is being reused
+		event.result = undefined;
+		if ( !event.target ) {
+			event.target = elem;
+		}
+
+		// Clone any incoming data and prepend the event, creating the handler arg list
+		data = data == null ?
+			[ event ] :
+			jQuery.makeArray( data, [ event ] );
+
+		// Allow special events to draw outside the lines
+		special = jQuery.event.special[ type ] || {};
+		if ( !onlyHandlers && special.trigger && special.trigger.apply( elem, data ) === false ) {
+			return;
+		}
+
+		// Determine event propagation path in advance, per W3C events spec (#9951)
+		// Bubble up to document, then to window; watch for a global ownerDocument var (#9724)
+		if ( !onlyHandlers && !special.noBubble && !jQuery.isWindow( elem ) ) {
+
+			bubbleType = special.delegateType || type;
+			if ( !rfocusMorph.test( bubbleType + type ) ) {
+				cur = cur.parentNode;
+			}
+			for ( ; cur; cur = cur.parentNode ) {
+				eventPath.push( cur );
+				tmp = cur;
+			}
+
+			// Only add window if we got to document (e.g., not plain obj or detached DOM)
+			if ( tmp === (elem.ownerDocument || document) ) {
+				eventPath.push( tmp.defaultView || tmp.parentWindow || window );
+			}
+		}
+
+		// Fire handlers on the event path
+		i = 0;
+		while ( (cur = eventPath[i++]) && !event.isPropagationStopped() ) {
+
+			event.type = i > 1 ?
+				bubbleType :
+				special.bindType || type;
+
+			// jQuery handler
+			handle = ( data_priv.get( cur, "events" ) || {} )[ event.type ] && data_priv.get( cur, "handle" );
+			if ( handle ) {
+				handle.apply( cur, data );
+			}
+
+			// Native handler
+			handle = ontype && cur[ ontype ];
+			if ( handle && handle.apply && jQuery.acceptData( cur ) ) {
+				event.result = handle.apply( cur, data );
+				if ( event.result === false ) {
+					event.preventDefault();
+				}
+			}
+		}
+		event.type = type;
+
+		// If nobody prevented the default action, do it now
+		if ( !onlyHandlers && !event.isDefaultPrevented() ) {
+
+			if ( (!special._default || special._default.apply( eventPath.pop(), data ) === false) &&
+				jQuery.acceptData( elem ) ) {
+
+				// Call a native DOM method on the target with the same name name as the event.
+				// Don't do default actions on window, that's where global variables be (#6170)
+				if ( ontype && jQuery.isFunction( elem[ type ] ) && !jQuery.isWindow( elem ) ) {
+
+					// Don't re-trigger an onFOO event when we call its FOO() method
+					tmp = elem[ ontype ];
+
+					if ( tmp ) {
+						elem[ ontype ] = null;
+					}
+
+					// Prevent re-triggering of the same event, since we already bubbled it above
+					jQuery.event.triggered = type;
+					elem[ type ]();
+					jQuery.event.triggered = undefined;
+
+					if ( tmp ) {
+						elem[ ontype ] = tmp;
+					}
+				}
+			}
+		}
+
+		return event.result;
+	},
+
+	dispatch: function( event ) {
+
+		// Make a writable jQuery.Event from the native event object
+		event = jQuery.event.fix( event );
+
+		var i, j, ret, matched, handleObj,
+			handlerQueue = [],
+			args = slice.call( arguments ),
+			handlers = ( data_priv.get( this, "events" ) || {} )[ event.type ] || [],
+			special = jQuery.event.special[ event.type ] || {};
+
+		// Use the fix-ed jQuery.Event rather than the (read-only) native event
+		args[0] = event;
+		event.delegateTarget = this;
+
+		// Call the preDispatch hook for the mapped type, and let it bail if desired
+		if ( special.preDispatch && special.preDispatch.call( this, event ) === false ) {
+			return;
+		}
+
+		// Determine handlers
+		handlerQueue = jQuery.event.handlers.call( this, event, handlers );
+
+		// Run delegates first; they may want to stop propagation beneath us
+		i = 0;
+		while ( (matched = handlerQueue[ i++ ]) && !event.isPropagationStopped() ) {
+			event.currentTarget = matched.elem;
+
+			j = 0;
+			while ( (handleObj = matched.handlers[ j++ ]) && !event.isImmediatePropagationStopped() ) {
+
+				// Triggered event must either 1) have no namespace, or 2) have namespace(s)
+				// a subset or equal to those in the bound event (both can have no namespace).
+				if ( !event.namespace_re || event.namespace_re.test( handleObj.namespace ) ) {
+
+					event.handleObj = handleObj;
+					event.data = handleObj.data;
+
+					ret = ( (jQuery.event.special[ handleObj.origType ] || {}).handle || handleObj.handler )
+							.apply( matched.elem, args );
+
+					if ( ret !== undefined ) {
+						if ( (event.result = ret) === false ) {
+							event.preventDefault();
+							event.stopPropagation();
+						}
+					}
+				}
+			}
+		}
+
+		// Call the postDispatch hook for the mapped type
+		if ( special.postDispatch ) {
+			special.postDispatch.call( this, event );
+		}
+
+		return event.result;
+	},
+
+	handlers: function( event, handlers ) {
+		var i, matches, sel, handleObj,
+			handlerQueue = [],
+			delegateCount = handlers.delegateCount,
+			cur = event.target;
+
+		// Find delegate handlers
+		// Black-hole SVG <use> instance trees (#13180)
+		// Avoid non-left-click bubbling in Firefox (#3861)
+		if ( delegateCount && cur.nodeType && (!event.button || event.type !== "click") ) {
+
+			for ( ; cur !== this; cur = cur.parentNode || this ) {
+
+				// Don't process clicks on disabled elements (#6911, #8165, #11382, #11764)
+				if ( cur.disabled !== true || event.type !== "click" ) {
+					matches = [];
+					for ( i = 0; i < delegateCount; i++ ) {
+						handleObj = handlers[ i ];
+
+						// Don't conflict with Object.prototype properties (#13203)
+						sel = handleObj.selector + " ";
+
+						if ( matches[ sel ] === undefined ) {
+							matches[ sel ] = handleObj.needsContext ?
+								jQuery( sel, this ).index( cur ) >= 0 :
+								jQuery.find( sel, this, null, [ cur ] ).length;
+						}
+						if ( matches[ sel ] ) {
+							matches.push( handleObj );
+						}
+					}
+					if ( matches.length ) {
+						handlerQueue.push({ elem: cur, handlers: matches });
+					}
+				}
+			}
+		}
+
+		// Add the remaining (directly-bound) handlers
+		if ( delegateCount < handlers.length ) {
+			handlerQueue.push({ elem: this, handlers: handlers.slice( delegateCount ) });
+		}
+
+		return handlerQueue;
+	},
+
+	// Includes some event props shared by KeyEvent and MouseEvent
+	props: "altKey bubbles cancelable ctrlKey currentTarget eventPhase metaKey relatedTarget shiftKey target timeStamp view which".split(" "),
+
+	fixHooks: {},
+
+	keyHooks: {
+		props: "char charCode key keyCode".split(" "),
+		filter: function( event, original ) {
+
+			// Add which for key events
+			if ( event.which == null ) {
+				event.which = original.charCode != null ? original.charCode : original.keyCode;
+			}
+
+			return event;
+		}
+	},
+
+	mouseHooks: {
+		props: "button buttons clientX clientY offsetX offsetY pageX pageY screenX screenY toElement".split(" "),
+		filter: function( event, original ) {
+			var eventDoc, doc, body,
+				button = original.button;
+
+			// Calculate pageX/Y if missing and clientX/Y available
+			if ( event.pageX == null && original.clientX != null ) {
+				eventDoc = event.target.ownerDocument || document;
+				doc = eventDoc.documentElement;
+				body = eventDoc.body;
+
+				event.pageX = original.clientX + ( doc && doc.scrollLeft || body && body.scrollLeft || 0 ) - ( doc && doc.clientLeft || body && body.clientLeft || 0 );
+				event.pageY = original.clientY + ( doc && doc.scrollTop  || body && body.scrollTop  || 0 ) - ( doc && doc.clientTop  || body && body.clientTop  || 0 );
+			}
+
+			// Add which for click: 1 === left; 2 === middle; 3 === right
+			// Note: button is not normalized, so don't use it
+			if ( !event.which && button !== undefined ) {
+				event.which = ( button & 1 ? 1 : ( button & 2 ? 3 : ( button & 4 ? 2 : 0 ) ) );
+			}
+
+			return event;
+		}
+	},
+
+	fix: function( event ) {
+		if ( event[ jQuery.expando ] ) {
+			return event;
+		}
+
+		// Create a writable copy of the event object and normalize some properties
+		var i, prop, copy,
+			type = event.type,
+			originalEvent = event,
+			fixHook = this.fixHooks[ type ];
+
+		if ( !fixHook ) {
+			this.fixHooks[ type ] = fixHook =
+				rmouseEvent.test( type ) ? this.mouseHooks :
+				rkeyEvent.test( type ) ? this.keyHooks :
+				{};
+		}
+		copy = fixHook.props ? this.props.concat( fixHook.props ) : this.props;
+
+		event = new jQuery.Event( originalEvent );
+
+		i = copy.length;
+		while ( i-- ) {
+			prop = copy[ i ];
+			event[ prop ] = originalEvent[ prop ];
+		}
+
+		// Support: Cordova 2.5 (WebKit) (#13255)
+		// All events should have a target; Cordova deviceready doesn't
+		if ( !event.target ) {
+			event.target = document;
+		}
+
+		// Support: Safari 6.0+, Chrome<28
+		// Target should not be a text node (#504, #13143)
+		if ( event.target.nodeType === 3 ) {
+			event.target = event.target.parentNode;
+		}
+
+		return fixHook.filter ? fixHook.filter( event, originalEvent ) : event;
+	},
+
+	special: {
+		load: {
+			// Prevent triggered image.load events from bubbling to window.load
+			noBubble: true
+		},
+		focus: {
+			// Fire native event if possible so blur/focus sequence is correct
+			trigger: function() {
+				if ( this !== safeActiveElement() && this.focus ) {
+					this.focus();
+					return false;
+				}
+			},
+			delegateType: "focusin"
+		},
+		blur: {
+			trigger: function() {
+				if ( this === safeActiveElement() && this.blur ) {
+					this.blur();
+					return false;
+				}
+			},
+			delegateType: "focusout"
+		},
+		click: {
+			// For checkbox, fire native event so checked state will be right
+			trigger: function() {
+				if ( this.type === "checkbox" && this.click && jQuery.nodeName( this, "input" ) ) {
+					this.click();
+					return false;
+				}
+			},
+
+			// For cross-browser consistency, don't fire native .click() on links
+			_default: function( event ) {
+				return jQuery.nodeName( event.target, "a" );
+			}
+		},
+
+		beforeunload: {
+			postDispatch: function( event ) {
+
+				// Support: Firefox 20+
+				// Firefox doesn't alert if the returnValue field is not set.
+				if ( event.result !== undefined && event.originalEvent ) {
+					event.originalEvent.returnValue = event.result;
+				}
+			}
+		}
+	},
+
+	simulate: function( type, elem, event, bubble ) {
+		// Piggyback on a donor event to simulate a different one.
+		// Fake originalEvent to avoid donor's stopPropagation, but if the
+		// simulated event prevents default then we do the same on the donor.
+		var e = jQuery.extend(
+			new jQuery.Event(),
+			event,
+			{
+				type: type,
+				isSimulated: true,
+				originalEvent: {}
+			}
+		);
+		if ( bubble ) {
+			jQuery.event.trigger( e, null, elem );
+		} else {
+			jQuery.event.dispatch.call( elem, e );
+		}
+		if ( e.isDefaultPrevented() ) {
+			event.preventDefault();
+		}
+	}
+};
+
+jQuery.removeEvent = function( elem, type, handle ) {
+	if ( elem.removeEventListener ) {
+		elem.removeEventListener( type, handle, false );
+	}
+};
+
+jQuery.Event = function( src, props ) {
+	// Allow instantiation without the 'new' keyword
+	if ( !(this instanceof jQuery.Event) ) {
+		return new jQuery.Event( src, props );
+	}
+
+	// Event object
+	if ( src && src.type ) {
+		this.originalEvent = src;
+		this.type = src.type;
+
+		// Events bubbling up the document may have been marked as prevented
+		// by a handler lower down the tree; reflect the correct value.
+		this.isDefaultPrevented = src.defaultPrevented ||
+				src.defaultPrevented === undefined &&
+				// Support: Android<4.0
+				src.returnValue === false ?
+			returnTrue :
+			returnFalse;
+
+	// Event type
+	} else {
+		this.type = src;
+	}
+
+	// Put explicitly provided properties onto the event object
+	if ( props ) {
+		jQuery.extend( this, props );
+	}
+
+	// Create a timestamp if incoming event doesn't have one
+	this.timeStamp = src && src.timeStamp || jQuery.now();
+
+	// Mark it as fixed
+	this[ jQuery.expando ] = true;
+};
+
+// jQuery.Event is based on DOM3 Events as specified by the ECMAScript Language Binding
+// http://www.w3.org/TR/2003/WD-DOM-Level-3-Events-20030331/ecma-script-binding.html
+jQuery.Event.prototype = {
+	isDefaultPrevented: returnFalse,
+	isPropagationStopped: returnFalse,
+	isImmediatePropagationStopped: returnFalse,
+
+	preventDefault: function() {
+		var e = this.originalEvent;
+
+		this.isDefaultPrevented = returnTrue;
+
+		if ( e && e.preventDefault ) {
+			e.preventDefault();
+		}
+	},
+	stopPropagation: function() {
+		var e = this.originalEvent;
+
+		this.isPropagationStopped = returnTrue;
+
+		if ( e && e.stopPropagation ) {
+			e.stopPropagation();
+		}
+	},
+	stopImmediatePropagation: function() {
+		var e = this.originalEvent;
+
+		this.isImmediatePropagationStopped = returnTrue;
+
+		if ( e && e.stopImmediatePropagation ) {
+			e.stopImmediatePropagation();
+		}
+
+		this.stopPropagation();
+	}
+};
+
+// Create mouseenter/leave events using mouseover/out and event-time checks
+// Support: Chrome 15+
+jQuery.each({
+	mouseenter: "mouseover",
+	mouseleave: "mouseout",
+	pointerenter: "pointerover",
+	pointerleave: "pointerout"
+}, function( orig, fix ) {
+	jQuery.event.special[ orig ] = {
+		delegateType: fix,
+		bindType: fix,
+
+		handle: function( event ) {
+			var ret,
+				target = this,
+				related = event.relatedTarget,
+				handleObj = event.handleObj;
+
+			// For mousenter/leave call the handler if related is outside the target.
+			// NB: No relatedTarget if the mouse left/entered the browser window
+			if ( !related || (related !== target && !jQuery.contains( target, related )) ) {
+				event.type = handleObj.origType;
+				ret = handleObj.handler.apply( this, arguments );
+				event.type = fix;
+			}
+			return ret;
+		}
+	};
+});
+
+// Support: Firefox, Chrome, Safari
+// Create "bubbling" focus and blur events
+if ( !support.focusinBubbles ) {
+	jQuery.each({ focus: "focusin", blur: "focusout" }, function( orig, fix ) {
+
+		// Attach a single capturing handler on the document while someone wants focusin/focusout
+		var handler = function( event ) {
+				jQuery.event.simulate( fix, event.target, jQuery.event.fix( event ), true );
+			};
+
+		jQuery.event.special[ fix ] = {
+			setup: function() {
+				var doc = this.ownerDocument || this,
+					attaches = data_priv.access( doc, fix );
+
+				if ( !attaches ) {
+					doc.addEventListener( orig, handler, true );
+				}
+				data_priv.access( doc, fix, ( attaches || 0 ) + 1 );
+			},
+			teardown: function() {
+				var doc = this.ownerDocument || this,
+					attaches = data_priv.access( doc, fix ) - 1;
+
+				if ( !attaches ) {
+					doc.removeEventListener( orig, handler, true );
+					data_priv.remove( doc, fix );
+
+				} else {
+					data_priv.access( doc, fix, attaches );
+				}
+			}
+		};
+	});
+}
+
+jQuery.fn.extend({
+
+	on: function( types, selector, data, fn, /*INTERNAL*/ one ) {
+		var origFn, type;
+
+		// Types can be a map of types/handlers
+		if ( typeof types === "object" ) {
+			// ( types-Object, selector, data )
+			if ( typeof selector !== "string" ) {
+				// ( types-Object, data )
+				data = data || selector;
+				selector = undefined;
+			}
+			for ( type in types ) {
+				this.on( type, selector, data, types[ type ], one );
+			}
+			return this;
+		}
+
+		if ( data == null && fn == null ) {
+			// ( types, fn )
+			fn = selector;
+			data = selector = undefined;
+		} else if ( fn == null ) {
+			if ( typeof selector === "string" ) {
+				// ( types, selector, fn )
+				fn = data;
+				data = undefined;
+			} else {
+				// ( types, data, fn )
+				fn = data;
+				data = selector;
+				selector = undefined;
+			}
+		}
+		if ( fn === false ) {
+			fn = returnFalse;
+		} else if ( !fn ) {
+			return this;
+		}
+
+		if ( one === 1 ) {
+			origFn = fn;
+			fn = function( event ) {
+				// Can use an empty set, since event contains the info
+				jQuery().off( event );
+				return origFn.apply( this, arguments );
+			};
+			// Use same guid so caller can remove using origFn
+			fn.guid = origFn.guid || ( origFn.guid = jQuery.guid++ );
+		}
+		return this.each( function() {
+			jQuery.event.add( this, types, fn, data, selector );
+		});
+	},
+	one: function( types, selector, data, fn ) {
+		return this.on( types, selector, data, fn, 1 );
+	},
+	off: function( types, selector, fn ) {
+		var handleObj, type;
+		if ( types && types.preventDefault && types.handleObj ) {
+			// ( event )  dispatched jQuery.Event
+			handleObj = types.handleObj;
+			jQuery( types.delegateTarget ).off(
+				handleObj.namespace ? handleObj.origType + "." + handleObj.namespace : handleObj.origType,
+				handleObj.selector,
+				handleObj.handler
+			);
+			return this;
+		}
+		if ( typeof types === "object" ) {
+			// ( types-object [, selector] )
+			for ( type in types ) {
+				this.off( type, selector, types[ type ] );
+			}
+			return this;
+		}
+		if ( selector === false || typeof selector === "function" ) {
+			// ( types [, fn] )
+			fn = selector;
+			selector = undefined;
+		}
+		if ( fn === false ) {
+			fn = returnFalse;
+		}
+		return this.each(function() {
+			jQuery.event.remove( this, types, fn, selector );
+		});
+	},
+
+	trigger: function( type, data ) {
+		return this.each(function() {
+			jQuery.event.trigger( type, data, this );
+		});
+	},
+	triggerHandler: function( type, data ) {
+		var elem = this[0];
+		if ( elem ) {
+			return jQuery.event.trigger( type, data, elem, true );
+		}
+	}
+});
+
+
+var
+	rxhtmlTag = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi,
+	rtagName = /<([\w:]+)/,
+	rhtml = /<|&#?\w+;/,
+	rnoInnerhtml = /<(?:script|style|link)/i,
+	// checked="checked" or checked
+	rchecked = /checked\s*(?:[^=]|=\s*.checked.)/i,
+	rscriptType = /^$|\/(?:java|ecma)script/i,
+	rscriptTypeMasked = /^true\/(.*)/,
+	rcleanScript = /^\s*<!(?:\[CDATA\[|--)|(?:\]\]|--)>\s*$/g,
+
+	// We have to close these tags to support XHTML (#13200)
+	wrapMap = {
+
+		// Support: IE9
+		option: [ 1, "<select multiple='multiple'>", "</select>" ],
+
+		thead: [ 1, "<table>", "</table>" ],
+		col: [ 2, "<table><colgroup>", "</colgroup></table>" ],
+		tr: [ 2, "<table><tbody>", "</tbody></table>" ],
+		td: [ 3, "<table><tbody><tr>", "</tr></tbody></table>" ],
+
+		_default: [ 0, "", "" ]
+	};
+
+// Support: IE9
+wrapMap.optgroup = wrapMap.option;
+
+wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
+wrapMap.th = wrapMap.td;
+
+// Support: 1.x compatibility
+// Manipulating tables requires a tbody
+function manipulationTarget( elem, content ) {
+	return jQuery.nodeName( elem, "table" ) &&
+		jQuery.nodeName( content.nodeType !== 11 ? content : content.firstChild, "tr" ) ?
+
+		elem.getElementsByTagName("tbody")[0] ||
+			elem.appendChild( elem.ownerDocument.createElement("tbody") ) :
+		elem;
+}
+
+// Replace/restore the type attribute of script elements for safe DOM manipulation
+function disableScript( elem ) {
+	elem.type = (elem.getAttribute("type") !== null) + "/" + elem.type;
+	return elem;
+}
+function restoreScript( elem ) {
+	var match = rscriptTypeMasked.exec( elem.type );
+
+	if ( match ) {
+		elem.type = match[ 1 ];
+	} else {
+		elem.removeAttribute("type");
+	}
+
+	return elem;
+}
+
+// Mark scripts as having already been evaluated
+function setGlobalEval( elems, refElements ) {
+	var i = 0,
+		l = elems.length;
+
+	for ( ; i < l; i++ ) {
+		data_priv.set(
+			elems[ i ], "globalEval", !refElements || data_priv.get( refElements[ i ], "globalEval" )
+		);
+	}
+}
+
+function cloneCopyEvent( src, dest ) {
+	var i, l, type, pdataOld, pdataCur, udataOld, udataCur, events;
+
+	if ( dest.nodeType !== 1 ) {
+		return;
+	}
+
+	// 1. Copy private data: events, handlers, etc.
+	if ( data_priv.hasData( src ) ) {
+		pdataOld = data_priv.access( src );
+		pdataCur = data_priv.set( dest, pdataOld );
+		events = pdataOld.events;
+
+		if ( events ) {
+			delete pdataCur.handle;
+			pdataCur.events = {};
+
+			for ( type in events ) {
+				for ( i = 0, l = events[ type ].length; i < l; i++ ) {
+					jQuery.event.add( dest, type, events[ type ][ i ] );
+				}
+			}
+		}
+	}
+
+	// 2. Copy user data
+	if ( data_user.hasData( src ) ) {
+		udataOld = data_user.access( src );
+		udataCur = jQuery.extend( {}, udataOld );
+
+		data_user.set( dest, udataCur );
+	}
+}
+
+function getAll( context, tag ) {
+	var ret = context.getElementsByTagName ? context.getElementsByTagName( tag || "*" ) :
+			context.querySelectorAll ? context.querySelectorAll( tag || "*" ) :
+			[];
+
+	return tag === undefined || tag && jQuery.nodeName( context, tag ) ?
+		jQuery.merge( [ context ], ret ) :
+		ret;
+}
+
+// Fix IE bugs, see support tests
+function fixInput( src, dest ) {
+	var nodeName = dest.nodeName.toLowerCase();
+
+	// Fails to persist the checked state of a cloned checkbox or radio button.
+	if ( nodeName === "input" && rcheckableType.test( src.type ) ) {
+		dest.checked = src.checked;
+
+	// Fails to return the selected option to the default selected state when cloning options
+	} else if ( nodeName === "input" || nodeName === "textarea" ) {
+		dest.defaultValue = src.defaultValue;
+	}
+}
+
+jQuery.extend({
+	clone: function( elem, dataAndEvents, deepDataAndEvents ) {
+		var i, l, srcElements, destElements,
+			clone = elem.cloneNode( true ),
+			inPage = jQuery.contains( elem.ownerDocument, elem );
+
+		// Fix IE cloning issues
+		if ( !support.noCloneChecked && ( elem.nodeType === 1 || elem.nodeType === 11 ) &&
+				!jQuery.isXMLDoc( elem ) ) {
+
+			// We eschew Sizzle here for performance reasons: http://jsperf.com/getall-vs-sizzle/2
+			destElements = getAll( clone );
+			srcElements = getAll( elem );
+
+			for ( i = 0, l = srcElements.length; i < l; i++ ) {
+				fixInput( srcElements[ i ], destElements[ i ] );
+			}
+		}
+
+		// Copy the events from the original to the clone
+		if ( dataAndEvents ) {
+			if ( deepDataAndEvents ) {
+				srcElements = srcElements || getAll( elem );
+				destElements = destElements || getAll( clone );
+
+				for ( i = 0, l = srcElements.length; i < l; i++ ) {
+					cloneCopyEvent( srcElements[ i ], destElements[ i ] );
+				}
+			} else {
+				cloneCopyEvent( elem, clone );
+			}
+		}
+
+		// Preserve script evaluation history
+		destElements = getAll( clone, "script" );
+		if ( destElements.length > 0 ) {
+			setGlobalEval( destElements, !inPage && getAll( elem, "script" ) );
+		}
+
+		// Return the cloned set
+		return clone;
+	},
+
+	buildFragment: function( elems, context, scripts, selection ) {
+		var elem, tmp, tag, wrap, contains, j,
+			fragment = context.createDocumentFragment(),
+			nodes = [],
+			i = 0,
+			l = elems.length;
+
+		for ( ; i < l; i++ ) {
+			elem = elems[ i ];
+
+			if ( elem || elem === 0 ) {
+
+				// Add nodes directly
+				if ( jQuery.type( elem ) === "object" ) {
+					// Support: QtWebKit, PhantomJS
+					// push.apply(_, arraylike) throws on ancient WebKit
+					jQuery.merge( nodes, elem.nodeType ? [ elem ] : elem );
+
+				// Convert non-html into a text node
+				} else if ( !rhtml.test( elem ) ) {
+					nodes.push( context.createTextNode( elem ) );
+
+				// Convert html into DOM nodes
+				} else {
+					tmp = tmp || fragment.appendChild( context.createElement("div") );
+
+					// Deserialize a standard representation
+					tag = ( rtagName.exec( elem ) || [ "", "" ] )[ 1 ].toLowerCase();
+					wrap = wrapMap[ tag ] || wrapMap._default;
+					tmp.innerHTML = wrap[ 1 ] + elem.replace( rxhtmlTag, "<$1></$2>" ) + wrap[ 2 ];
+
+					// Descend through wrappers to the right content
+					j = wrap[ 0 ];
+					while ( j-- ) {
+						tmp = tmp.lastChild;
+					}
+
+					// Support: QtWebKit, PhantomJS
+					// push.apply(_, arraylike) throws on ancient WebKit
+					jQuery.merge( nodes, tmp.childNodes );
+
+					// Remember the top-level container
+					tmp = fragment.firstChild;
+
+					// Ensure the created nodes are orphaned (#12392)
+					tmp.textContent = "";
+				}
+			}
+		}
+
+		// Remove wrapper from fragment
+		fragment.textContent = "";
+
+		i = 0;
+		while ( (elem = nodes[ i++ ]) ) {
+
+			// #4087 - If origin and destination elements are the same, and this is
+			// that element, do not do anything
+			if ( selection && jQuery.inArray( elem, selection ) !== -1 ) {
+				continue;
+			}
+
+			contains = jQuery.contains( elem.ownerDocument, elem );
+
+			// Append to fragment
+			tmp = getAll( fragment.appendChild( elem ), "script" );
+
+			// Preserve script evaluation history
+			if ( contains ) {
+				setGlobalEval( tmp );
+			}
+
+			// Capture executables
+			if ( scripts ) {
+				j = 0;
+				while ( (elem = tmp[ j++ ]) ) {
+					if ( rscriptType.test( elem.type || "" ) ) {
+						scripts.push( elem );
+					}
+				}
+			}
+		}
+
+		return fragment;
+	},
+
+	cleanData: function( elems ) {
+		var data, elem, type, key,
+			special = jQuery.event.special,
+			i = 0;
+
+		for ( ; (elem = elems[ i ]) !== undefined; i++ ) {
+			if ( jQuery.acceptData( elem ) ) {
+				key = elem[ data_priv.expando ];
+
+				if ( key && (data = data_priv.cache[ key ]) ) {
+					if ( data.events ) {
+						for ( type in data.events ) {
+							if ( special[ type ] ) {
+								jQuery.event.remove( elem, type );
+
+							// This is a shortcut to avoid jQuery.event.remove's overhead
+							} else {
+								jQuery.removeEvent( elem, type, data.handle );
+							}
+						}
+					}
+					if ( data_priv.cache[ key ] ) {
+						// Discard any remaining `private` data
+						delete data_priv.cache[ key ];
+					}
+				}
+			}
+			// Discard any remaining `user` data
+			delete data_user.cache[ elem[ data_user.expando ] ];
+		}
+	}
+});
+
+jQuery.fn.extend({
+	text: function( value ) {
+		return access( this, function( value ) {
+			return value === undefined ?
+				jQuery.text( this ) :
+				this.empty().each(function() {
+					if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
+						this.textContent = value;
+					}
+				});
+		}, null, value, arguments.length );
+	},
+
+	append: function() {
+		return this.domManip( arguments, function( elem ) {
+			if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
+				var target = manipulationTarget( this, elem );
+				target.appendChild( elem );
+			}
+		});
+	},
+
+	prepend: function() {
+		return this.domManip( arguments, function( elem ) {
+			if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
+				var target = manipulationTarget( this, elem );
+				target.insertBefore( elem, target.firstChild );
+			}
+		});
+	},
+
+	before: function() {
+		return this.domManip( arguments, function( elem ) {
+			if ( this.parentNode ) {
+				this.parentNode.insertBefore( elem, this );
+			}
+		});
+	},
+
+	after: function() {
+		return this.domManip( arguments, function( elem ) {
+			if ( this.parentNode ) {
+				this.parentNode.insertBefore( elem, this.nextSibling );
+			}
+		});
+	},
+
+	remove: function( selector, keepData /* Internal Use Only */ ) {
+		var elem,
+			elems = selector ? jQuery.filter( selector, this ) : this,
+			i = 0;
+
+		for ( ; (elem = elems[i]) != null; i++ ) {
+			if ( !keepData && elem.nodeType === 1 ) {
+				jQuery.cleanData( getAll( elem ) );
+			}
+
+			if ( elem.parentNode ) {
+				if ( keepData && jQuery.contains( elem.ownerDocument, elem ) ) {
+					setGlobalEval( getAll( elem, "script" ) );
+				}
+				elem.parentNode.removeChild( elem );
+			}
+		}
+
+		return this;
+	},
+
+	empty: function() {
+		var elem,
+			i = 0;
+
+		for ( ; (elem = this[i]) != null; i++ ) {
+			if ( elem.nodeType === 1 ) {
+
+				// Prevent memory leaks
+				jQuery.cleanData( getAll( elem, false ) );
+
+				// Remove any remaining nodes
+				elem.textContent = "";
+			}
+		}
+
+		return this;
+	},
+
+	clone: function( dataAndEvents, deepDataAndEvents ) {
+		dataAndEvents = dataAndEvents == null ? false : dataAndEvents;
+		deepDataAndEvents = deepDataAndEvents == null ? dataAndEvents : deepDataAndEvents;
+
+		return this.map(function() {
+			return jQuery.clone( this, dataAndEvents, deepDataAndEvents );
+		});
+	},
+
+	html: function( value ) {
+		return access( this, function( value ) {
+			var elem = this[ 0 ] || {},
+				i = 0,
+				l = this.length;
+
+			if ( value === undefined && elem.nodeType === 1 ) {
+				return elem.innerHTML;
+			}
+
+			// See if we can take a shortcut and just use innerHTML
+			if ( typeof value === "string" && !rnoInnerhtml.test( value ) &&
+				!wrapMap[ ( rtagName.exec( value ) || [ "", "" ] )[ 1 ].toLowerCase() ] ) {
+
+				value = value.replace( rxhtmlTag, "<$1></$2>" );
+
+				try {
+					for ( ; i < l; i++ ) {
+						elem = this[ i ] || {};
+
+						// Remove element nodes and prevent memory leaks
+						if ( elem.nodeType === 1 ) {
+							jQuery.cleanData( getAll( elem, false ) );
+							elem.innerHTML = value;
+						}
+					}
+
+					elem = 0;
+
+				// If using innerHTML throws an exception, use the fallback method
+				} catch( e ) {}
+			}
+
+			if ( elem ) {
+				this.empty().append( value );
+			}
+		}, null, value, arguments.length );
+	},
+
+	replaceWith: function() {
+		var arg = arguments[ 0 ];
+
+		// Make the changes, replacing each context element with the new content
+		this.domManip( arguments, function( elem ) {
+			arg = this.parentNode;
+
+			jQuery.cleanData( getAll( this ) );
+
+			if ( arg ) {
+				arg.replaceChild( elem, this );
+			}
+		});
+
+		// Force removal if there was no new content (e.g., from empty arguments)
+		return arg && (arg.length || arg.nodeType) ? this : this.remove();
+	},
+
+	detach: function( selector ) {
+		return this.remove( selector, true );
+	},
+
+	domManip: function( args, callback ) {
+
+		// Flatten any nested arrays
+		args = concat.apply( [], args );
+
+		var fragment, first, scripts, hasScripts, node, doc,
+			i = 0,
+			l = this.length,
+			set = this,
+			iNoClone = l - 1,
+			value = args[ 0 ],
+			isFunction = jQuery.isFunction( value );
+
+		// We can't cloneNode fragments that contain checked, in WebKit
+		if ( isFunction ||
+				( l > 1 && typeof value === "string" &&
+					!support.checkClone && rchecked.test( value ) ) ) {
+			return this.each(function( index ) {
+				var self = set.eq( index );
+				if ( isFunction ) {
+					args[ 0 ] = value.call( this, index, self.html() );
+				}
+				self.domManip( args, callback );
+			});
+		}
+
+		if ( l ) {
+			fragment = jQuery.buildFragment( args, this[ 0 ].ownerDocument, false, this );
+			first = fragment.firstChild;
+
+			if ( fragment.childNodes.length === 1 ) {
+				fragment = first;
+			}
+
+			if ( first ) {
+				scripts = jQuery.map( getAll( fragment, "script" ), disableScript );
+				hasScripts = scripts.length;
+
+				// Use the original fragment for the last item instead of the first because it can end up
+				// being emptied incorrectly in certain situations (#8070).
+				for ( ; i < l; i++ ) {
+					node = fragment;
+
+					if ( i !== iNoClone ) {
+						node = jQuery.clone( node, true, true );
+
+						// Keep references to cloned scripts for later restoration
+						if ( hasScripts ) {
+							// Support: QtWebKit
+							// jQuery.merge because push.apply(_, arraylike) throws
+							jQuery.merge( scripts, getAll( node, "script" ) );
+						}
+					}
+
+					callback.call( this[ i ], node, i );
+				}
+
+				if ( hasScripts ) {
+					doc = scripts[ scripts.length - 1 ].ownerDocument;
+
+					// Reenable scripts
+					jQuery.map( scripts, restoreScript );
+
+					// Evaluate executable scripts on first document insertion
+					for ( i = 0; i < hasScripts; i++ ) {
+						node = scripts[ i ];
+						if ( rscriptType.test( node.type || "" ) &&
+							!data_priv.access( node, "globalEval" ) && jQuery.contains( doc, node ) ) {
+
+							if ( node.src ) {
+								// Optional AJAX dependency, but won't run scripts if not present
+								if ( jQuery._evalUrl ) {
+									jQuery._evalUrl( node.src );
+								}
+							} else {
+								jQuery.globalEval( node.textContent.replace( rcleanScript, "" ) );
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return this;
+	}
+});
+
+jQuery.each({
+	appendTo: "append",
+	prependTo: "prepend",
+	insertBefore: "before",
+	insertAfter: "after",
+	replaceAll: "replaceWith"
+}, function( name, original ) {
+	jQuery.fn[ name ] = function( selector ) {
+		var elems,
+			ret = [],
+			insert = jQuery( selector ),
+			last = insert.length - 1,
+			i = 0;
+
+		for ( ; i <= last; i++ ) {
+			elems = i === last ? this : this.clone( true );
+			jQuery( insert[ i ] )[ original ]( elems );
+
+			// Support: QtWebKit
+			// .get() because push.apply(_, arraylike) throws
+			push.apply( ret, elems.get() );
+		}
+
+		return this.pushStack( ret );
+	};
+});
+
+
+var iframe,
+	elemdisplay = {};
+
+/**
+ * Retrieve the actual display of a element
+ * @param {String} name nodeName of the element
+ * @param {Object} doc Document object
+ */
+// Called only from within defaultDisplay
+function actualDisplay( name, doc ) {
+	var style,
+		elem = jQuery( doc.createElement( name ) ).appendTo( doc.body ),
+
+		// getDefaultComputedStyle might be reliably used only on attached element
+		display = window.getDefaultComputedStyle && ( style = window.getDefaultComputedStyle( elem[ 0 ] ) ) ?
+
+			// Use of this method is a temporary fix (more like optimization) until something better comes along,
+			// since it was removed from specification and supported only in FF
+			style.display : jQuery.css( elem[ 0 ], "display" );
+
+	// We don't have any data stored on the element,
+	// so use "detach" method as fast way to get rid of the element
+	elem.detach();
+
+	return display;
+}
+
+/**
+ * Try to determine the default display value of an element
+ * @param {String} nodeName
+ */
+function defaultDisplay( nodeName ) {
+	var doc = document,
+		display = elemdisplay[ nodeName ];
+
+	if ( !display ) {
+		display = actualDisplay( nodeName, doc );
+
+		// If the simple way fails, read from inside an iframe
+		if ( display === "none" || !display ) {
+
+			// Use the already-created iframe if possible
+			iframe = (iframe || jQuery( "<iframe frameborder='0' width='0' height='0'/>" )).appendTo( doc.documentElement );
+
+			// Always write a new HTML skeleton so Webkit and Firefox don't choke on reuse
+			doc = iframe[ 0 ].contentDocument;
+
+			// Support: IE
+			doc.write();
+			doc.close();
+
+			display = actualDisplay( nodeName, doc );
+			iframe.detach();
+		}
+
+		// Store the correct default display
+		elemdisplay[ nodeName ] = display;
+	}
+
+	return display;
+}
+var rmargin = (/^margin/);
+
+var rnumnonpx = new RegExp( "^(" + pnum + ")(?!px)[a-z%]+$", "i" );
+
+var getStyles = function( elem ) {
+		// Support: IE<=11+, Firefox<=30+ (#15098, #14150)
+		// IE throws on elements created in popups
+		// FF meanwhile throws on frame elements through "defaultView.getComputedStyle"
+		if ( elem.ownerDocument.defaultView.opener ) {
+			return elem.ownerDocument.defaultView.getComputedStyle( elem, null );
+		}
+
+		return window.getComputedStyle( elem, null );
+	};
+
+
+
+function curCSS( elem, name, computed ) {
+	var width, minWidth, maxWidth, ret,
+		style = elem.style;
+
+	computed = computed || getStyles( elem );
+
+	// Support: IE9
+	// getPropertyValue is only needed for .css('filter') (#12537)
+	if ( computed ) {
+		ret = computed.getPropertyValue( name ) || computed[ name ];
+	}
+
+	if ( computed ) {
+
+		if ( ret === "" && !jQuery.contains( elem.ownerDocument, elem ) ) {
+			ret = jQuery.style( elem, name );
+		}
+
+		// Support: iOS < 6
+		// A tribute to the "awesome hack by Dean Edwards"
+		// iOS < 6 (at least) returns percentage for a larger set of values, but width seems to be reliably pixels
+		// this is against the CSSOM draft spec: http://dev.w3.org/csswg/cssom/#resolved-values
+		if ( rnumnonpx.test( ret ) && rmargin.test( name ) ) {
+
+			// Remember the original values
+			width = style.width;
+			minWidth = style.minWidth;
+			maxWidth = style.maxWidth;
+
+			// Put in the new values to get a computed value out
+			style.minWidth = style.maxWidth = style.width = ret;
+			ret = computed.width;
+
+			// Revert the changed values
+			style.width = width;
+			style.minWidth = minWidth;
+			style.maxWidth = maxWidth;
+		}
+	}
+
+	return ret !== undefined ?
+		// Support: IE
+		// IE returns zIndex value as an integer.
+		ret + "" :
+		ret;
+}
+
+
+function addGetHookIf( conditionFn, hookFn ) {
+	// Define the hook, we'll check on the first run if it's really needed.
+	return {
+		get: function() {
+			if ( conditionFn() ) {
+				// Hook not needed (or it's not possible to use it due
+				// to missing dependency), remove it.
+				delete this.get;
+				return;
+			}
+
+			// Hook needed; redefine it so that the support test is not executed again.
+			return (this.get = hookFn).apply( this, arguments );
+		}
+	};
+}
+
+
+(function() {
+	var pixelPositionVal, boxSizingReliableVal,
+		docElem = document.documentElement,
+		container = document.createElement( "div" ),
+		div = document.createElement( "div" );
+
+	if ( !div.style ) {
+		return;
+	}
+
+	// Support: IE9-11+
+	// Style of cloned element affects source element cloned (#8908)
+	div.style.backgroundClip = "content-box";
+	div.cloneNode( true ).style.backgroundClip = "";
+	support.clearCloneStyle = div.style.backgroundClip === "content-box";
+
+	container.style.cssText = "border:0;width:0;height:0;top:0;left:-9999px;margin-top:1px;" +
+		"position:absolute";
+	container.appendChild( div );
+
+	// Executing both pixelPosition & boxSizingReliable tests require only one layout
+	// so they're executed at the same time to save the second computation.
+	function computePixelPositionAndBoxSizingReliable() {
+		div.style.cssText =
+			// Support: Firefox<29, Android 2.3
+			// Vendor-prefix box-sizing
+			"-webkit-box-sizing:border-box;-moz-box-sizing:border-box;" +
+			"box-sizing:border-box;display:block;margin-top:1%;top:1%;" +
+			"border:1px;padding:1px;width:4px;position:absolute";
+		div.innerHTML = "";
+		docElem.appendChild( container );
+
+		var divStyle = window.getComputedStyle( div, null );
+		pixelPositionVal = divStyle.top !== "1%";
+		boxSizingReliableVal = divStyle.width === "4px";
+
+		docElem.removeChild( container );
+	}
+
+	// Support: node.js jsdom
+	// Don't assume that getComputedStyle is a property of the global object
+	if ( window.getComputedStyle ) {
+		jQuery.extend( support, {
+			pixelPosition: function() {
+
+				// This test is executed only once but we still do memoizing
+				// since we can use the boxSizingReliable pre-computing.
+				// No need to check if the test was already performed, though.
+				computePixelPositionAndBoxSizingReliable();
+				return pixelPositionVal;
+			},
+			boxSizingReliable: function() {
+				if ( boxSizingReliableVal == null ) {
+					computePixelPositionAndBoxSizingReliable();
+				}
+				return boxSizingReliableVal;
+			},
+			reliableMarginRight: function() {
+
+				// Support: Android 2.3
+				// Check if div with explicit width and no margin-right incorrectly
+				// gets computed margin-right based on width of container. (#3333)
+				// WebKit Bug 13343 - getComputedStyle returns wrong value for margin-right
+				// This support function is only executed once so no memoizing is needed.
+				var ret,
+					marginDiv = div.appendChild( document.createElement( "div" ) );
+
+				// Reset CSS: box-sizing; display; margin; border; padding
+				marginDiv.style.cssText = div.style.cssText =
+					// Support: Firefox<29, Android 2.3
+					// Vendor-prefix box-sizing
+					"-webkit-box-sizing:content-box;-moz-box-sizing:content-box;" +
+					"box-sizing:content-box;display:block;margin:0;border:0;padding:0";
+				marginDiv.style.marginRight = marginDiv.style.width = "0";
+				div.style.width = "1px";
+				docElem.appendChild( container );
+
+				ret = !parseFloat( window.getComputedStyle( marginDiv, null ).marginRight );
+
+				docElem.removeChild( container );
+				div.removeChild( marginDiv );
+
+				return ret;
+			}
+		});
+	}
+})();
+
+
+// A method for quickly swapping in/out CSS properties to get correct calculations.
+jQuery.swap = function( elem, options, callback, args ) {
+	var ret, name,
+		old = {};
+
+	// Remember the old values, and insert the new ones
+	for ( name in options ) {
+		old[ name ] = elem.style[ name ];
+		elem.style[ name ] = options[ name ];
+	}
+
+	ret = callback.apply( elem, args || [] );
+
+	// Revert the old values
+	for ( name in options ) {
+		elem.style[ name ] = old[ name ];
+	}
+
+	return ret;
+};
+
+
+var
+	// Swappable if display is none or starts with table except "table", "table-cell", or "table-caption"
+	// See here for display values: https://developer.mozilla.org/en-US/docs/CSS/display
+	rdisplayswap = /^(none|table(?!-c[ea]).+)/,
+	rnumsplit = new RegExp( "^(" + pnum + ")(.*)$", "i" ),
+	rrelNum = new RegExp( "^([+-])=(" + pnum + ")", "i" ),
+
+	cssShow = { position: "absolute", visibility: "hidden", display: "block" },
+	cssNormalTransform = {
+		letterSpacing: "0",
+		fontWeight: "400"
+	},
+
+	cssPrefixes = [ "Webkit", "O", "Moz", "ms" ];
+
+// Return a css property mapped to a potentially vendor prefixed property
+function vendorPropName( style, name ) {
+
+	// Shortcut for names that are not vendor prefixed
+	if ( name in style ) {
+		return name;
+	}
+
+	// Check for vendor prefixed names
+	var capName = name[0].toUpperCase() + name.slice(1),
+		origName = name,
+		i = cssPrefixes.length;
+
+	while ( i-- ) {
+		name = cssPrefixes[ i ] + capName;
+		if ( name in style ) {
+			return name;
+		}
+	}
+
+	return origName;
+}
+
+function setPositiveNumber( elem, value, subtract ) {
+	var matches = rnumsplit.exec( value );
+	return matches ?
+		// Guard against undefined "subtract", e.g., when used as in cssHooks
+		Math.max( 0, matches[ 1 ] - ( subtract || 0 ) ) + ( matches[ 2 ] || "px" ) :
+		value;
+}
+
+function augmentWidthOrHeight( elem, name, extra, isBorderBox, styles ) {
+	var i = extra === ( isBorderBox ? "border" : "content" ) ?
+		// If we already have the right measurement, avoid augmentation
+		4 :
+		// Otherwise initialize for horizontal or vertical properties
+		name === "width" ? 1 : 0,
+
+		val = 0;
+
+	for ( ; i < 4; i += 2 ) {
+		// Both box models exclude margin, so add it if we want it
+		if ( extra === "margin" ) {
+			val += jQuery.css( elem, extra + cssExpand[ i ], true, styles );
+		}
+
+		if ( isBorderBox ) {
+			// border-box includes padding, so remove it if we want content
+			if ( extra === "content" ) {
+				val -= jQuery.css( elem, "padding" + cssExpand[ i ], true, styles );
+			}
+
+			// At this point, extra isn't border nor margin, so remove border
+			if ( extra !== "margin" ) {
+				val -= jQuery.css( elem, "border" + cssExpand[ i ] + "Width", true, styles );
+			}
+		} else {
+			// At this point, extra isn't content, so add padding
+			val += jQuery.css( elem, "padding" + cssExpand[ i ], true, styles );
+
+			// At this point, extra isn't content nor padding, so add border
+			if ( extra !== "padding" ) {
+				val += jQuery.css( elem, "border" + cssExpand[ i ] + "Width", true, styles );
+			}
+		}
+	}
+
+	return val;
+}
+
+function getWidthOrHeight( elem, name, extra ) {
+
+	// Start with offset property, which is equivalent to the border-box value
+	var valueIsBorderBox = true,
+		val = name === "width" ? elem.offsetWidth : elem.offsetHeight,
+		styles = getStyles( elem ),
+		isBorderBox = jQuery.css( elem, "boxSizing", false, styles ) === "border-box";
+
+	// Some non-html elements return undefined for offsetWidth, so check for null/undefined
+	// svg - https://bugzilla.mozilla.org/show_bug.cgi?id=649285
+	// MathML - https://bugzilla.mozilla.org/show_bug.cgi?id=491668
+	if ( val <= 0 || val == null ) {
+		// Fall back to computed then uncomputed css if necessary
+		val = curCSS( elem, name, styles );
+		if ( val < 0 || val == null ) {
+			val = elem.style[ name ];
+		}
+
+		// Computed unit is not pixels. Stop here and return.
+		if ( rnumnonpx.test(val) ) {
+			return val;
+		}
+
+		// Check for style in case a browser which returns unreliable values
+		// for getComputedStyle silently falls back to the reliable elem.style
+		valueIsBorderBox = isBorderBox &&
+			( support.boxSizingReliable() || val === elem.style[ name ] );
+
+		// Normalize "", auto, and prepare for extra
+		val = parseFloat( val ) || 0;
+	}
+
+	// Use the active box-sizing model to add/subtract irrelevant styles
+	return ( val +
+		augmentWidthOrHeight(
+			elem,
+			name,
+			extra || ( isBorderBox ? "border" : "content" ),
+			valueIsBorderBox,
+			styles
+		)
+	) + "px";
+}
+
+function showHide( elements, show ) {
+	var display, elem, hidden,
+		values = [],
+		index = 0,
+		length = elements.length;
+
+	for ( ; index < length; index++ ) {
+		elem = elements[ index ];
+		if ( !elem.style ) {
+			continue;
+		}
+
+		values[ index ] = data_priv.get( elem, "olddisplay" );
+		display = elem.style.display;
+		if ( show ) {
+			// Reset the inline display of this element to learn if it is
+			// being hidden by cascaded rules or not
+			if ( !values[ index ] && display === "none" ) {
+				elem.style.display = "";
+			}
+
+			// Set elements which have been overridden with display: none
+			// in a stylesheet to whatever the default browser style is
+			// for such an element
+			if ( elem.style.display === "" && isHidden( elem ) ) {
+				values[ index ] = data_priv.access( elem, "olddisplay", defaultDisplay(elem.nodeName) );
+			}
+		} else {
+			hidden = isHidden( elem );
+
+			if ( display !== "none" || !hidden ) {
+				data_priv.set( elem, "olddisplay", hidden ? display : jQuery.css( elem, "display" ) );
+			}
+		}
+	}
+
+	// Set the display of most of the elements in a second loop
+	// to avoid the constant reflow
+	for ( index = 0; index < length; index++ ) {
+		elem = elements[ index ];
+		if ( !elem.style ) {
+			continue;
+		}
+		if ( !show || elem.style.display === "none" || elem.style.display === "" ) {
+			elem.style.display = show ? values[ index ] || "" : "none";
+		}
+	}
+
+	return elements;
+}
+
+jQuery.extend({
+
+	// Add in style property hooks for overriding the default
+	// behavior of getting and setting a style property
+	cssHooks: {
+		opacity: {
+			get: function( elem, computed ) {
+				if ( computed ) {
+
+					// We should always get a number back from opacity
+					var ret = curCSS( elem, "opacity" );
+					return ret === "" ? "1" : ret;
+				}
+			}
+		}
+	},
+
+	// Don't automatically add "px" to these possibly-unitless properties
+	cssNumber: {
+		"columnCount": true,
+		"fillOpacity": true,
+		"flexGrow": true,
+		"flexShrink": true,
+		"fontWeight": true,
+		"lineHeight": true,
+		"opacity": true,
+		"order": true,
+		"orphans": true,
+		"widows": true,
+		"zIndex": true,
+		"zoom": true
+	},
+
+	// Add in properties whose names you wish to fix before
+	// setting or getting the value
+	cssProps: {
+		"float": "cssFloat"
+	},
+
+	// Get and set the style property on a DOM Node
+	style: function( elem, name, value, extra ) {
+
+		// Don't set styles on text and comment nodes
+		if ( !elem || elem.nodeType === 3 || elem.nodeType === 8 || !elem.style ) {
+			return;
+		}
+
+		// Make sure that we're working with the right name
+		var ret, type, hooks,
+			origName = jQuery.camelCase( name ),
+			style = elem.style;
+
+		name = jQuery.cssProps[ origName ] || ( jQuery.cssProps[ origName ] = vendorPropName( style, origName ) );
+
+		// Gets hook for the prefixed version, then unprefixed version
+		hooks = jQuery.cssHooks[ name ] || jQuery.cssHooks[ origName ];
+
+		// Check if we're setting a value
+		if ( value !== undefined ) {
+			type = typeof value;
+
+			// Convert "+=" or "-=" to relative numbers (#7345)
+			if ( type === "string" && (ret = rrelNum.exec( value )) ) {
+				value = ( ret[1] + 1 ) * ret[2] + parseFloat( jQuery.css( elem, name ) );
+				// Fixes bug #9237
+				type = "number";
+			}
+
+			// Make sure that null and NaN values aren't set (#7116)
+			if ( value == null || value !== value ) {
+				return;
+			}
+
+			// If a number, add 'px' to the (except for certain CSS properties)
+			if ( type === "number" && !jQuery.cssNumber[ origName ] ) {
+				value += "px";
+			}
+
+			// Support: IE9-11+
+			// background-* props affect original clone's values
+			if ( !support.clearCloneStyle && value === "" && name.indexOf( "background" ) === 0 ) {
+				style[ name ] = "inherit";
+			}
+
+			// If a hook was provided, use that value, otherwise just set the specified value
+			if ( !hooks || !("set" in hooks) || (value = hooks.set( elem, value, extra )) !== undefined ) {
+				style[ name ] = value;
+			}
+
+		} else {
+			// If a hook was provided get the non-computed value from there
+			if ( hooks && "get" in hooks && (ret = hooks.get( elem, false, extra )) !== undefined ) {
+				return ret;
+			}
+
+			// Otherwise just get the value from the style object
+			return style[ name ];
+		}
+	},
+
+	css: function( elem, name, extra, styles ) {
+		var val, num, hooks,
+			origName = jQuery.camelCase( name );
+
+		// Make sure that we're working with the right name
+		name = jQuery.cssProps[ origName ] || ( jQuery.cssProps[ origName ] = vendorPropName( elem.style, origName ) );
+
+		// Try prefixed name followed by the unprefixed name
+		hooks = jQuery.cssHooks[ name ] || jQuery.cssHooks[ origName ];
+
+		// If a hook was provided get the computed value from there
+		if ( hooks && "get" in hooks ) {
+			val = hooks.get( elem, true, extra );
+		}
+
+		// Otherwise, if a way to get the computed value exists, use that
+		if ( val === undefined ) {
+			val = curCSS( elem, name, styles );
+		}
+
+		// Convert "normal" to computed value
+		if ( val === "normal" && name in cssNormalTransform ) {
+			val = cssNormalTransform[ name ];
+		}
+
+		// Make numeric if forced or a qualifier was provided and val looks numeric
+		if ( extra === "" || extra ) {
+			num = parseFloat( val );
+			return extra === true || jQuery.isNumeric( num ) ? num || 0 : val;
+		}
+		return val;
+	}
+});
+
+jQuery.each([ "height", "width" ], function( i, name ) {
+	jQuery.cssHooks[ name ] = {
+		get: function( elem, computed, extra ) {
+			if ( computed ) {
+
+				// Certain elements can have dimension info if we invisibly show them
+				// but it must have a current display style that would benefit
+				return rdisplayswap.test( jQuery.css( elem, "display" ) ) && elem.offsetWidth === 0 ?
+					jQuery.swap( elem, cssShow, function() {
+						return getWidthOrHeight( elem, name, extra );
+					}) :
+					getWidthOrHeight( elem, name, extra );
+			}
+		},
+
+		set: function( elem, value, extra ) {
+			var styles = extra && getStyles( elem );
+			return setPositiveNumber( elem, value, extra ?
+				augmentWidthOrHeight(
+					elem,
+					name,
+					extra,
+					jQuery.css( elem, "boxSizing", false, styles ) === "border-box",
+					styles
+				) : 0
+			);
+		}
+	};
+});
+
+// Support: Android 2.3
+jQuery.cssHooks.marginRight = addGetHookIf( support.reliableMarginRight,
+	function( elem, computed ) {
+		if ( computed ) {
+			return jQuery.swap( elem, { "display": "inline-block" },
+				curCSS, [ elem, "marginRight" ] );
+		}
+	}
+);
+
+// These hooks are used by animate to expand properties
+jQuery.each({
+	margin: "",
+	padding: "",
+	border: "Width"
+}, function( prefix, suffix ) {
+	jQuery.cssHooks[ prefix + suffix ] = {
+		expand: function( value ) {
+			var i = 0,
+				expanded = {},
+
+				// Assumes a single number if not a string
+				parts = typeof value === "string" ? value.split(" ") : [ value ];
+
+			for ( ; i < 4; i++ ) {
+				expanded[ prefix + cssExpand[ i ] + suffix ] =
+					parts[ i ] || parts[ i - 2 ] || parts[ 0 ];
+			}
+
+			return expanded;
+		}
+	};
+
+	if ( !rmargin.test( prefix ) ) {
+		jQuery.cssHooks[ prefix + suffix ].set = setPositiveNumber;
+	}
+});
+
+jQuery.fn.extend({
+	css: function( name, value ) {
+		return access( this, function( elem, name, value ) {
+			var styles, len,
+				map = {},
+				i = 0;
+
+			if ( jQuery.isArray( name ) ) {
+				styles = getStyles( elem );
+				len = name.length;
+
+				for ( ; i < len; i++ ) {
+					map[ name[ i ] ] = jQuery.css( elem, name[ i ], false, styles );
+				}
+
+				return map;
+			}
+
+			return value !== undefined ?
+				jQuery.style( elem, name, value ) :
+				jQuery.css( elem, name );
+		}, name, value, arguments.length > 1 );
+	},
+	show: function() {
+		return showHide( this, true );
+	},
+	hide: function() {
+		return showHide( this );
+	},
+	toggle: function( state ) {
+		if ( typeof state === "boolean" ) {
+			return state ? this.show() : this.hide();
+		}
+
+		return this.each(function() {
+			if ( isHidden( this ) ) {
+				jQuery( this ).show();
+			} else {
+				jQuery( this ).hide();
+			}
+		});
+	}
+});
+
+
+function Tween( elem, options, prop, end, easing ) {
+	return new Tween.prototype.init( elem, options, prop, end, easing );
+}
+jQuery.Tween = Tween;
+
+Tween.prototype = {
+	constructor: Tween,
+	init: function( elem, options, prop, end, easing, unit ) {
+		this.elem = elem;
+		this.prop = prop;
+		this.easing = easing || "swing";
+		this.options = options;
+		this.start = this.now = this.cur();
+		this.end = end;
+		this.unit = unit || ( jQuery.cssNumber[ prop ] ? "" : "px" );
+	},
+	cur: function() {
+		var hooks = Tween.propHooks[ this.prop ];
+
+		return hooks && hooks.get ?
+			hooks.get( this ) :
+			Tween.propHooks._default.get( this );
+	},
+	run: function( percent ) {
+		var eased,
+			hooks = Tween.propHooks[ this.prop ];
+
+		if ( this.options.duration ) {
+			this.pos = eased = jQuery.easing[ this.easing ](
+				percent, this.options.duration * percent, 0, 1, this.options.duration
+			);
+		} else {
+			this.pos = eased = percent;
+		}
+		this.now = ( this.end - this.start ) * eased + this.start;
+
+		if ( this.options.step ) {
+			this.options.step.call( this.elem, this.now, this );
+		}
+
+		if ( hooks && hooks.set ) {
+			hooks.set( this );
+		} else {
+			Tween.propHooks._default.set( this );
+		}
+		return this;
+	}
+};
+
+Tween.prototype.init.prototype = Tween.prototype;
+
+Tween.propHooks = {
+	_default: {
+		get: function( tween ) {
+			var result;
+
+			if ( tween.elem[ tween.prop ] != null &&
+				(!tween.elem.style || tween.elem.style[ tween.prop ] == null) ) {
+				return tween.elem[ tween.prop ];
+			}
+
+			// Passing an empty string as a 3rd parameter to .css will automatically
+			// attempt a parseFloat and fallback to a string if the parse fails.
+			// Simple values such as "10px" are parsed to Float;
+			// complex values such as "rotate(1rad)" are returned as-is.
+			result = jQuery.css( tween.elem, tween.prop, "" );
+			// Empty strings, null, undefined and "auto" are converted to 0.
+			return !result || result === "auto" ? 0 : result;
+		},
+		set: function( tween ) {
+			// Use step hook for back compat.
+			// Use cssHook if its there.
+			// Use .style if available and use plain properties where available.
+			if ( jQuery.fx.step[ tween.prop ] ) {
+				jQuery.fx.step[ tween.prop ]( tween );
+			} else if ( tween.elem.style && ( tween.elem.style[ jQuery.cssProps[ tween.prop ] ] != null || jQuery.cssHooks[ tween.prop ] ) ) {
+				jQuery.style( tween.elem, tween.prop, tween.now + tween.unit );
+			} else {
+				tween.elem[ tween.prop ] = tween.now;
+			}
+		}
+	}
+};
+
+// Support: IE9
+// Panic based approach to setting things on disconnected nodes
+Tween.propHooks.scrollTop = Tween.propHooks.scrollLeft = {
+	set: function( tween ) {
+		if ( tween.elem.nodeType && tween.elem.parentNode ) {
+			tween.elem[ tween.prop ] = tween.now;
+		}
+	}
+};
+
+jQuery.easing = {
+	linear: function( p ) {
+		return p;
+	},
+	swing: function( p ) {
+		return 0.5 - Math.cos( p * Math.PI ) / 2;
+	}
+};
+
+jQuery.fx = Tween.prototype.init;
+
+// Back Compat <1.8 extension point
+jQuery.fx.step = {};
+
+
+
+
+var
+	fxNow, timerId,
+	rfxtypes = /^(?:toggle|show|hide)$/,
+	rfxnum = new RegExp( "^(?:([+-])=|)(" + pnum + ")([a-z%]*)$", "i" ),
+	rrun = /queueHooks$/,
+	animationPrefilters = [ defaultPrefilter ],
+	tweeners = {
+		"*": [ function( prop, value ) {
+			var tween = this.createTween( prop, value ),
+				target = tween.cur(),
+				parts = rfxnum.exec( value ),
+				unit = parts && parts[ 3 ] || ( jQuery.cssNumber[ prop ] ? "" : "px" ),
+
+				// Starting value computation is required for potential unit mismatches
+				start = ( jQuery.cssNumber[ prop ] || unit !== "px" && +target ) &&
+					rfxnum.exec( jQuery.css( tween.elem, prop ) ),
+				scale = 1,
+				maxIterations = 20;
+
+			if ( start && start[ 3 ] !== unit ) {
+				// Trust units reported by jQuery.css
+				unit = unit || start[ 3 ];
+
+				// Make sure we update the tween properties later on
+				parts = parts || [];
+
+				// Iteratively approximate from a nonzero starting point
+				start = +target || 1;
+
+				do {
+					// If previous iteration zeroed out, double until we get *something*.
+					// Use string for doubling so we don't accidentally see scale as unchanged below
+					scale = scale || ".5";
+
+					// Adjust and apply
+					start = start / scale;
+					jQuery.style( tween.elem, prop, start + unit );
+
+				// Update scale, tolerating zero or NaN from tween.cur(),
+				// break the loop if scale is unchanged or perfect, or if we've just had enough
+				} while ( scale !== (scale = tween.cur() / target) && scale !== 1 && --maxIterations );
+			}
+
+			// Update tween properties
+			if ( parts ) {
+				start = tween.start = +start || +target || 0;
+				tween.unit = unit;
+				// If a +=/-= token was provided, we're doing a relative animation
+				tween.end = parts[ 1 ] ?
+					start + ( parts[ 1 ] + 1 ) * parts[ 2 ] :
+					+parts[ 2 ];
+			}
+
+			return tween;
+		} ]
+	};
+
+// Animations created synchronously will run synchronously
+function createFxNow() {
+	setTimeout(function() {
+		fxNow = undefined;
+	});
+	return ( fxNow = jQuery.now() );
+}
+
+// Generate parameters to create a standard animation
+function genFx( type, includeWidth ) {
+	var which,
+		i = 0,
+		attrs = { height: type };
+
+	// If we include width, step value is 1 to do all cssExpand values,
+	// otherwise step value is 2 to skip over Left and Right
+	includeWidth = includeWidth ? 1 : 0;
+	for ( ; i < 4 ; i += 2 - includeWidth ) {
+		which = cssExpand[ i ];
+		attrs[ "margin" + which ] = attrs[ "padding" + which ] = type;
+	}
+
+	if ( includeWidth ) {
+		attrs.opacity = attrs.width = type;
+	}
+
+	return attrs;
+}
+
+function createTween( value, prop, animation ) {
+	var tween,
+		collection = ( tweeners[ prop ] || [] ).concat( tweeners[ "*" ] ),
+		index = 0,
+		length = collection.length;
+	for ( ; index < length; index++ ) {
+		if ( (tween = collection[ index ].call( animation, prop, value )) ) {
+
+			// We're done with this property
+			return tween;
+		}
+	}
+}
+
+function defaultPrefilter( elem, props, opts ) {
+	/* jshint validthis: true */
+	var prop, value, toggle, tween, hooks, oldfire, display, checkDisplay,
+		anim = this,
+		orig = {},
+		style = elem.style,
+		hidden = elem.nodeType && isHidden( elem ),
+		dataShow = data_priv.get( elem, "fxshow" );
+
+	// Handle queue: false promises
+	if ( !opts.queue ) {
+		hooks = jQuery._queueHooks( elem, "fx" );
+		if ( hooks.unqueued == null ) {
+			hooks.unqueued = 0;
+			oldfire = hooks.empty.fire;
+			hooks.empty.fire = function() {
+				if ( !hooks.unqueued ) {
+					oldfire();
+				}
+			};
+		}
+		hooks.unqueued++;
+
+		anim.always(function() {
+			// Ensure the complete handler is called before this completes
+			anim.always(function() {
+				hooks.unqueued--;
+				if ( !jQuery.queue( elem, "fx" ).length ) {
+					hooks.empty.fire();
+				}
+			});
+		});
+	}
+
+	// Height/width overflow pass
+	if ( elem.nodeType === 1 && ( "height" in props || "width" in props ) ) {
+		// Make sure that nothing sneaks out
+		// Record all 3 overflow attributes because IE9-10 do not
+		// change the overflow attribute when overflowX and
+		// overflowY are set to the same value
+		opts.overflow = [ style.overflow, style.overflowX, style.overflowY ];
+
+		// Set display property to inline-block for height/width
+		// animations on inline elements that are having width/height animated
+		display = jQuery.css( elem, "display" );
+
+		// Test default display if display is currently "none"
+		checkDisplay = display === "none" ?
+			data_priv.get( elem, "olddisplay" ) || defaultDisplay( elem.nodeName ) : display;
+
+		if ( checkDisplay === "inline" && jQuery.css( elem, "float" ) === "none" ) {
+			style.display = "inline-block";
+		}
+	}
+
+	if ( opts.overflow ) {
+		style.overflow = "hidden";
+		anim.always(function() {
+			style.overflow = opts.overflow[ 0 ];
+			style.overflowX = opts.overflow[ 1 ];
+			style.overflowY = opts.overflow[ 2 ];
+		});
+	}
+
+	// show/hide pass
+	for ( prop in props ) {
+		value = props[ prop ];
+		if ( rfxtypes.exec( value ) ) {
+			delete props[ prop ];
+			toggle = toggle || value === "toggle";
+			if ( value === ( hidden ? "hide" : "show" ) ) {
+
+				// If there is dataShow left over from a stopped hide or show and we are going to proceed with show, we should pretend to be hidden
+				if ( value === "show" && dataShow && dataShow[ prop ] !== undefined ) {
+					hidden = true;
+				} else {
+					continue;
+				}
+			}
+			orig[ prop ] = dataShow && dataShow[ prop ] || jQuery.style( elem, prop );
+
+		// Any non-fx value stops us from restoring the original display value
+		} else {
+			display = undefined;
+		}
+	}
+
+	if ( !jQuery.isEmptyObject( orig ) ) {
+		if ( dataShow ) {
+			if ( "hidden" in dataShow ) {
+				hidden = dataShow.hidden;
+			}
+		} else {
+			dataShow = data_priv.access( elem, "fxshow", {} );
+		}
+
+		// Store state if its toggle - enables .stop().toggle() to "reverse"
+		if ( toggle ) {
+			dataShow.hidden = !hidden;
+		}
+		if ( hidden ) {
+			jQuery( elem ).show();
+		} else {
+			anim.done(function() {
+				jQuery( elem ).hide();
+			});
+		}
+		anim.done(function() {
+			var prop;
+
+			data_priv.remove( elem, "fxshow" );
+			for ( prop in orig ) {
+				jQuery.style( elem, prop, orig[ prop ] );
+			}
+		});
+		for ( prop in orig ) {
+			tween = createTween( hidden ? dataShow[ prop ] : 0, prop, anim );
+
+			if ( !( prop in dataShow ) ) {
+				dataShow[ prop ] = tween.start;
+				if ( hidden ) {
+					tween.end = tween.start;
+					tween.start = prop === "width" || prop === "height" ? 1 : 0;
+				}
+			}
+		}
+
+	// If this is a noop like .hide().hide(), restore an overwritten display value
+	} else if ( (display === "none" ? defaultDisplay( elem.nodeName ) : display) === "inline" ) {
+		style.display = display;
+	}
+}
+
+function propFilter( props, specialEasing ) {
+	var index, name, easing, value, hooks;
+
+	// camelCase, specialEasing and expand cssHook pass
+	for ( index in props ) {
+		name = jQuery.camelCase( index );
+		easing = specialEasing[ name ];
+		value = props[ index ];
+		if ( jQuery.isArray( value ) ) {
+			easing = value[ 1 ];
+			value = props[ index ] = value[ 0 ];
+		}
+
+		if ( index !== name ) {
+			props[ name ] = value;
+			delete props[ index ];
+		}
+
+		hooks = jQuery.cssHooks[ name ];
+		if ( hooks && "expand" in hooks ) {
+			value = hooks.expand( value );
+			delete props[ name ];
+
+			// Not quite $.extend, this won't overwrite existing keys.
+			// Reusing 'index' because we have the correct "name"
+			for ( index in value ) {
+				if ( !( index in props ) ) {
+					props[ index ] = value[ index ];
+					specialEasing[ index ] = easing;
+				}
+			}
+		} else {
+			specialEasing[ name ] = easing;
+		}
+	}
+}
+
+function Animation( elem, properties, options ) {
+	var result,
+		stopped,
+		index = 0,
+		length = animationPrefilters.length,
+		deferred = jQuery.Deferred().always( function() {
+			// Don't match elem in the :animated selector
+			delete tick.elem;
+		}),
+		tick = function() {
+			if ( stopped ) {
+				return false;
+			}
+			var currentTime = fxNow || createFxNow(),
+				remaining = Math.max( 0, animation.startTime + animation.duration - currentTime ),
+				// Support: Android 2.3
+				// Archaic crash bug won't allow us to use `1 - ( 0.5 || 0 )` (#12497)
+				temp = remaining / animation.duration || 0,
+				percent = 1 - temp,
+				index = 0,
+				length = animation.tweens.length;
+
+			for ( ; index < length ; index++ ) {
+				animation.tweens[ index ].run( percent );
+			}
+
+			deferred.notifyWith( elem, [ animation, percent, remaining ]);
+
+			if ( percent < 1 && length ) {
+				return remaining;
+			} else {
+				deferred.resolveWith( elem, [ animation ] );
+				return false;
+			}
+		},
+		animation = deferred.promise({
+			elem: elem,
+			props: jQuery.extend( {}, properties ),
+			opts: jQuery.extend( true, { specialEasing: {} }, options ),
+			originalProperties: properties,
+			originalOptions: options,
+			startTime: fxNow || createFxNow(),
+			duration: options.duration,
+			tweens: [],
+			createTween: function( prop, end ) {
+				var tween = jQuery.Tween( elem, animation.opts, prop, end,
+						animation.opts.specialEasing[ prop ] || animation.opts.easing );
+				animation.tweens.push( tween );
+				return tween;
+			},
+			stop: function( gotoEnd ) {
+				var index = 0,
+					// If we are going to the end, we want to run all the tweens
+					// otherwise we skip this part
+					length = gotoEnd ? animation.tweens.length : 0;
+				if ( stopped ) {
+					return this;
+				}
+				stopped = true;
+				for ( ; index < length ; index++ ) {
+					animation.tweens[ index ].run( 1 );
+				}
+
+				// Resolve when we played the last frame; otherwise, reject
+				if ( gotoEnd ) {
+					deferred.resolveWith( elem, [ animation, gotoEnd ] );
+				} else {
+					deferred.rejectWith( elem, [ animation, gotoEnd ] );
+				}
+				return this;
+			}
+		}),
+		props = animation.props;
+
+	propFilter( props, animation.opts.specialEasing );
+
+	for ( ; index < length ; index++ ) {
+		result = animationPrefilters[ index ].call( animation, elem, props, animation.opts );
+		if ( result ) {
+			return result;
+		}
+	}
+
+	jQuery.map( props, createTween, animation );
+
+	if ( jQuery.isFunction( animation.opts.start ) ) {
+		animation.opts.start.call( elem, animation );
+	}
+
+	jQuery.fx.timer(
+		jQuery.extend( tick, {
+			elem: elem,
+			anim: animation,
+			queue: animation.opts.queue
+		})
+	);
+
+	// attach callbacks from options
+	return animation.progress( animation.opts.progress )
+		.done( animation.opts.done, animation.opts.complete )
+		.fail( animation.opts.fail )
+		.always( animation.opts.always );
+}
+
+jQuery.Animation = jQuery.extend( Animation, {
+
+	tweener: function( props, callback ) {
+		if ( jQuery.isFunction( props ) ) {
+			callback = props;
+			props = [ "*" ];
+		} else {
+			props = props.split(" ");
+		}
+
+		var prop,
+			index = 0,
+			length = props.length;
+
+		for ( ; index < length ; index++ ) {
+			prop = props[ index ];
+			tweeners[ prop ] = tweeners[ prop ] || [];
+			tweeners[ prop ].unshift( callback );
+		}
+	},
+
+	prefilter: function( callback, prepend ) {
+		if ( prepend ) {
+			animationPrefilters.unshift( callback );
+		} else {
+			animationPrefilters.push( callback );
+		}
+	}
+});
+
+jQuery.speed = function( speed, easing, fn ) {
+	var opt = speed && typeof speed === "object" ? jQuery.extend( {}, speed ) : {
+		complete: fn || !fn && easing ||
+			jQuery.isFunction( speed ) && speed,
+		duration: speed,
+		easing: fn && easing || easing && !jQuery.isFunction( easing ) && easing
+	};
+
+	opt.duration = jQuery.fx.off ? 0 : typeof opt.duration === "number" ? opt.duration :
+		opt.duration in jQuery.fx.speeds ? jQuery.fx.speeds[ opt.duration ] : jQuery.fx.speeds._default;
+
+	// Normalize opt.queue - true/undefined/null -> "fx"
+	if ( opt.queue == null || opt.queue === true ) {
+		opt.queue = "fx";
+	}
+
+	// Queueing
+	opt.old = opt.complete;
+
+	opt.complete = function() {
+		if ( jQuery.isFunction( opt.old ) ) {
+			opt.old.call( this );
+		}
+
+		if ( opt.queue ) {
+			jQuery.dequeue( this, opt.queue );
+		}
+	};
+
+	return opt;
+};
+
+jQuery.fn.extend({
+	fadeTo: function( speed, to, easing, callback ) {
+
+		// Show any hidden elements after setting opacity to 0
+		return this.filter( isHidden ).css( "opacity", 0 ).show()
+
+			// Animate to the value specified
+			.end().animate({ opacity: to }, speed, easing, callback );
+	},
+	animate: function( prop, speed, easing, callback ) {
+		var empty = jQuery.isEmptyObject( prop ),
+			optall = jQuery.speed( speed, easing, callback ),
+			doAnimation = function() {
+				// Operate on a copy of prop so per-property easing won't be lost
+				var anim = Animation( this, jQuery.extend( {}, prop ), optall );
+
+				// Empty animations, or finishing resolves immediately
+				if ( empty || data_priv.get( this, "finish" ) ) {
+					anim.stop( true );
+				}
+			};
+			doAnimation.finish = doAnimation;
+
+		return empty || optall.queue === false ?
+			this.each( doAnimation ) :
+			this.queue( optall.queue, doAnimation );
+	},
+	stop: function( type, clearQueue, gotoEnd ) {
+		var stopQueue = function( hooks ) {
+			var stop = hooks.stop;
+			delete hooks.stop;
+			stop( gotoEnd );
+		};
+
+		if ( typeof type !== "string" ) {
+			gotoEnd = clearQueue;
+			clearQueue = type;
+			type = undefined;
+		}
+		if ( clearQueue && type !== false ) {
+			this.queue( type || "fx", [] );
+		}
+
+		return this.each(function() {
+			var dequeue = true,
+				index = type != null && type + "queueHooks",
+				timers = jQuery.timers,
+				data = data_priv.get( this );
+
+			if ( index ) {
+				if ( data[ index ] && data[ index ].stop ) {
+					stopQueue( data[ index ] );
+				}
+			} else {
+				for ( index in data ) {
+					if ( data[ index ] && data[ index ].stop && rrun.test( index ) ) {
+						stopQueue( data[ index ] );
+					}
+				}
+			}
+
+			for ( index = timers.length; index--; ) {
+				if ( timers[ index ].elem === this && (type == null || timers[ index ].queue === type) ) {
+					timers[ index ].anim.stop( gotoEnd );
+					dequeue = false;
+					timers.splice( index, 1 );
+				}
+			}
+
+			// Start the next in the queue if the last step wasn't forced.
+			// Timers currently will call their complete callbacks, which
+			// will dequeue but only if they were gotoEnd.
+			if ( dequeue || !gotoEnd ) {
+				jQuery.dequeue( this, type );
+			}
+		});
+	},
+	finish: function( type ) {
+		if ( type !== false ) {
+			type = type || "fx";
+		}
+		return this.each(function() {
+			var index,
+				data = data_priv.get( this ),
+				queue = data[ type + "queue" ],
+				hooks = data[ type + "queueHooks" ],
+				timers = jQuery.timers,
+				length = queue ? queue.length : 0;
+
+			// Enable finishing flag on private data
+			data.finish = true;
+
+			// Empty the queue first
+			jQuery.queue( this, type, [] );
+
+			if ( hooks && hooks.stop ) {
+				hooks.stop.call( this, true );
+			}
+
+			// Look for any active animations, and finish them
+			for ( index = timers.length; index--; ) {
+				if ( timers[ index ].elem === this && timers[ index ].queue === type ) {
+					timers[ index ].anim.stop( true );
+					timers.splice( index, 1 );
+				}
+			}
+
+			// Look for any animations in the old queue and finish them
+			for ( index = 0; index < length; index++ ) {
+				if ( queue[ index ] && queue[ index ].finish ) {
+					queue[ index ].finish.call( this );
+				}
+			}
+
+			// Turn off finishing flag
+			delete data.finish;
+		});
+	}
+});
+
+jQuery.each([ "toggle", "show", "hide" ], function( i, name ) {
+	var cssFn = jQuery.fn[ name ];
+	jQuery.fn[ name ] = function( speed, easing, callback ) {
+		return speed == null || typeof speed === "boolean" ?
+			cssFn.apply( this, arguments ) :
+			this.animate( genFx( name, true ), speed, easing, callback );
+	};
+});
+
+// Generate shortcuts for custom animations
+jQuery.each({
+	slideDown: genFx("show"),
+	slideUp: genFx("hide"),
+	slideToggle: genFx("toggle"),
+	fadeIn: { opacity: "show" },
+	fadeOut: { opacity: "hide" },
+	fadeToggle: { opacity: "toggle" }
+}, function( name, props ) {
+	jQuery.fn[ name ] = function( speed, easing, callback ) {
+		return this.animate( props, speed, easing, callback );
+	};
+});
+
+jQuery.timers = [];
+jQuery.fx.tick = function() {
+	var timer,
+		i = 0,
+		timers = jQuery.timers;
+
+	fxNow = jQuery.now();
+
+	for ( ; i < timers.length; i++ ) {
+		timer = timers[ i ];
+		// Checks the timer has not already been removed
+		if ( !timer() && timers[ i ] === timer ) {
+			timers.splice( i--, 1 );
+		}
+	}
+
+	if ( !timers.length ) {
+		jQuery.fx.stop();
+	}
+	fxNow = undefined;
+};
+
+jQuery.fx.timer = function( timer ) {
+	jQuery.timers.push( timer );
+	if ( timer() ) {
+		jQuery.fx.start();
+	} else {
+		jQuery.timers.pop();
+	}
+};
+
+jQuery.fx.interval = 13;
+
+jQuery.fx.start = function() {
+	if ( !timerId ) {
+		timerId = setInterval( jQuery.fx.tick, jQuery.fx.interval );
+	}
+};
+
+jQuery.fx.stop = function() {
+	clearInterval( timerId );
+	timerId = null;
+};
+
+jQuery.fx.speeds = {
+	slow: 600,
+	fast: 200,
+	// Default speed
+	_default: 400
+};
+
+
+// Based off of the plugin by Clint Helfers, with permission.
+// http://blindsignals.com/index.php/2009/07/jquery-delay/
+jQuery.fn.delay = function( time, type ) {
+	time = jQuery.fx ? jQuery.fx.speeds[ time ] || time : time;
+	type = type || "fx";
+
+	return this.queue( type, function( next, hooks ) {
+		var timeout = setTimeout( next, time );
+		hooks.stop = function() {
+			clearTimeout( timeout );
+		};
+	});
+};
+
+
+(function() {
+	var input = document.createElement( "input" ),
+		select = document.createElement( "select" ),
+		opt = select.appendChild( document.createElement( "option" ) );
+
+	input.type = "checkbox";
+
+	// Support: iOS<=5.1, Android<=4.2+
+	// Default value for a checkbox should be "on"
+	support.checkOn = input.value !== "";
+
+	// Support: IE<=11+
+	// Must access selectedIndex to make default options select
+	support.optSelected = opt.selected;
+
+	// Support: Android<=2.3
+	// Options inside disabled selects are incorrectly marked as disabled
+	select.disabled = true;
+	support.optDisabled = !opt.disabled;
+
+	// Support: IE<=11+
+	// An input loses its value after becoming a radio
+	input = document.createElement( "input" );
+	input.value = "t";
+	input.type = "radio";
+	support.radioValue = input.value === "t";
+})();
+
+
+var nodeHook, boolHook,
+	attrHandle = jQuery.expr.attrHandle;
+
+jQuery.fn.extend({
+	attr: function( name, value ) {
+		return access( this, jQuery.attr, name, value, arguments.length > 1 );
+	},
+
+	removeAttr: function( name ) {
+		return this.each(function() {
+			jQuery.removeAttr( this, name );
+		});
+	}
+});
+
+jQuery.extend({
+	attr: function( elem, name, value ) {
+		var hooks, ret,
+			nType = elem.nodeType;
+
+		// don't get/set attributes on text, comment and attribute nodes
+		if ( !elem || nType === 3 || nType === 8 || nType === 2 ) {
+			return;
+		}
+
+		// Fallback to prop when attributes are not supported
+		if ( typeof elem.getAttribute === strundefined ) {
+			return jQuery.prop( elem, name, value );
+		}
+
+		// All attributes are lowercase
+		// Grab necessary hook if one is defined
+		if ( nType !== 1 || !jQuery.isXMLDoc( elem ) ) {
+			name = name.toLowerCase();
+			hooks = jQuery.attrHooks[ name ] ||
+				( jQuery.expr.match.bool.test( name ) ? boolHook : nodeHook );
+		}
+
+		if ( value !== undefined ) {
+
+			if ( value === null ) {
+				jQuery.removeAttr( elem, name );
+
+			} else if ( hooks && "set" in hooks && (ret = hooks.set( elem, value, name )) !== undefined ) {
+				return ret;
+
+			} else {
+				elem.setAttribute( name, value + "" );
+				return value;
+			}
+
+		} else if ( hooks && "get" in hooks && (ret = hooks.get( elem, name )) !== null ) {
+			return ret;
+
+		} else {
+			ret = jQuery.find.attr( elem, name );
+
+			// Non-existent attributes return null, we normalize to undefined
+			return ret == null ?
+				undefined :
+				ret;
+		}
+	},
+
+	removeAttr: function( elem, value ) {
+		var name, propName,
+			i = 0,
+			attrNames = value && value.match( rnotwhite );
+
+		if ( attrNames && elem.nodeType === 1 ) {
+			while ( (name = attrNames[i++]) ) {
+				propName = jQuery.propFix[ name ] || name;
+
+				// Boolean attributes get special treatment (#10870)
+				if ( jQuery.expr.match.bool.test( name ) ) {
+					// Set corresponding property to false
+					elem[ propName ] = false;
+				}
+
+				elem.removeAttribute( name );
+			}
+		}
+	},
+
+	attrHooks: {
+		type: {
+			set: function( elem, value ) {
+				if ( !support.radioValue && value === "radio" &&
+					jQuery.nodeName( elem, "input" ) ) {
+					var val = elem.value;
+					elem.setAttribute( "type", value );
+					if ( val ) {
+						elem.value = val;
+					}
+					return value;
+				}
+			}
+		}
+	}
+});
+
+// Hooks for boolean attributes
+boolHook = {
+	set: function( elem, value, name ) {
+		if ( value === false ) {
+			// Remove boolean attributes when set to false
+			jQuery.removeAttr( elem, name );
+		} else {
+			elem.setAttribute( name, name );
+		}
+		return name;
+	}
+};
+jQuery.each( jQuery.expr.match.bool.source.match( /\w+/g ), function( i, name ) {
+	var getter = attrHandle[ name ] || jQuery.find.attr;
+
+	attrHandle[ name ] = function( elem, name, isXML ) {
+		var ret, handle;
+		if ( !isXML ) {
+			// Avoid an infinite loop by temporarily removing this function from the getter
+			handle = attrHandle[ name ];
+			attrHandle[ name ] = ret;
+			ret = getter( elem, name, isXML ) != null ?
+				name.toLowerCase() :
+				null;
+			attrHandle[ name ] = handle;
+		}
+		return ret;
+	};
+});
+
+
+
+
+var rfocusable = /^(?:input|select|textarea|button)$/i;
+
+jQuery.fn.extend({
+	prop: function( name, value ) {
+		return access( this, jQuery.prop, name, value, arguments.length > 1 );
+	},
+
+	removeProp: function( name ) {
+		return this.each(function() {
+			delete this[ jQuery.propFix[ name ] || name ];
+		});
+	}
+});
+
+jQuery.extend({
+	propFix: {
+		"for": "htmlFor",
+		"class": "className"
+	},
+
+	prop: function( elem, name, value ) {
+		var ret, hooks, notxml,
+			nType = elem.nodeType;
+
+		// Don't get/set properties on text, comment and attribute nodes
+		if ( !elem || nType === 3 || nType === 8 || nType === 2 ) {
+			return;
+		}
+
+		notxml = nType !== 1 || !jQuery.isXMLDoc( elem );
+
+		if ( notxml ) {
+			// Fix name and attach hooks
+			name = jQuery.propFix[ name ] || name;
+			hooks = jQuery.propHooks[ name ];
+		}
+
+		if ( value !== undefined ) {
+			return hooks && "set" in hooks && (ret = hooks.set( elem, value, name )) !== undefined ?
+				ret :
+				( elem[ name ] = value );
+
+		} else {
+			return hooks && "get" in hooks && (ret = hooks.get( elem, name )) !== null ?
+				ret :
+				elem[ name ];
+		}
+	},
+
+	propHooks: {
+		tabIndex: {
+			get: function( elem ) {
+				return elem.hasAttribute( "tabindex" ) || rfocusable.test( elem.nodeName ) || elem.href ?
+					elem.tabIndex :
+					-1;
+			}
+		}
+	}
+});
+
+if ( !support.optSelected ) {
+	jQuery.propHooks.selected = {
+		get: function( elem ) {
+			var parent = elem.parentNode;
+			if ( parent && parent.parentNode ) {
+				parent.parentNode.selectedIndex;
+			}
+			return null;
+		}
+	};
+}
+
+jQuery.each([
+	"tabIndex",
+	"readOnly",
+	"maxLength",
+	"cellSpacing",
+	"cellPadding",
+	"rowSpan",
+	"colSpan",
+	"useMap",
+	"frameBorder",
+	"contentEditable"
+], function() {
+	jQuery.propFix[ this.toLowerCase() ] = this;
+});
+
+
+
+
+var rclass = /[\t\r\n\f]/g;
+
+jQuery.fn.extend({
+	addClass: function( value ) {
+		var classes, elem, cur, clazz, j, finalValue,
+			proceed = typeof value === "string" && value,
+			i = 0,
+			len = this.length;
+
+		if ( jQuery.isFunction( value ) ) {
+			return this.each(function( j ) {
+				jQuery( this ).addClass( value.call( this, j, this.className ) );
+			});
+		}
+
+		if ( proceed ) {
+			// The disjunction here is for better compressibility (see removeClass)
+			classes = ( value || "" ).match( rnotwhite ) || [];
+
+			for ( ; i < len; i++ ) {
+				elem = this[ i ];
+				cur = elem.nodeType === 1 && ( elem.className ?
+					( " " + elem.className + " " ).replace( rclass, " " ) :
+					" "
+				);
+
+				if ( cur ) {
+					j = 0;
+					while ( (clazz = classes[j++]) ) {
+						if ( cur.indexOf( " " + clazz + " " ) < 0 ) {
+							cur += clazz + " ";
+						}
+					}
+
+					// only assign if different to avoid unneeded rendering.
+					finalValue = jQuery.trim( cur );
+					if ( elem.className !== finalValue ) {
+						elem.className = finalValue;
+					}
+				}
+			}
+		}
+
+		return this;
+	},
+
+	removeClass: function( value ) {
+		var classes, elem, cur, clazz, j, finalValue,
+			proceed = arguments.length === 0 || typeof value === "string" && value,
+			i = 0,
+			len = this.length;
+
+		if ( jQuery.isFunction( value ) ) {
+			return this.each(function( j ) {
+				jQuery( this ).removeClass( value.call( this, j, this.className ) );
+			});
+		}
+		if ( proceed ) {
+			classes = ( value || "" ).match( rnotwhite ) || [];
+
+			for ( ; i < len; i++ ) {
+				elem = this[ i ];
+				// This expression is here for better compressibility (see addClass)
+				cur = elem.nodeType === 1 && ( elem.className ?
+					( " " + elem.className + " " ).replace( rclass, " " ) :
+					""
+				);
+
+				if ( cur ) {
+					j = 0;
+					while ( (clazz = classes[j++]) ) {
+						// Remove *all* instances
+						while ( cur.indexOf( " " + clazz + " " ) >= 0 ) {
+							cur = cur.replace( " " + clazz + " ", " " );
+						}
+					}
+
+					// Only assign if different to avoid unneeded rendering.
+					finalValue = value ? jQuery.trim( cur ) : "";
+					if ( elem.className !== finalValue ) {
+						elem.className = finalValue;
+					}
+				}
+			}
+		}
+
+		return this;
+	},
+
+	toggleClass: function( value, stateVal ) {
+		var type = typeof value;
+
+		if ( typeof stateVal === "boolean" && type === "string" ) {
+			return stateVal ? this.addClass( value ) : this.removeClass( value );
+		}
+
+		if ( jQuery.isFunction( value ) ) {
+			return this.each(function( i ) {
+				jQuery( this ).toggleClass( value.call(this, i, this.className, stateVal), stateVal );
+			});
+		}
+
+		return this.each(function() {
+			if ( type === "string" ) {
+				// Toggle individual class names
+				var className,
+					i = 0,
+					self = jQuery( this ),
+					classNames = value.match( rnotwhite ) || [];
+
+				while ( (className = classNames[ i++ ]) ) {
+					// Check each className given, space separated list
+					if ( self.hasClass( className ) ) {
+						self.removeClass( className );
+					} else {
+						self.addClass( className );
+					}
+				}
+
+			// Toggle whole class name
+			} else if ( type === strundefined || type === "boolean" ) {
+				if ( this.className ) {
+					// store className if set
+					data_priv.set( this, "__className__", this.className );
+				}
+
+				// If the element has a class name or if we're passed `false`,
+				// then remove the whole classname (if there was one, the above saved it).
+				// Otherwise bring back whatever was previously saved (if anything),
+				// falling back to the empty string if nothing was stored.
+				this.className = this.className || value === false ? "" : data_priv.get( this, "__className__" ) || "";
+			}
+		});
+	},
+
+	hasClass: function( selector ) {
+		var className = " " + selector + " ",
+			i = 0,
+			l = this.length;
+		for ( ; i < l; i++ ) {
+			if ( this[i].nodeType === 1 && (" " + this[i].className + " ").replace(rclass, " ").indexOf( className ) >= 0 ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+});
+
+
+
+
+var rreturn = /\r/g;
+
+jQuery.fn.extend({
+	val: function( value ) {
+		var hooks, ret, isFunction,
+			elem = this[0];
+
+		if ( !arguments.length ) {
+			if ( elem ) {
+				hooks = jQuery.valHooks[ elem.type ] || jQuery.valHooks[ elem.nodeName.toLowerCase() ];
+
+				if ( hooks && "get" in hooks && (ret = hooks.get( elem, "value" )) !== undefined ) {
+					return ret;
+				}
+
+				ret = elem.value;
+
+				return typeof ret === "string" ?
+					// Handle most common string cases
+					ret.replace(rreturn, "") :
+					// Handle cases where value is null/undef or number
+					ret == null ? "" : ret;
+			}
+
+			return;
+		}
+
+		isFunction = jQuery.isFunction( value );
+
+		return this.each(function( i ) {
+			var val;
+
+			if ( this.nodeType !== 1 ) {
+				return;
+			}
+
+			if ( isFunction ) {
+				val = value.call( this, i, jQuery( this ).val() );
+			} else {
+				val = value;
+			}
+
+			// Treat null/undefined as ""; convert numbers to string
+			if ( val == null ) {
+				val = "";
+
+			} else if ( typeof val === "number" ) {
+				val += "";
+
+			} else if ( jQuery.isArray( val ) ) {
+				val = jQuery.map( val, function( value ) {
+					return value == null ? "" : value + "";
+				});
+			}
+
+			hooks = jQuery.valHooks[ this.type ] || jQuery.valHooks[ this.nodeName.toLowerCase() ];
+
+			// If set returns undefined, fall back to normal setting
+			if ( !hooks || !("set" in hooks) || hooks.set( this, val, "value" ) === undefined ) {
+				this.value = val;
+			}
+		});
+	}
+});
+
+jQuery.extend({
+	valHooks: {
+		option: {
+			get: function( elem ) {
+				var val = jQuery.find.attr( elem, "value" );
+				return val != null ?
+					val :
+					// Support: IE10-11+
+					// option.text throws exceptions (#14686, #14858)
+					jQuery.trim( jQuery.text( elem ) );
+			}
+		},
+		select: {
+			get: function( elem ) {
+				var value, option,
+					options = elem.options,
+					index = elem.selectedIndex,
+					one = elem.type === "select-one" || index < 0,
+					values = one ? null : [],
+					max = one ? index + 1 : options.length,
+					i = index < 0 ?
+						max :
+						one ? index : 0;
+
+				// Loop through all the selected options
+				for ( ; i < max; i++ ) {
+					option = options[ i ];
+
+					// IE6-9 doesn't update selected after form reset (#2551)
+					if ( ( option.selected || i === index ) &&
+							// Don't return options that are disabled or in a disabled optgroup
+							( support.optDisabled ? !option.disabled : option.getAttribute( "disabled" ) === null ) &&
+							( !option.parentNode.disabled || !jQuery.nodeName( option.parentNode, "optgroup" ) ) ) {
+
+						// Get the specific value for the option
+						value = jQuery( option ).val();
+
+						// We don't need an array for one selects
+						if ( one ) {
+							return value;
+						}
+
+						// Multi-Selects return an array
+						values.push( value );
+					}
+				}
+
+				return values;
+			},
+
+			set: function( elem, value ) {
+				var optionSet, option,
+					options = elem.options,
+					values = jQuery.makeArray( value ),
+					i = options.length;
+
+				while ( i-- ) {
+					option = options[ i ];
+					if ( (option.selected = jQuery.inArray( option.value, values ) >= 0) ) {
+						optionSet = true;
+					}
+				}
+
+				// Force browsers to behave consistently when non-matching value is set
+				if ( !optionSet ) {
+					elem.selectedIndex = -1;
+				}
+				return values;
+			}
+		}
+	}
+});
+
+// Radios and checkboxes getter/setter
+jQuery.each([ "radio", "checkbox" ], function() {
+	jQuery.valHooks[ this ] = {
+		set: function( elem, value ) {
+			if ( jQuery.isArray( value ) ) {
+				return ( elem.checked = jQuery.inArray( jQuery(elem).val(), value ) >= 0 );
+			}
+		}
+	};
+	if ( !support.checkOn ) {
+		jQuery.valHooks[ this ].get = function( elem ) {
+			return elem.getAttribute("value") === null ? "on" : elem.value;
+		};
+	}
+});
+
+
+
+
+// Return jQuery for attributes-only inclusion
+
+
+jQuery.each( ("blur focus focusin focusout load resize scroll unload click dblclick " +
+	"mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave " +
+	"change select submit keydown keypress keyup error contextmenu").split(" "), function( i, name ) {
+
+	// Handle event binding
+	jQuery.fn[ name ] = function( data, fn ) {
+		return arguments.length > 0 ?
+			this.on( name, null, data, fn ) :
+			this.trigger( name );
+	};
+});
+
+jQuery.fn.extend({
+	hover: function( fnOver, fnOut ) {
+		return this.mouseenter( fnOver ).mouseleave( fnOut || fnOver );
+	},
+
+	bind: function( types, data, fn ) {
+		return this.on( types, null, data, fn );
+	},
+	unbind: function( types, fn ) {
+		return this.off( types, null, fn );
+	},
+
+	delegate: function( selector, types, data, fn ) {
+		return this.on( types, selector, data, fn );
+	},
+	undelegate: function( selector, types, fn ) {
+		// ( namespace ) or ( selector, types [, fn] )
+		return arguments.length === 1 ? this.off( selector, "**" ) : this.off( types, selector || "**", fn );
+	}
+});
+
+
+var nonce = jQuery.now();
+
+var rquery = (/\?/);
+
+
+
+// Support: Android 2.3
+// Workaround failure to string-cast null input
+jQuery.parseJSON = function( data ) {
+	return JSON.parse( data + "" );
+};
+
+
+// Cross-browser xml parsing
+jQuery.parseXML = function( data ) {
+	var xml, tmp;
+	if ( !data || typeof data !== "string" ) {
+		return null;
+	}
+
+	// Support: IE9
+	try {
+		tmp = new DOMParser();
+		xml = tmp.parseFromString( data, "text/xml" );
+	} catch ( e ) {
+		xml = undefined;
+	}
+
+	if ( !xml || xml.getElementsByTagName( "parsererror" ).length ) {
+		jQuery.error( "Invalid XML: " + data );
+	}
+	return xml;
+};
+
+
+var
+	rhash = /#.*$/,
+	rts = /([?&])_=[^&]*/,
+	rheaders = /^(.*?):[ \t]*([^\r\n]*)$/mg,
+	// #7653, #8125, #8152: local protocol detection
+	rlocalProtocol = /^(?:about|app|app-storage|.+-extension|file|res|widget):$/,
+	rnoContent = /^(?:GET|HEAD)$/,
+	rprotocol = /^\/\//,
+	rurl = /^([\w.+-]+:)(?:\/\/(?:[^\/?#]*@|)([^\/?#:]*)(?::(\d+)|)|)/,
+
+	/* Prefilters
+	 * 1) They are useful to introduce custom dataTypes (see ajax/jsonp.js for an example)
+	 * 2) These are called:
+	 *    - BEFORE asking for a transport
+	 *    - AFTER param serialization (s.data is a string if s.processData is true)
+	 * 3) key is the dataType
+	 * 4) the catchall symbol "*" can be used
+	 * 5) execution will start with transport dataType and THEN continue down to "*" if needed
+	 */
+	prefilters = {},
+
+	/* Transports bindings
+	 * 1) key is the dataType
+	 * 2) the catchall symbol "*" can be used
+	 * 3) selection will start with transport dataType and THEN go to "*" if needed
+	 */
+	transports = {},
+
+	// Avoid comment-prolog char sequence (#10098); must appease lint and evade compression
+	allTypes = "*/".concat( "*" ),
+
+	// Document location
+	ajaxLocation = window.location.href,
+
+	// Segment location into parts
+	ajaxLocParts = rurl.exec( ajaxLocation.toLowerCase() ) || [];
+
+// Base "constructor" for jQuery.ajaxPrefilter and jQuery.ajaxTransport
+function addToPrefiltersOrTransports( structure ) {
+
+	// dataTypeExpression is optional and defaults to "*"
+	return function( dataTypeExpression, func ) {
+
+		if ( typeof dataTypeExpression !== "string" ) {
+			func = dataTypeExpression;
+			dataTypeExpression = "*";
+		}
+
+		var dataType,
+			i = 0,
+			dataTypes = dataTypeExpression.toLowerCase().match( rnotwhite ) || [];
+
+		if ( jQuery.isFunction( func ) ) {
+			// For each dataType in the dataTypeExpression
+			while ( (dataType = dataTypes[i++]) ) {
+				// Prepend if requested
+				if ( dataType[0] === "+" ) {
+					dataType = dataType.slice( 1 ) || "*";
+					(structure[ dataType ] = structure[ dataType ] || []).unshift( func );
+
+				// Otherwise append
+				} else {
+					(structure[ dataType ] = structure[ dataType ] || []).push( func );
+				}
+			}
+		}
+	};
+}
+
+// Base inspection function for prefilters and transports
+function inspectPrefiltersOrTransports( structure, options, originalOptions, jqXHR ) {
+
+	var inspected = {},
+		seekingTransport = ( structure === transports );
+
+	function inspect( dataType ) {
+		var selected;
+		inspected[ dataType ] = true;
+		jQuery.each( structure[ dataType ] || [], function( _, prefilterOrFactory ) {
+			var dataTypeOrTransport = prefilterOrFactory( options, originalOptions, jqXHR );
+			if ( typeof dataTypeOrTransport === "string" && !seekingTransport && !inspected[ dataTypeOrTransport ] ) {
+				options.dataTypes.unshift( dataTypeOrTransport );
+				inspect( dataTypeOrTransport );
+				return false;
+			} else if ( seekingTransport ) {
+				return !( selected = dataTypeOrTransport );
+			}
+		});
+		return selected;
+	}
+
+	return inspect( options.dataTypes[ 0 ] ) || !inspected[ "*" ] && inspect( "*" );
+}
+
+// A special extend for ajax options
+// that takes "flat" options (not to be deep extended)
+// Fixes #9887
+function ajaxExtend( target, src ) {
+	var key, deep,
+		flatOptions = jQuery.ajaxSettings.flatOptions || {};
+
+	for ( key in src ) {
+		if ( src[ key ] !== undefined ) {
+			( flatOptions[ key ] ? target : ( deep || (deep = {}) ) )[ key ] = src[ key ];
+		}
+	}
+	if ( deep ) {
+		jQuery.extend( true, target, deep );
+	}
+
+	return target;
+}
+
+/* Handles responses to an ajax request:
+ * - finds the right dataType (mediates between content-type and expected dataType)
+ * - returns the corresponding response
+ */
+function ajaxHandleResponses( s, jqXHR, responses ) {
+
+	var ct, type, finalDataType, firstDataType,
+		contents = s.contents,
+		dataTypes = s.dataTypes;
+
+	// Remove auto dataType and get content-type in the process
+	while ( dataTypes[ 0 ] === "*" ) {
+		dataTypes.shift();
+		if ( ct === undefined ) {
+			ct = s.mimeType || jqXHR.getResponseHeader("Content-Type");
+		}
+	}
+
+	// Check if we're dealing with a known content-type
+	if ( ct ) {
+		for ( type in contents ) {
+			if ( contents[ type ] && contents[ type ].test( ct ) ) {
+				dataTypes.unshift( type );
+				break;
+			}
+		}
+	}
+
+	// Check to see if we have a response for the expected dataType
+	if ( dataTypes[ 0 ] in responses ) {
+		finalDataType = dataTypes[ 0 ];
+	} else {
+		// Try convertible dataTypes
+		for ( type in responses ) {
+			if ( !dataTypes[ 0 ] || s.converters[ type + " " + dataTypes[0] ] ) {
+				finalDataType = type;
+				break;
+			}
+			if ( !firstDataType ) {
+				firstDataType = type;
+			}
+		}
+		// Or just use first one
+		finalDataType = finalDataType || firstDataType;
+	}
+
+	// If we found a dataType
+	// We add the dataType to the list if needed
+	// and return the corresponding response
+	if ( finalDataType ) {
+		if ( finalDataType !== dataTypes[ 0 ] ) {
+			dataTypes.unshift( finalDataType );
+		}
+		return responses[ finalDataType ];
+	}
+}
+
+/* Chain conversions given the request and the original response
+ * Also sets the responseXXX fields on the jqXHR instance
+ */
+function ajaxConvert( s, response, jqXHR, isSuccess ) {
+	var conv2, current, conv, tmp, prev,
+		converters = {},
+		// Work with a copy of dataTypes in case we need to modify it for conversion
+		dataTypes = s.dataTypes.slice();
+
+	// Create converters map with lowercased keys
+	if ( dataTypes[ 1 ] ) {
+		for ( conv in s.converters ) {
+			converters[ conv.toLowerCase() ] = s.converters[ conv ];
+		}
+	}
+
+	current = dataTypes.shift();
+
+	// Convert to each sequential dataType
+	while ( current ) {
+
+		if ( s.responseFields[ current ] ) {
+			jqXHR[ s.responseFields[ current ] ] = response;
+		}
+
+		// Apply the dataFilter if provided
+		if ( !prev && isSuccess && s.dataFilter ) {
+			response = s.dataFilter( response, s.dataType );
+		}
+
+		prev = current;
+		current = dataTypes.shift();
+
+		if ( current ) {
+
+		// There's only work to do if current dataType is non-auto
+			if ( current === "*" ) {
+
+				current = prev;
+
+			// Convert response if prev dataType is non-auto and differs from current
+			} else if ( prev !== "*" && prev !== current ) {
+
+				// Seek a direct converter
+				conv = converters[ prev + " " + current ] || converters[ "* " + current ];
+
+				// If none found, seek a pair
+				if ( !conv ) {
+					for ( conv2 in converters ) {
+
+						// If conv2 outputs current
+						tmp = conv2.split( " " );
+						if ( tmp[ 1 ] === current ) {
+
+							// If prev can be converted to accepted input
+							conv = converters[ prev + " " + tmp[ 0 ] ] ||
+								converters[ "* " + tmp[ 0 ] ];
+							if ( conv ) {
+								// Condense equivalence converters
+								if ( conv === true ) {
+									conv = converters[ conv2 ];
+
+								// Otherwise, insert the intermediate dataType
+								} else if ( converters[ conv2 ] !== true ) {
+									current = tmp[ 0 ];
+									dataTypes.unshift( tmp[ 1 ] );
+								}
+								break;
+							}
+						}
+					}
+				}
+
+				// Apply converter (if not an equivalence)
+				if ( conv !== true ) {
+
+					// Unless errors are allowed to bubble, catch and return them
+					if ( conv && s[ "throws" ] ) {
+						response = conv( response );
+					} else {
+						try {
+							response = conv( response );
+						} catch ( e ) {
+							return { state: "parsererror", error: conv ? e : "No conversion from " + prev + " to " + current };
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return { state: "success", data: response };
+}
+
+jQuery.extend({
+
+	// Counter for holding the number of active queries
+	active: 0,
+
+	// Last-Modified header cache for next request
+	lastModified: {},
+	etag: {},
+
+	ajaxSettings: {
+		url: ajaxLocation,
+		type: "GET",
+		isLocal: rlocalProtocol.test( ajaxLocParts[ 1 ] ),
+		global: true,
+		processData: true,
+		async: true,
+		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+		/*
+		timeout: 0,
+		data: null,
+		dataType: null,
+		username: null,
+		password: null,
+		cache: null,
+		throws: false,
+		traditional: false,
+		headers: {},
+		*/
+
+		accepts: {
+			"*": allTypes,
+			text: "text/plain",
+			html: "text/html",
+			xml: "application/xml, text/xml",
+			json: "application/json, text/javascript"
+		},
+
+		contents: {
+			xml: /xml/,
+			html: /html/,
+			json: /json/
+		},
+
+		responseFields: {
+			xml: "responseXML",
+			text: "responseText",
+			json: "responseJSON"
+		},
+
+		// Data converters
+		// Keys separate source (or catchall "*") and destination types with a single space
+		converters: {
+
+			// Convert anything to text
+			"* text": String,
+
+			// Text to html (true = no transformation)
+			"text html": true,
+
+			// Evaluate text as a json expression
+			"text json": jQuery.parseJSON,
+
+			// Parse text as xml
+			"text xml": jQuery.parseXML
+		},
+
+		// For options that shouldn't be deep extended:
+		// you can add your own custom options here if
+		// and when you create one that shouldn't be
+		// deep extended (see ajaxExtend)
+		flatOptions: {
+			url: true,
+			context: true
+		}
+	},
+
+	// Creates a full fledged settings object into target
+	// with both ajaxSettings and settings fields.
+	// If target is omitted, writes into ajaxSettings.
+	ajaxSetup: function( target, settings ) {
+		return settings ?
+
+			// Building a settings object
+			ajaxExtend( ajaxExtend( target, jQuery.ajaxSettings ), settings ) :
+
+			// Extending ajaxSettings
+			ajaxExtend( jQuery.ajaxSettings, target );
+	},
+
+	ajaxPrefilter: addToPrefiltersOrTransports( prefilters ),
+	ajaxTransport: addToPrefiltersOrTransports( transports ),
+
+	// Main method
+	ajax: function( url, options ) {
+
+		// If url is an object, simulate pre-1.5 signature
+		if ( typeof url === "object" ) {
+			options = url;
+			url = undefined;
+		}
+
+		// Force options to be an object
+		options = options || {};
+
+		var transport,
+			// URL without anti-cache param
+			cacheURL,
+			// Response headers
+			responseHeadersString,
+			responseHeaders,
+			// timeout handle
+			timeoutTimer,
+			// Cross-domain detection vars
+			parts,
+			// To know if global events are to be dispatched
+			fireGlobals,
+			// Loop variable
+			i,
+			// Create the final options object
+			s = jQuery.ajaxSetup( {}, options ),
+			// Callbacks context
+			callbackContext = s.context || s,
+			// Context for global events is callbackContext if it is a DOM node or jQuery collection
+			globalEventContext = s.context && ( callbackContext.nodeType || callbackContext.jquery ) ?
+				jQuery( callbackContext ) :
+				jQuery.event,
+			// Deferreds
+			deferred = jQuery.Deferred(),
+			completeDeferred = jQuery.Callbacks("once memory"),
+			// Status-dependent callbacks
+			statusCode = s.statusCode || {},
+			// Headers (they are sent all at once)
+			requestHeaders = {},
+			requestHeadersNames = {},
+			// The jqXHR state
+			state = 0,
+			// Default abort message
+			strAbort = "canceled",
+			// Fake xhr
+			jqXHR = {
+				readyState: 0,
+
+				// Builds headers hashtable if needed
+				getResponseHeader: function( key ) {
+					var match;
+					if ( state === 2 ) {
+						if ( !responseHeaders ) {
+							responseHeaders = {};
+							while ( (match = rheaders.exec( responseHeadersString )) ) {
+								responseHeaders[ match[1].toLowerCase() ] = match[ 2 ];
+							}
+						}
+						match = responseHeaders[ key.toLowerCase() ];
+					}
+					return match == null ? null : match;
+				},
+
+				// Raw string
+				getAllResponseHeaders: function() {
+					return state === 2 ? responseHeadersString : null;
+				},
+
+				// Caches the header
+				setRequestHeader: function( name, value ) {
+					var lname = name.toLowerCase();
+					if ( !state ) {
+						name = requestHeadersNames[ lname ] = requestHeadersNames[ lname ] || name;
+						requestHeaders[ name ] = value;
+					}
+					return this;
+				},
+
+				// Overrides response content-type header
+				overrideMimeType: function( type ) {
+					if ( !state ) {
+						s.mimeType = type;
+					}
+					return this;
+				},
+
+				// Status-dependent callbacks
+				statusCode: function( map ) {
+					var code;
+					if ( map ) {
+						if ( state < 2 ) {
+							for ( code in map ) {
+								// Lazy-add the new callback in a way that preserves old ones
+								statusCode[ code ] = [ statusCode[ code ], map[ code ] ];
+							}
+						} else {
+							// Execute the appropriate callbacks
+							jqXHR.always( map[ jqXHR.status ] );
+						}
+					}
+					return this;
+				},
+
+				// Cancel the request
+				abort: function( statusText ) {
+					var finalText = statusText || strAbort;
+					if ( transport ) {
+						transport.abort( finalText );
+					}
+					done( 0, finalText );
+					return this;
+				}
+			};
+
+		// Attach deferreds
+		deferred.promise( jqXHR ).complete = completeDeferred.add;
+		jqXHR.success = jqXHR.done;
+		jqXHR.error = jqXHR.fail;
+
+		// Remove hash character (#7531: and string promotion)
+		// Add protocol if not provided (prefilters might expect it)
+		// Handle falsy url in the settings object (#10093: consistency with old signature)
+		// We also use the url parameter if available
+		s.url = ( ( url || s.url || ajaxLocation ) + "" ).replace( rhash, "" )
+			.replace( rprotocol, ajaxLocParts[ 1 ] + "//" );
+
+		// Alias method option to type as per ticket #12004
+		s.type = options.method || options.type || s.method || s.type;
+
+		// Extract dataTypes list
+		s.dataTypes = jQuery.trim( s.dataType || "*" ).toLowerCase().match( rnotwhite ) || [ "" ];
+
+		// A cross-domain request is in order when we have a protocol:host:port mismatch
+		if ( s.crossDomain == null ) {
+			parts = rurl.exec( s.url.toLowerCase() );
+			s.crossDomain = !!( parts &&
+				( parts[ 1 ] !== ajaxLocParts[ 1 ] || parts[ 2 ] !== ajaxLocParts[ 2 ] ||
+					( parts[ 3 ] || ( parts[ 1 ] === "http:" ? "80" : "443" ) ) !==
+						( ajaxLocParts[ 3 ] || ( ajaxLocParts[ 1 ] === "http:" ? "80" : "443" ) ) )
+			);
+		}
+
+		// Convert data if not already a string
+		if ( s.data && s.processData && typeof s.data !== "string" ) {
+			s.data = jQuery.param( s.data, s.traditional );
+		}
+
+		// Apply prefilters
+		inspectPrefiltersOrTransports( prefilters, s, options, jqXHR );
+
+		// If request was aborted inside a prefilter, stop there
+		if ( state === 2 ) {
+			return jqXHR;
+		}
+
+		// We can fire global events as of now if asked to
+		// Don't fire events if jQuery.event is undefined in an AMD-usage scenario (#15118)
+		fireGlobals = jQuery.event && s.global;
+
+		// Watch for a new set of requests
+		if ( fireGlobals && jQuery.active++ === 0 ) {
+			jQuery.event.trigger("ajaxStart");
+		}
+
+		// Uppercase the type
+		s.type = s.type.toUpperCase();
+
+		// Determine if request has content
+		s.hasContent = !rnoContent.test( s.type );
+
+		// Save the URL in case we're toying with the If-Modified-Since
+		// and/or If-None-Match header later on
+		cacheURL = s.url;
+
+		// More options handling for requests with no content
+		if ( !s.hasContent ) {
+
+			// If data is available, append data to url
+			if ( s.data ) {
+				cacheURL = ( s.url += ( rquery.test( cacheURL ) ? "&" : "?" ) + s.data );
+				// #9682: remove data so that it's not used in an eventual retry
+				delete s.data;
+			}
+
+			// Add anti-cache in url if needed
+			if ( s.cache === false ) {
+				s.url = rts.test( cacheURL ) ?
+
+					// If there is already a '_' parameter, set its value
+					cacheURL.replace( rts, "$1_=" + nonce++ ) :
+
+					// Otherwise add one to the end
+					cacheURL + ( rquery.test( cacheURL ) ? "&" : "?" ) + "_=" + nonce++;
+			}
+		}
+
+		// Set the If-Modified-Since and/or If-None-Match header, if in ifModified mode.
+		if ( s.ifModified ) {
+			if ( jQuery.lastModified[ cacheURL ] ) {
+				jqXHR.setRequestHeader( "If-Modified-Since", jQuery.lastModified[ cacheURL ] );
+			}
+			if ( jQuery.etag[ cacheURL ] ) {
+				jqXHR.setRequestHeader( "If-None-Match", jQuery.etag[ cacheURL ] );
+			}
+		}
+
+		// Set the correct header, if data is being sent
+		if ( s.data && s.hasContent && s.contentType !== false || options.contentType ) {
+			jqXHR.setRequestHeader( "Content-Type", s.contentType );
+		}
+
+		// Set the Accepts header for the server, depending on the dataType
+		jqXHR.setRequestHeader(
+			"Accept",
+			s.dataTypes[ 0 ] && s.accepts[ s.dataTypes[0] ] ?
+				s.accepts[ s.dataTypes[0] ] + ( s.dataTypes[ 0 ] !== "*" ? ", " + allTypes + "; q=0.01" : "" ) :
+				s.accepts[ "*" ]
+		);
+
+		// Check for headers option
+		for ( i in s.headers ) {
+			jqXHR.setRequestHeader( i, s.headers[ i ] );
+		}
+
+		// Allow custom headers/mimetypes and early abort
+		if ( s.beforeSend && ( s.beforeSend.call( callbackContext, jqXHR, s ) === false || state === 2 ) ) {
+			// Abort if not done already and return
+			return jqXHR.abort();
+		}
+
+		// Aborting is no longer a cancellation
+		strAbort = "abort";
+
+		// Install callbacks on deferreds
+		for ( i in { success: 1, error: 1, complete: 1 } ) {
+			jqXHR[ i ]( s[ i ] );
+		}
+
+		// Get transport
+		transport = inspectPrefiltersOrTransports( transports, s, options, jqXHR );
+
+		// If no transport, we auto-abort
+		if ( !transport ) {
+			done( -1, "No Transport" );
+		} else {
+			jqXHR.readyState = 1;
+
+			// Send global event
+			if ( fireGlobals ) {
+				globalEventContext.trigger( "ajaxSend", [ jqXHR, s ] );
+			}
+			// Timeout
+			if ( s.async && s.timeout > 0 ) {
+				timeoutTimer = setTimeout(function() {
+					jqXHR.abort("timeout");
+				}, s.timeout );
+			}
+
+			try {
+				state = 1;
+				transport.send( requestHeaders, done );
+			} catch ( e ) {
+				// Propagate exception as error if not done
+				if ( state < 2 ) {
+					done( -1, e );
+				// Simply rethrow otherwise
+				} else {
+					throw e;
+				}
+			}
+		}
+
+		// Callback for when everything is done
+		function done( status, nativeStatusText, responses, headers ) {
+			var isSuccess, success, error, response, modified,
+				statusText = nativeStatusText;
+
+			// Called once
+			if ( state === 2 ) {
+				return;
+			}
+
+			// State is "done" now
+			state = 2;
+
+			// Clear timeout if it exists
+			if ( timeoutTimer ) {
+				clearTimeout( timeoutTimer );
+			}
+
+			// Dereference transport for early garbage collection
+			// (no matter how long the jqXHR object will be used)
+			transport = undefined;
+
+			// Cache response headers
+			responseHeadersString = headers || "";
+
+			// Set readyState
+			jqXHR.readyState = status > 0 ? 4 : 0;
+
+			// Determine if successful
+			isSuccess = status >= 200 && status < 300 || status === 304;
+
+			// Get response data
+			if ( responses ) {
+				response = ajaxHandleResponses( s, jqXHR, responses );
+			}
+
+			// Convert no matter what (that way responseXXX fields are always set)
+			response = ajaxConvert( s, response, jqXHR, isSuccess );
+
+			// If successful, handle type chaining
+			if ( isSuccess ) {
+
+				// Set the If-Modified-Since and/or If-None-Match header, if in ifModified mode.
+				if ( s.ifModified ) {
+					modified = jqXHR.getResponseHeader("Last-Modified");
+					if ( modified ) {
+						jQuery.lastModified[ cacheURL ] = modified;
+					}
+					modified = jqXHR.getResponseHeader("etag");
+					if ( modified ) {
+						jQuery.etag[ cacheURL ] = modified;
+					}
+				}
+
+				// if no content
+				if ( status === 204 || s.type === "HEAD" ) {
+					statusText = "nocontent";
+
+				// if not modified
+				} else if ( status === 304 ) {
+					statusText = "notmodified";
+
+				// If we have data, let's convert it
+				} else {
+					statusText = response.state;
+					success = response.data;
+					error = response.error;
+					isSuccess = !error;
+				}
+			} else {
+				// Extract error from statusText and normalize for non-aborts
+				error = statusText;
+				if ( status || !statusText ) {
+					statusText = "error";
+					if ( status < 0 ) {
+						status = 0;
+					}
+				}
+			}
+
+			// Set data for the fake xhr object
+			jqXHR.status = status;
+			jqXHR.statusText = ( nativeStatusText || statusText ) + "";
+
+			// Success/Error
+			if ( isSuccess ) {
+				deferred.resolveWith( callbackContext, [ success, statusText, jqXHR ] );
+			} else {
+				deferred.rejectWith( callbackContext, [ jqXHR, statusText, error ] );
+			}
+
+			// Status-dependent callbacks
+			jqXHR.statusCode( statusCode );
+			statusCode = undefined;
+
+			if ( fireGlobals ) {
+				globalEventContext.trigger( isSuccess ? "ajaxSuccess" : "ajaxError",
+					[ jqXHR, s, isSuccess ? success : error ] );
+			}
+
+			// Complete
+			completeDeferred.fireWith( callbackContext, [ jqXHR, statusText ] );
+
+			if ( fireGlobals ) {
+				globalEventContext.trigger( "ajaxComplete", [ jqXHR, s ] );
+				// Handle the global AJAX counter
+				if ( !( --jQuery.active ) ) {
+					jQuery.event.trigger("ajaxStop");
+				}
+			}
+		}
+
+		return jqXHR;
+	},
+
+	getJSON: function( url, data, callback ) {
+		return jQuery.get( url, data, callback, "json" );
+	},
+
+	getScript: function( url, callback ) {
+		return jQuery.get( url, undefined, callback, "script" );
+	}
+});
+
+jQuery.each( [ "get", "post" ], function( i, method ) {
+	jQuery[ method ] = function( url, data, callback, type ) {
+		// Shift arguments if data argument was omitted
+		if ( jQuery.isFunction( data ) ) {
+			type = type || callback;
+			callback = data;
+			data = undefined;
+		}
+
+		return jQuery.ajax({
+			url: url,
+			type: method,
+			dataType: type,
+			data: data,
+			success: callback
+		});
+	};
+});
+
+
+jQuery._evalUrl = function( url ) {
+	return jQuery.ajax({
+		url: url,
+		type: "GET",
+		dataType: "script",
+		async: false,
+		global: false,
+		"throws": true
+	});
+};
+
+
+jQuery.fn.extend({
+	wrapAll: function( html ) {
+		var wrap;
+
+		if ( jQuery.isFunction( html ) ) {
+			return this.each(function( i ) {
+				jQuery( this ).wrapAll( html.call(this, i) );
+			});
+		}
+
+		if ( this[ 0 ] ) {
+
+			// The elements to wrap the target around
+			wrap = jQuery( html, this[ 0 ].ownerDocument ).eq( 0 ).clone( true );
+
+			if ( this[ 0 ].parentNode ) {
+				wrap.insertBefore( this[ 0 ] );
+			}
+
+			wrap.map(function() {
+				var elem = this;
+
+				while ( elem.firstElementChild ) {
+					elem = elem.firstElementChild;
+				}
+
+				return elem;
+			}).append( this );
+		}
+
+		return this;
+	},
+
+	wrapInner: function( html ) {
+		if ( jQuery.isFunction( html ) ) {
+			return this.each(function( i ) {
+				jQuery( this ).wrapInner( html.call(this, i) );
+			});
+		}
+
+		return this.each(function() {
+			var self = jQuery( this ),
+				contents = self.contents();
+
+			if ( contents.length ) {
+				contents.wrapAll( html );
+
+			} else {
+				self.append( html );
+			}
+		});
+	},
+
+	wrap: function( html ) {
+		var isFunction = jQuery.isFunction( html );
+
+		return this.each(function( i ) {
+			jQuery( this ).wrapAll( isFunction ? html.call(this, i) : html );
+		});
+	},
+
+	unwrap: function() {
+		return this.parent().each(function() {
+			if ( !jQuery.nodeName( this, "body" ) ) {
+				jQuery( this ).replaceWith( this.childNodes );
+			}
+		}).end();
+	}
+});
+
+
+jQuery.expr.filters.hidden = function( elem ) {
+	// Support: Opera <= 12.12
+	// Opera reports offsetWidths and offsetHeights less than zero on some elements
+	return elem.offsetWidth <= 0 && elem.offsetHeight <= 0;
+};
+jQuery.expr.filters.visible = function( elem ) {
+	return !jQuery.expr.filters.hidden( elem );
+};
+
+
+
+
+var r20 = /%20/g,
+	rbracket = /\[\]$/,
+	rCRLF = /\r?\n/g,
+	rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i,
+	rsubmittable = /^(?:input|select|textarea|keygen)/i;
+
+function buildParams( prefix, obj, traditional, add ) {
+	var name;
+
+	if ( jQuery.isArray( obj ) ) {
+		// Serialize array item.
+		jQuery.each( obj, function( i, v ) {
+			if ( traditional || rbracket.test( prefix ) ) {
+				// Treat each array item as a scalar.
+				add( prefix, v );
+
+			} else {
+				// Item is non-scalar (array or object), encode its numeric index.
+				buildParams( prefix + "[" + ( typeof v === "object" ? i : "" ) + "]", v, traditional, add );
+			}
+		});
+
+	} else if ( !traditional && jQuery.type( obj ) === "object" ) {
+		// Serialize object item.
+		for ( name in obj ) {
+			buildParams( prefix + "[" + name + "]", obj[ name ], traditional, add );
+		}
+
+	} else {
+		// Serialize scalar item.
+		add( prefix, obj );
+	}
+}
+
+// Serialize an array of form elements or a set of
+// key/values into a query string
+jQuery.param = function( a, traditional ) {
+	var prefix,
+		s = [],
+		add = function( key, value ) {
+			// If value is a function, invoke it and return its value
+			value = jQuery.isFunction( value ) ? value() : ( value == null ? "" : value );
+			s[ s.length ] = encodeURIComponent( key ) + "=" + encodeURIComponent( value );
+		};
+
+	// Set traditional to true for jQuery <= 1.3.2 behavior.
+	if ( traditional === undefined ) {
+		traditional = jQuery.ajaxSettings && jQuery.ajaxSettings.traditional;
+	}
+
+	// If an array was passed in, assume that it is an array of form elements.
+	if ( jQuery.isArray( a ) || ( a.jquery && !jQuery.isPlainObject( a ) ) ) {
+		// Serialize the form elements
+		jQuery.each( a, function() {
+			add( this.name, this.value );
+		});
+
+	} else {
+		// If traditional, encode the "old" way (the way 1.3.2 or older
+		// did it), otherwise encode params recursively.
+		for ( prefix in a ) {
+			buildParams( prefix, a[ prefix ], traditional, add );
+		}
+	}
+
+	// Return the resulting serialization
+	return s.join( "&" ).replace( r20, "+" );
+};
+
+jQuery.fn.extend({
+	serialize: function() {
+		return jQuery.param( this.serializeArray() );
+	},
+	serializeArray: function() {
+		return this.map(function() {
+			// Can add propHook for "elements" to filter or add form elements
+			var elements = jQuery.prop( this, "elements" );
+			return elements ? jQuery.makeArray( elements ) : this;
+		})
+		.filter(function() {
+			var type = this.type;
+
+			// Use .is( ":disabled" ) so that fieldset[disabled] works
+			return this.name && !jQuery( this ).is( ":disabled" ) &&
+				rsubmittable.test( this.nodeName ) && !rsubmitterTypes.test( type ) &&
+				( this.checked || !rcheckableType.test( type ) );
+		})
+		.map(function( i, elem ) {
+			var val = jQuery( this ).val();
+
+			return val == null ?
+				null :
+				jQuery.isArray( val ) ?
+					jQuery.map( val, function( val ) {
+						return { name: elem.name, value: val.replace( rCRLF, "\r\n" ) };
+					}) :
+					{ name: elem.name, value: val.replace( rCRLF, "\r\n" ) };
+		}).get();
+	}
+});
+
+
+jQuery.ajaxSettings.xhr = function() {
+	try {
+		return new XMLHttpRequest();
+	} catch( e ) {}
+};
+
+var xhrId = 0,
+	xhrCallbacks = {},
+	xhrSuccessStatus = {
+		// file protocol always yields status code 0, assume 200
+		0: 200,
+		// Support: IE9
+		// #1450: sometimes IE returns 1223 when it should be 204
+		1223: 204
+	},
+	xhrSupported = jQuery.ajaxSettings.xhr();
+
+// Support: IE9
+// Open requests must be manually aborted on unload (#5280)
+// See https://support.microsoft.com/kb/2856746 for more info
+if ( window.attachEvent ) {
+	window.attachEvent( "onunload", function() {
+		for ( var key in xhrCallbacks ) {
+			xhrCallbacks[ key ]();
+		}
+	});
+}
+
+support.cors = !!xhrSupported && ( "withCredentials" in xhrSupported );
+support.ajax = xhrSupported = !!xhrSupported;
+
+jQuery.ajaxTransport(function( options ) {
+	var callback;
+
+	// Cross domain only allowed if supported through XMLHttpRequest
+	if ( support.cors || xhrSupported && !options.crossDomain ) {
+		return {
+			send: function( headers, complete ) {
+				var i,
+					xhr = options.xhr(),
+					id = ++xhrId;
+
+				xhr.open( options.type, options.url, options.async, options.username, options.password );
+
+				// Apply custom fields if provided
+				if ( options.xhrFields ) {
+					for ( i in options.xhrFields ) {
+						xhr[ i ] = options.xhrFields[ i ];
+					}
+				}
+
+				// Override mime type if needed
+				if ( options.mimeType && xhr.overrideMimeType ) {
+					xhr.overrideMimeType( options.mimeType );
+				}
+
+				// X-Requested-With header
+				// For cross-domain requests, seeing as conditions for a preflight are
+				// akin to a jigsaw puzzle, we simply never set it to be sure.
+				// (it can always be set on a per-request basis or even using ajaxSetup)
+				// For same-domain requests, won't change header if already provided.
+				if ( !options.crossDomain && !headers["X-Requested-With"] ) {
+					headers["X-Requested-With"] = "XMLHttpRequest";
+				}
+
+				// Set headers
+				for ( i in headers ) {
+					xhr.setRequestHeader( i, headers[ i ] );
+				}
+
+				// Callback
+				callback = function( type ) {
+					return function() {
+						if ( callback ) {
+							delete xhrCallbacks[ id ];
+							callback = xhr.onload = xhr.onerror = null;
+
+							if ( type === "abort" ) {
+								xhr.abort();
+							} else if ( type === "error" ) {
+								complete(
+									// file: protocol always yields status 0; see #8605, #14207
+									xhr.status,
+									xhr.statusText
+								);
+							} else {
+								complete(
+									xhrSuccessStatus[ xhr.status ] || xhr.status,
+									xhr.statusText,
+									// Support: IE9
+									// Accessing binary-data responseText throws an exception
+									// (#11426)
+									typeof xhr.responseText === "string" ? {
+										text: xhr.responseText
+									} : undefined,
+									xhr.getAllResponseHeaders()
+								);
+							}
+						}
+					};
+				};
+
+				// Listen to events
+				xhr.onload = callback();
+				xhr.onerror = callback("error");
+
+				// Create the abort callback
+				callback = xhrCallbacks[ id ] = callback("abort");
+
+				try {
+					// Do send the request (this may raise an exception)
+					xhr.send( options.hasContent && options.data || null );
+				} catch ( e ) {
+					// #14683: Only rethrow if this hasn't been notified as an error yet
+					if ( callback ) {
+						throw e;
+					}
+				}
+			},
+
+			abort: function() {
+				if ( callback ) {
+					callback();
+				}
+			}
+		};
+	}
+});
+
+
+
+
+// Install script dataType
+jQuery.ajaxSetup({
+	accepts: {
+		script: "text/javascript, application/javascript, application/ecmascript, application/x-ecmascript"
+	},
+	contents: {
+		script: /(?:java|ecma)script/
+	},
+	converters: {
+		"text script": function( text ) {
+			jQuery.globalEval( text );
+			return text;
+		}
+	}
+});
+
+// Handle cache's special case and crossDomain
+jQuery.ajaxPrefilter( "script", function( s ) {
+	if ( s.cache === undefined ) {
+		s.cache = false;
+	}
+	if ( s.crossDomain ) {
+		s.type = "GET";
+	}
+});
+
+// Bind script tag hack transport
+jQuery.ajaxTransport( "script", function( s ) {
+	// This transport only deals with cross domain requests
+	if ( s.crossDomain ) {
+		var script, callback;
+		return {
+			send: function( _, complete ) {
+				script = jQuery("<script>").prop({
+					async: true,
+					charset: s.scriptCharset,
+					src: s.url
+				}).on(
+					"load error",
+					callback = function( evt ) {
+						script.remove();
+						callback = null;
+						if ( evt ) {
+							complete( evt.type === "error" ? 404 : 200, evt.type );
+						}
+					}
+				);
+				document.head.appendChild( script[ 0 ] );
+			},
+			abort: function() {
+				if ( callback ) {
+					callback();
+				}
+			}
+		};
+	}
+});
+
+
+
+
+var oldCallbacks = [],
+	rjsonp = /(=)\?(?=&|$)|\?\?/;
+
+// Default jsonp settings
+jQuery.ajaxSetup({
+	jsonp: "callback",
+	jsonpCallback: function() {
+		var callback = oldCallbacks.pop() || ( jQuery.expando + "_" + ( nonce++ ) );
+		this[ callback ] = true;
+		return callback;
+	}
+});
+
+// Detect, normalize options and install callbacks for jsonp requests
+jQuery.ajaxPrefilter( "json jsonp", function( s, originalSettings, jqXHR ) {
+
+	var callbackName, overwritten, responseContainer,
+		jsonProp = s.jsonp !== false && ( rjsonp.test( s.url ) ?
+			"url" :
+			typeof s.data === "string" && !( s.contentType || "" ).indexOf("application/x-www-form-urlencoded") && rjsonp.test( s.data ) && "data"
+		);
+
+	// Handle iff the expected data type is "jsonp" or we have a parameter to set
+	if ( jsonProp || s.dataTypes[ 0 ] === "jsonp" ) {
+
+		// Get callback name, remembering preexisting value associated with it
+		callbackName = s.jsonpCallback = jQuery.isFunction( s.jsonpCallback ) ?
+			s.jsonpCallback() :
+			s.jsonpCallback;
+
+		// Insert callback into url or form data
+		if ( jsonProp ) {
+			s[ jsonProp ] = s[ jsonProp ].replace( rjsonp, "$1" + callbackName );
+		} else if ( s.jsonp !== false ) {
+			s.url += ( rquery.test( s.url ) ? "&" : "?" ) + s.jsonp + "=" + callbackName;
+		}
+
+		// Use data converter to retrieve json after script execution
+		s.converters["script json"] = function() {
+			if ( !responseContainer ) {
+				jQuery.error( callbackName + " was not called" );
+			}
+			return responseContainer[ 0 ];
+		};
+
+		// force json dataType
+		s.dataTypes[ 0 ] = "json";
+
+		// Install callback
+		overwritten = window[ callbackName ];
+		window[ callbackName ] = function() {
+			responseContainer = arguments;
+		};
+
+		// Clean-up function (fires after converters)
+		jqXHR.always(function() {
+			// Restore preexisting value
+			window[ callbackName ] = overwritten;
+
+			// Save back as free
+			if ( s[ callbackName ] ) {
+				// make sure that re-using the options doesn't screw things around
+				s.jsonpCallback = originalSettings.jsonpCallback;
+
+				// save the callback name for future use
+				oldCallbacks.push( callbackName );
+			}
+
+			// Call if it was a function and we have a response
+			if ( responseContainer && jQuery.isFunction( overwritten ) ) {
+				overwritten( responseContainer[ 0 ] );
+			}
+
+			responseContainer = overwritten = undefined;
+		});
+
+		// Delegate to script
+		return "script";
+	}
+});
+
+
+
+
+// data: string of html
+// context (optional): If specified, the fragment will be created in this context, defaults to document
+// keepScripts (optional): If true, will include scripts passed in the html string
+jQuery.parseHTML = function( data, context, keepScripts ) {
+	if ( !data || typeof data !== "string" ) {
+		return null;
+	}
+	if ( typeof context === "boolean" ) {
+		keepScripts = context;
+		context = false;
+	}
+	context = context || document;
+
+	var parsed = rsingleTag.exec( data ),
+		scripts = !keepScripts && [];
+
+	// Single tag
+	if ( parsed ) {
+		return [ context.createElement( parsed[1] ) ];
+	}
+
+	parsed = jQuery.buildFragment( [ data ], context, scripts );
+
+	if ( scripts && scripts.length ) {
+		jQuery( scripts ).remove();
+	}
+
+	return jQuery.merge( [], parsed.childNodes );
+};
+
+
+// Keep a copy of the old load method
+var _load = jQuery.fn.load;
+
+/**
+ * Load a url into a page
+ */
+jQuery.fn.load = function( url, params, callback ) {
+	if ( typeof url !== "string" && _load ) {
+		return _load.apply( this, arguments );
+	}
+
+	var selector, type, response,
+		self = this,
+		off = url.indexOf(" ");
+
+	if ( off >= 0 ) {
+		selector = jQuery.trim( url.slice( off ) );
+		url = url.slice( 0, off );
+	}
+
+	// If it's a function
+	if ( jQuery.isFunction( params ) ) {
+
+		// We assume that it's the callback
+		callback = params;
+		params = undefined;
+
+	// Otherwise, build a param string
+	} else if ( params && typeof params === "object" ) {
+		type = "POST";
+	}
+
+	// If we have elements to modify, make the request
+	if ( self.length > 0 ) {
+		jQuery.ajax({
+			url: url,
+
+			// if "type" variable is undefined, then "GET" method will be used
+			type: type,
+			dataType: "html",
+			data: params
+		}).done(function( responseText ) {
+
+			// Save response for use in complete callback
+			response = arguments;
+
+			self.html( selector ?
+
+				// If a selector was specified, locate the right elements in a dummy div
+				// Exclude scripts to avoid IE 'Permission Denied' errors
+				jQuery("<div>").append( jQuery.parseHTML( responseText ) ).find( selector ) :
+
+				// Otherwise use the full result
+				responseText );
+
+		}).complete( callback && function( jqXHR, status ) {
+			self.each( callback, response || [ jqXHR.responseText, status, jqXHR ] );
+		});
+	}
+
+	return this;
+};
+
+
+
+
+// Attach a bunch of functions for handling common AJAX events
+jQuery.each( [ "ajaxStart", "ajaxStop", "ajaxComplete", "ajaxError", "ajaxSuccess", "ajaxSend" ], function( i, type ) {
+	jQuery.fn[ type ] = function( fn ) {
+		return this.on( type, fn );
+	};
+});
+
+
+
+
+jQuery.expr.filters.animated = function( elem ) {
+	return jQuery.grep(jQuery.timers, function( fn ) {
+		return elem === fn.elem;
+	}).length;
+};
+
+
+
+
+var docElem = window.document.documentElement;
+
+/**
+ * Gets a window from an element
+ */
+function getWindow( elem ) {
+	return jQuery.isWindow( elem ) ? elem : elem.nodeType === 9 && elem.defaultView;
+}
+
+jQuery.offset = {
+	setOffset: function( elem, options, i ) {
+		var curPosition, curLeft, curCSSTop, curTop, curOffset, curCSSLeft, calculatePosition,
+			position = jQuery.css( elem, "position" ),
+			curElem = jQuery( elem ),
+			props = {};
+
+		// Set position first, in-case top/left are set even on static elem
+		if ( position === "static" ) {
+			elem.style.position = "relative";
+		}
+
+		curOffset = curElem.offset();
+		curCSSTop = jQuery.css( elem, "top" );
+		curCSSLeft = jQuery.css( elem, "left" );
+		calculatePosition = ( position === "absolute" || position === "fixed" ) &&
+			( curCSSTop + curCSSLeft ).indexOf("auto") > -1;
+
+		// Need to be able to calculate position if either
+		// top or left is auto and position is either absolute or fixed
+		if ( calculatePosition ) {
+			curPosition = curElem.position();
+			curTop = curPosition.top;
+			curLeft = curPosition.left;
+
+		} else {
+			curTop = parseFloat( curCSSTop ) || 0;
+			curLeft = parseFloat( curCSSLeft ) || 0;
+		}
+
+		if ( jQuery.isFunction( options ) ) {
+			options = options.call( elem, i, curOffset );
+		}
+
+		if ( options.top != null ) {
+			props.top = ( options.top - curOffset.top ) + curTop;
+		}
+		if ( options.left != null ) {
+			props.left = ( options.left - curOffset.left ) + curLeft;
+		}
+
+		if ( "using" in options ) {
+			options.using.call( elem, props );
+
+		} else {
+			curElem.css( props );
+		}
+	}
+};
+
+jQuery.fn.extend({
+	offset: function( options ) {
+		if ( arguments.length ) {
+			return options === undefined ?
+				this :
+				this.each(function( i ) {
+					jQuery.offset.setOffset( this, options, i );
+				});
+		}
+
+		var docElem, win,
+			elem = this[ 0 ],
+			box = { top: 0, left: 0 },
+			doc = elem && elem.ownerDocument;
+
+		if ( !doc ) {
+			return;
+		}
+
+		docElem = doc.documentElement;
+
+		// Make sure it's not a disconnected DOM node
+		if ( !jQuery.contains( docElem, elem ) ) {
+			return box;
+		}
+
+		// Support: BlackBerry 5, iOS 3 (original iPhone)
+		// If we don't have gBCR, just use 0,0 rather than error
+		if ( typeof elem.getBoundingClientRect !== strundefined ) {
+			box = elem.getBoundingClientRect();
+		}
+		win = getWindow( doc );
+		return {
+			top: box.top + win.pageYOffset - docElem.clientTop,
+			left: box.left + win.pageXOffset - docElem.clientLeft
+		};
+	},
+
+	position: function() {
+		if ( !this[ 0 ] ) {
+			return;
+		}
+
+		var offsetParent, offset,
+			elem = this[ 0 ],
+			parentOffset = { top: 0, left: 0 };
+
+		// Fixed elements are offset from window (parentOffset = {top:0, left: 0}, because it is its only offset parent
+		if ( jQuery.css( elem, "position" ) === "fixed" ) {
+			// Assume getBoundingClientRect is there when computed position is fixed
+			offset = elem.getBoundingClientRect();
+
+		} else {
+			// Get *real* offsetParent
+			offsetParent = this.offsetParent();
+
+			// Get correct offsets
+			offset = this.offset();
+			if ( !jQuery.nodeName( offsetParent[ 0 ], "html" ) ) {
+				parentOffset = offsetParent.offset();
+			}
+
+			// Add offsetParent borders
+			parentOffset.top += jQuery.css( offsetParent[ 0 ], "borderTopWidth", true );
+			parentOffset.left += jQuery.css( offsetParent[ 0 ], "borderLeftWidth", true );
+		}
+
+		// Subtract parent offsets and element margins
+		return {
+			top: offset.top - parentOffset.top - jQuery.css( elem, "marginTop", true ),
+			left: offset.left - parentOffset.left - jQuery.css( elem, "marginLeft", true )
+		};
+	},
+
+	offsetParent: function() {
+		return this.map(function() {
+			var offsetParent = this.offsetParent || docElem;
+
+			while ( offsetParent && ( !jQuery.nodeName( offsetParent, "html" ) && jQuery.css( offsetParent, "position" ) === "static" ) ) {
+				offsetParent = offsetParent.offsetParent;
+			}
+
+			return offsetParent || docElem;
+		});
+	}
+});
+
+// Create scrollLeft and scrollTop methods
+jQuery.each( { scrollLeft: "pageXOffset", scrollTop: "pageYOffset" }, function( method, prop ) {
+	var top = "pageYOffset" === prop;
+
+	jQuery.fn[ method ] = function( val ) {
+		return access( this, function( elem, method, val ) {
+			var win = getWindow( elem );
+
+			if ( val === undefined ) {
+				return win ? win[ prop ] : elem[ method ];
+			}
+
+			if ( win ) {
+				win.scrollTo(
+					!top ? val : window.pageXOffset,
+					top ? val : window.pageYOffset
+				);
+
+			} else {
+				elem[ method ] = val;
+			}
+		}, method, val, arguments.length, null );
+	};
+});
+
+// Support: Safari<7+, Chrome<37+
+// Add the top/left cssHooks using jQuery.fn.position
+// Webkit bug: https://bugs.webkit.org/show_bug.cgi?id=29084
+// Blink bug: https://code.google.com/p/chromium/issues/detail?id=229280
+// getComputedStyle returns percent when specified for top/left/bottom/right;
+// rather than make the css module depend on the offset module, just check for it here
+jQuery.each( [ "top", "left" ], function( i, prop ) {
+	jQuery.cssHooks[ prop ] = addGetHookIf( support.pixelPosition,
+		function( elem, computed ) {
+			if ( computed ) {
+				computed = curCSS( elem, prop );
+				// If curCSS returns percentage, fallback to offset
+				return rnumnonpx.test( computed ) ?
+					jQuery( elem ).position()[ prop ] + "px" :
+					computed;
+			}
+		}
+	);
+});
+
+
+// Create innerHeight, innerWidth, height, width, outerHeight and outerWidth methods
+jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
+	jQuery.each( { padding: "inner" + name, content: type, "": "outer" + name }, function( defaultExtra, funcName ) {
+		// Margin is only for outerHeight, outerWidth
+		jQuery.fn[ funcName ] = function( margin, value ) {
+			var chainable = arguments.length && ( defaultExtra || typeof margin !== "boolean" ),
+				extra = defaultExtra || ( margin === true || value === true ? "margin" : "border" );
+
+			return access( this, function( elem, type, value ) {
+				var doc;
+
+				if ( jQuery.isWindow( elem ) ) {
+					// As of 5/8/2012 this will yield incorrect results for Mobile Safari, but there
+					// isn't a whole lot we can do. See pull request at this URL for discussion:
+					// https://github.com/jquery/jquery/pull/764
+					return elem.document.documentElement[ "client" + name ];
+				}
+
+				// Get document width or height
+				if ( elem.nodeType === 9 ) {
+					doc = elem.documentElement;
+
+					// Either scroll[Width/Height] or offset[Width/Height] or client[Width/Height],
+					// whichever is greatest
+					return Math.max(
+						elem.body[ "scroll" + name ], doc[ "scroll" + name ],
+						elem.body[ "offset" + name ], doc[ "offset" + name ],
+						doc[ "client" + name ]
+					);
+				}
+
+				return value === undefined ?
+					// Get width or height on the element, requesting but not forcing parseFloat
+					jQuery.css( elem, type, extra ) :
+
+					// Set width or height on the element
+					jQuery.style( elem, type, value, extra );
+			}, type, chainable ? margin : undefined, chainable, null );
+		};
+	});
+});
+
+
+// The number of elements contained in the matched element set
+jQuery.fn.size = function() {
+	return this.length;
+};
+
+jQuery.fn.andSelf = jQuery.fn.addBack;
+
+
+
+
+// Register as a named AMD module, since jQuery can be concatenated with other
+// files that may use define, but not via a proper concatenation script that
+// understands anonymous AMD modules. A named AMD is safest and most robust
+// way to register. Lowercase jquery is used because AMD module names are
+// derived from file names, and jQuery is normally delivered in a lowercase
+// file name. Do this after creating the global so that if an AMD module wants
+// to call noConflict to hide this version of jQuery, it will work.
+
+// Note that for maximum portability, libraries that are not jQuery should
+// declare themselves as anonymous modules, and avoid setting a global if an
+// AMD loader is present. jQuery is a special case. For more information, see
+// https://github.com/jrburke/requirejs/wiki/Updating-existing-libraries#wiki-anon
+
+if ( typeof define === "function" && define.amd ) {
+	define( "jquery", [], function() {
+		return jQuery;
+	});
+}
+
+
+
+
+var
+	// Map over jQuery in case of overwrite
+	_jQuery = window.jQuery,
+
+	// Map over the $ in case of overwrite
+	_$ = window.$;
+
+jQuery.noConflict = function( deep ) {
+	if ( window.$ === jQuery ) {
+		window.$ = _$;
+	}
+
+	if ( deep && window.jQuery === jQuery ) {
+		window.jQuery = _jQuery;
+	}
+
+	return jQuery;
+};
+
+// Expose jQuery and $ identifiers, even in AMD
+// (#7102#comment:10, https://github.com/jquery/jquery/pull/557)
+// and CommonJS for browser emulators (#13566)
+if ( typeof noGlobal === strundefined ) {
+	window.jQuery = window.$ = jQuery;
+}
+
+
+
+
+return jQuery;
+
+}));
+
+},{}],49:[function(require,module,exports){
 /**
  * Copyright (c) 2014 Meizu bigertech, All rights reserved.
  * http://www.bigertech.com/
@@ -9540,7 +19370,7 @@ function md5(string, key, raw) {
 }
 module.exports = md5;
 
-},{}],46:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -9599,7 +19429,5430 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],47:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
+/**
+ * Sinon core utilities. For internal use only.
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+var sinon = (function () {
+    var sinon;
+    var isNode = typeof module !== "undefined" && module.exports && typeof require === "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        sinon = module.exports = require("./sinon/util/core");
+        require("./sinon/extend");
+        require("./sinon/typeOf");
+        require("./sinon/times_in_words");
+        require("./sinon/spy");
+        require("./sinon/call");
+        require("./sinon/behavior");
+        require("./sinon/stub");
+        require("./sinon/mock");
+        require("./sinon/collection");
+        require("./sinon/assert");
+        require("./sinon/sandbox");
+        require("./sinon/test");
+        require("./sinon/test_case");
+        require("./sinon/match");
+        require("./sinon/format");
+        require("./sinon/log_error");
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+        sinon = module.exports;
+    } else {
+        sinon = {};
+    }
+
+    return sinon;
+}());
+
+},{"./sinon/assert":52,"./sinon/behavior":53,"./sinon/call":54,"./sinon/collection":55,"./sinon/extend":56,"./sinon/format":57,"./sinon/log_error":58,"./sinon/match":59,"./sinon/mock":60,"./sinon/sandbox":61,"./sinon/spy":62,"./sinon/stub":63,"./sinon/test":64,"./sinon/test_case":65,"./sinon/times_in_words":66,"./sinon/typeOf":67,"./sinon/util/core":68}],52:[function(require,module,exports){
+(function (global){
+/**
+ * @depend times_in_words.js
+ * @depend util/core.js
+ * @depend stub.js
+ * @depend format.js
+ */
+/**
+ * Assertions matching the test spy retrieval interface.
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+(function (sinon, global) {
+    var slice = Array.prototype.slice;
+
+    function makeApi(sinon) {
+        var assert;
+
+        function verifyIsStub() {
+            var method;
+
+            for (var i = 0, l = arguments.length; i < l; ++i) {
+                method = arguments[i];
+
+                if (!method) {
+                    assert.fail("fake is not a spy");
+                }
+
+                if (typeof method != "function") {
+                    assert.fail(method + " is not a function");
+                }
+
+                if (typeof method.getCall != "function") {
+                    assert.fail(method + " is not stubbed");
+                }
+            }
+        }
+
+        function failAssertion(object, msg) {
+            object = object || global;
+            var failMethod = object.fail || assert.fail;
+            failMethod.call(object, msg);
+        }
+
+        function mirrorPropAsAssertion(name, method, message) {
+            if (arguments.length == 2) {
+                message = method;
+                method = name;
+            }
+
+            assert[name] = function (fake) {
+                verifyIsStub(fake);
+
+                var args = slice.call(arguments, 1);
+                var failed = false;
+
+                if (typeof method == "function") {
+                    failed = !method(fake);
+                } else {
+                    failed = typeof fake[method] == "function" ?
+                        !fake[method].apply(fake, args) : !fake[method];
+                }
+
+                if (failed) {
+                    failAssertion(this, fake.printf.apply(fake, [message].concat(args)));
+                } else {
+                    assert.pass(name);
+                }
+            };
+        }
+
+        function exposedName(prefix, prop) {
+            return !prefix || /^fail/.test(prop) ? prop :
+                prefix + prop.slice(0, 1).toUpperCase() + prop.slice(1);
+        }
+
+        assert = {
+            failException: "AssertError",
+
+            fail: function fail(message) {
+                var error = new Error(message);
+                error.name = this.failException || assert.failException;
+
+                throw error;
+            },
+
+            pass: function pass(assertion) {},
+
+            callOrder: function assertCallOrder() {
+                verifyIsStub.apply(null, arguments);
+                var expected = "", actual = "";
+
+                if (!sinon.calledInOrder(arguments)) {
+                    try {
+                        expected = [].join.call(arguments, ", ");
+                        var calls = slice.call(arguments);
+                        var i = calls.length;
+                        while (i) {
+                            if (!calls[--i].called) {
+                                calls.splice(i, 1);
+                            }
+                        }
+                        actual = sinon.orderByFirstCall(calls).join(", ");
+                    } catch (e) {
+                        // If this fails, we'll just fall back to the blank string
+                    }
+
+                    failAssertion(this, "expected " + expected + " to be " +
+                                "called in order but were called as " + actual);
+                } else {
+                    assert.pass("callOrder");
+                }
+            },
+
+            callCount: function assertCallCount(method, count) {
+                verifyIsStub(method);
+
+                if (method.callCount != count) {
+                    var msg = "expected %n to be called " + sinon.timesInWords(count) +
+                        " but was called %c%C";
+                    failAssertion(this, method.printf(msg));
+                } else {
+                    assert.pass("callCount");
+                }
+            },
+
+            expose: function expose(target, options) {
+                if (!target) {
+                    throw new TypeError("target is null or undefined");
+                }
+
+                var o = options || {};
+                var prefix = typeof o.prefix == "undefined" && "assert" || o.prefix;
+                var includeFail = typeof o.includeFail == "undefined" || !!o.includeFail;
+
+                for (var method in this) {
+                    if (method != "expose" && (includeFail || !/^(fail)/.test(method))) {
+                        target[exposedName(prefix, method)] = this[method];
+                    }
+                }
+
+                return target;
+            },
+
+            match: function match(actual, expectation) {
+                var matcher = sinon.match(expectation);
+                if (matcher.test(actual)) {
+                    assert.pass("match");
+                } else {
+                    var formatted = [
+                        "expected value to match",
+                        "    expected = " + sinon.format(expectation),
+                        "    actual = " + sinon.format(actual)
+                    ]
+                    failAssertion(this, formatted.join("\n"));
+                }
+            }
+        };
+
+        mirrorPropAsAssertion("called", "expected %n to have been called at least once but was never called");
+        mirrorPropAsAssertion("notCalled", function (spy) { return !spy.called; },
+                            "expected %n to not have been called but was called %c%C");
+        mirrorPropAsAssertion("calledOnce", "expected %n to be called once but was called %c%C");
+        mirrorPropAsAssertion("calledTwice", "expected %n to be called twice but was called %c%C");
+        mirrorPropAsAssertion("calledThrice", "expected %n to be called thrice but was called %c%C");
+        mirrorPropAsAssertion("calledOn", "expected %n to be called with %1 as this but was called with %t");
+        mirrorPropAsAssertion("alwaysCalledOn", "expected %n to always be called with %1 as this but was called with %t");
+        mirrorPropAsAssertion("calledWithNew", "expected %n to be called with new");
+        mirrorPropAsAssertion("alwaysCalledWithNew", "expected %n to always be called with new");
+        mirrorPropAsAssertion("calledWith", "expected %n to be called with arguments %*%C");
+        mirrorPropAsAssertion("calledWithMatch", "expected %n to be called with match %*%C");
+        mirrorPropAsAssertion("alwaysCalledWith", "expected %n to always be called with arguments %*%C");
+        mirrorPropAsAssertion("alwaysCalledWithMatch", "expected %n to always be called with match %*%C");
+        mirrorPropAsAssertion("calledWithExactly", "expected %n to be called with exact arguments %*%C");
+        mirrorPropAsAssertion("alwaysCalledWithExactly", "expected %n to always be called with exact arguments %*%C");
+        mirrorPropAsAssertion("neverCalledWith", "expected %n to never be called with arguments %*%C");
+        mirrorPropAsAssertion("neverCalledWithMatch", "expected %n to never be called with match %*%C");
+        mirrorPropAsAssertion("threw", "%n did not throw exception%C");
+        mirrorPropAsAssertion("alwaysThrew", "%n did not always throw exception%C");
+
+        sinon.assert = assert;
+        return assert;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        require("./match");
+        module.exports = makeApi(sinon);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+
+}(typeof sinon == "object" && sinon || null, typeof window != "undefined" ? window : (typeof self != "undefined") ? self : global));
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./match":59,"./util/core":68}],53:[function(require,module,exports){
+(function (process){
+/**
+ * @depend util/core.js
+ * @depend extend.js
+ */
+/**
+ * Stub behavior
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @author Tim Fischbach (mail@timfischbach.de)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+(function (sinon) {
+    var slice = Array.prototype.slice;
+    var join = Array.prototype.join;
+
+    var nextTick = (function () {
+        if (typeof process === "object" && typeof process.nextTick === "function") {
+            return process.nextTick;
+        } else if (typeof setImmediate === "function") {
+            return setImmediate;
+        } else {
+            return function (callback) {
+                setTimeout(callback, 0);
+            };
+        }
+    })();
+
+    function throwsException(error, message) {
+        if (typeof error == "string") {
+            this.exception = new Error(message || "");
+            this.exception.name = error;
+        } else if (!error) {
+            this.exception = new Error("Error");
+        } else {
+            this.exception = error;
+        }
+
+        return this;
+    }
+
+    function getCallback(behavior, args) {
+        var callArgAt = behavior.callArgAt;
+
+        if (callArgAt < 0) {
+            var callArgProp = behavior.callArgProp;
+
+            for (var i = 0, l = args.length; i < l; ++i) {
+                if (!callArgProp && typeof args[i] == "function") {
+                    return args[i];
+                }
+
+                if (callArgProp && args[i] &&
+                    typeof args[i][callArgProp] == "function") {
+                    return args[i][callArgProp];
+                }
+            }
+
+            return null;
+        }
+
+        return args[callArgAt];
+    }
+
+    function makeApi(sinon) {
+        function getCallbackError(behavior, func, args) {
+            if (behavior.callArgAt < 0) {
+                var msg;
+
+                if (behavior.callArgProp) {
+                    msg = sinon.functionName(behavior.stub) +
+                        " expected to yield to '" + behavior.callArgProp +
+                        "', but no object with such a property was passed.";
+                } else {
+                    msg = sinon.functionName(behavior.stub) +
+                        " expected to yield, but no callback was passed.";
+                }
+
+                if (args.length > 0) {
+                    msg += " Received [" + join.call(args, ", ") + "]";
+                }
+
+                return msg;
+            }
+
+            return "argument at index " + behavior.callArgAt + " is not a function: " + func;
+        }
+
+        function callCallback(behavior, args) {
+            if (typeof behavior.callArgAt == "number") {
+                var func = getCallback(behavior, args);
+
+                if (typeof func != "function") {
+                    throw new TypeError(getCallbackError(behavior, func, args));
+                }
+
+                if (behavior.callbackAsync) {
+                    nextTick(function () {
+                        func.apply(behavior.callbackContext, behavior.callbackArguments);
+                    });
+                } else {
+                    func.apply(behavior.callbackContext, behavior.callbackArguments);
+                }
+            }
+        }
+
+        var proto = {
+            create: function create(stub) {
+                var behavior = sinon.extend({}, sinon.behavior);
+                delete behavior.create;
+                behavior.stub = stub;
+
+                return behavior;
+            },
+
+            isPresent: function isPresent() {
+                return (typeof this.callArgAt == "number" ||
+                        this.exception ||
+                        typeof this.returnArgAt == "number" ||
+                        this.returnThis ||
+                        this.returnValueDefined);
+            },
+
+            invoke: function invoke(context, args) {
+                callCallback(this, args);
+
+                if (this.exception) {
+                    throw this.exception;
+                } else if (typeof this.returnArgAt == "number") {
+                    return args[this.returnArgAt];
+                } else if (this.returnThis) {
+                    return context;
+                }
+
+                return this.returnValue;
+            },
+
+            onCall: function onCall(index) {
+                return this.stub.onCall(index);
+            },
+
+            onFirstCall: function onFirstCall() {
+                return this.stub.onFirstCall();
+            },
+
+            onSecondCall: function onSecondCall() {
+                return this.stub.onSecondCall();
+            },
+
+            onThirdCall: function onThirdCall() {
+                return this.stub.onThirdCall();
+            },
+
+            withArgs: function withArgs(/* arguments */) {
+                throw new Error("Defining a stub by invoking \"stub.onCall(...).withArgs(...)\" is not supported. " +
+                                "Use \"stub.withArgs(...).onCall(...)\" to define sequential behavior for calls with certain arguments.");
+            },
+
+            callsArg: function callsArg(pos) {
+                if (typeof pos != "number") {
+                    throw new TypeError("argument index is not number");
+                }
+
+                this.callArgAt = pos;
+                this.callbackArguments = [];
+                this.callbackContext = undefined;
+                this.callArgProp = undefined;
+                this.callbackAsync = false;
+
+                return this;
+            },
+
+            callsArgOn: function callsArgOn(pos, context) {
+                if (typeof pos != "number") {
+                    throw new TypeError("argument index is not number");
+                }
+                if (typeof context != "object") {
+                    throw new TypeError("argument context is not an object");
+                }
+
+                this.callArgAt = pos;
+                this.callbackArguments = [];
+                this.callbackContext = context;
+                this.callArgProp = undefined;
+                this.callbackAsync = false;
+
+                return this;
+            },
+
+            callsArgWith: function callsArgWith(pos) {
+                if (typeof pos != "number") {
+                    throw new TypeError("argument index is not number");
+                }
+
+                this.callArgAt = pos;
+                this.callbackArguments = slice.call(arguments, 1);
+                this.callbackContext = undefined;
+                this.callArgProp = undefined;
+                this.callbackAsync = false;
+
+                return this;
+            },
+
+            callsArgOnWith: function callsArgWith(pos, context) {
+                if (typeof pos != "number") {
+                    throw new TypeError("argument index is not number");
+                }
+                if (typeof context != "object") {
+                    throw new TypeError("argument context is not an object");
+                }
+
+                this.callArgAt = pos;
+                this.callbackArguments = slice.call(arguments, 2);
+                this.callbackContext = context;
+                this.callArgProp = undefined;
+                this.callbackAsync = false;
+
+                return this;
+            },
+
+            yields: function () {
+                this.callArgAt = -1;
+                this.callbackArguments = slice.call(arguments, 0);
+                this.callbackContext = undefined;
+                this.callArgProp = undefined;
+                this.callbackAsync = false;
+
+                return this;
+            },
+
+            yieldsOn: function (context) {
+                if (typeof context != "object") {
+                    throw new TypeError("argument context is not an object");
+                }
+
+                this.callArgAt = -1;
+                this.callbackArguments = slice.call(arguments, 1);
+                this.callbackContext = context;
+                this.callArgProp = undefined;
+                this.callbackAsync = false;
+
+                return this;
+            },
+
+            yieldsTo: function (prop) {
+                this.callArgAt = -1;
+                this.callbackArguments = slice.call(arguments, 1);
+                this.callbackContext = undefined;
+                this.callArgProp = prop;
+                this.callbackAsync = false;
+
+                return this;
+            },
+
+            yieldsToOn: function (prop, context) {
+                if (typeof context != "object") {
+                    throw new TypeError("argument context is not an object");
+                }
+
+                this.callArgAt = -1;
+                this.callbackArguments = slice.call(arguments, 2);
+                this.callbackContext = context;
+                this.callArgProp = prop;
+                this.callbackAsync = false;
+
+                return this;
+            },
+
+            throws: throwsException,
+            throwsException: throwsException,
+
+            returns: function returns(value) {
+                this.returnValue = value;
+                this.returnValueDefined = true;
+
+                return this;
+            },
+
+            returnsArg: function returnsArg(pos) {
+                if (typeof pos != "number") {
+                    throw new TypeError("argument index is not number");
+                }
+
+                this.returnArgAt = pos;
+
+                return this;
+            },
+
+            returnsThis: function returnsThis() {
+                this.returnThis = true;
+
+                return this;
+            }
+        };
+
+        // create asynchronous versions of callsArg* and yields* methods
+        for (var method in proto) {
+            // need to avoid creating anotherasync versions of the newly added async methods
+            if (proto.hasOwnProperty(method) &&
+                method.match(/^(callsArg|yields)/) &&
+                !method.match(/Async/)) {
+                proto[method + "Async"] = (function (syncFnName) {
+                    return function () {
+                        var result = this[syncFnName].apply(this, arguments);
+                        this.callbackAsync = true;
+                        return result;
+                    };
+                })(method);
+            }
+        }
+
+        sinon.behavior = proto;
+        return proto;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        module.exports = makeApi(sinon);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+}).call(this,require('_process'))
+},{"./util/core":68,"_process":50}],54:[function(require,module,exports){
+/**
+  * @depend util/core.js
+  * @depend match.js
+  * @depend format.js
+  */
+/**
+  * Spy calls
+  *
+  * @author Christian Johansen (christian@cjohansen.no)
+  * @author Maximilian Antoni (mail@maxantoni.de)
+  * @license BSD
+  *
+  * Copyright (c) 2010-2013 Christian Johansen
+  * Copyright (c) 2013 Maximilian Antoni
+  */
+"use strict";
+
+(function (sinon) {
+    function makeApi(sinon) {
+        function throwYieldError(proxy, text, args) {
+            var msg = sinon.functionName(proxy) + text;
+            if (args.length) {
+                msg += " Received [" + slice.call(args).join(", ") + "]";
+            }
+            throw new Error(msg);
+        }
+
+        var slice = Array.prototype.slice;
+
+        var callProto = {
+            calledOn: function calledOn(thisValue) {
+                if (sinon.match && sinon.match.isMatcher(thisValue)) {
+                    return thisValue.test(this.thisValue);
+                }
+                return this.thisValue === thisValue;
+            },
+
+            calledWith: function calledWith() {
+                for (var i = 0, l = arguments.length; i < l; i += 1) {
+                    if (!sinon.deepEqual(arguments[i], this.args[i])) {
+                        return false;
+                    }
+                }
+
+                return true;
+            },
+
+            calledWithMatch: function calledWithMatch() {
+                for (var i = 0, l = arguments.length; i < l; i += 1) {
+                    var actual = this.args[i];
+                    var expectation = arguments[i];
+                    if (!sinon.match || !sinon.match(expectation).test(actual)) {
+                        return false;
+                    }
+                }
+                return true;
+            },
+
+            calledWithExactly: function calledWithExactly() {
+                return arguments.length == this.args.length &&
+                    this.calledWith.apply(this, arguments);
+            },
+
+            notCalledWith: function notCalledWith() {
+                return !this.calledWith.apply(this, arguments);
+            },
+
+            notCalledWithMatch: function notCalledWithMatch() {
+                return !this.calledWithMatch.apply(this, arguments);
+            },
+
+            returned: function returned(value) {
+                return sinon.deepEqual(value, this.returnValue);
+            },
+
+            threw: function threw(error) {
+                if (typeof error === "undefined" || !this.exception) {
+                    return !!this.exception;
+                }
+
+                return this.exception === error || this.exception.name === error;
+            },
+
+            calledWithNew: function calledWithNew() {
+                return this.proxy.prototype && this.thisValue instanceof this.proxy;
+            },
+
+            calledBefore: function (other) {
+                return this.callId < other.callId;
+            },
+
+            calledAfter: function (other) {
+                return this.callId > other.callId;
+            },
+
+            callArg: function (pos) {
+                this.args[pos]();
+            },
+
+            callArgOn: function (pos, thisValue) {
+                this.args[pos].apply(thisValue);
+            },
+
+            callArgWith: function (pos) {
+                this.callArgOnWith.apply(this, [pos, null].concat(slice.call(arguments, 1)));
+            },
+
+            callArgOnWith: function (pos, thisValue) {
+                var args = slice.call(arguments, 2);
+                this.args[pos].apply(thisValue, args);
+            },
+
+            yield: function () {
+                this.yieldOn.apply(this, [null].concat(slice.call(arguments, 0)));
+            },
+
+            yieldOn: function (thisValue) {
+                var args = this.args;
+                for (var i = 0, l = args.length; i < l; ++i) {
+                    if (typeof args[i] === "function") {
+                        args[i].apply(thisValue, slice.call(arguments, 1));
+                        return;
+                    }
+                }
+                throwYieldError(this.proxy, " cannot yield since no callback was passed.", args);
+            },
+
+            yieldTo: function (prop) {
+                this.yieldToOn.apply(this, [prop, null].concat(slice.call(arguments, 1)));
+            },
+
+            yieldToOn: function (prop, thisValue) {
+                var args = this.args;
+                for (var i = 0, l = args.length; i < l; ++i) {
+                    if (args[i] && typeof args[i][prop] === "function") {
+                        args[i][prop].apply(thisValue, slice.call(arguments, 2));
+                        return;
+                    }
+                }
+                throwYieldError(this.proxy, " cannot yield to '" + prop +
+                    "' since no callback was passed.", args);
+            },
+
+            toString: function () {
+                var callStr = this.proxy.toString() + "(";
+                var args = [];
+
+                for (var i = 0, l = this.args.length; i < l; ++i) {
+                    args.push(sinon.format(this.args[i]));
+                }
+
+                callStr = callStr + args.join(", ") + ")";
+
+                if (typeof this.returnValue != "undefined") {
+                    callStr += " => " + sinon.format(this.returnValue);
+                }
+
+                if (this.exception) {
+                    callStr += " !" + this.exception.name;
+
+                    if (this.exception.message) {
+                        callStr += "(" + this.exception.message + ")";
+                    }
+                }
+
+                return callStr;
+            }
+        };
+
+        callProto.invokeCallback = callProto.yield;
+
+        function createSpyCall(spy, thisValue, args, returnValue, exception, id) {
+            if (typeof id !== "number") {
+                throw new TypeError("Call id is not a number");
+            }
+            var proxyCall = sinon.create(callProto);
+            proxyCall.proxy = spy;
+            proxyCall.thisValue = thisValue;
+            proxyCall.args = args;
+            proxyCall.returnValue = returnValue;
+            proxyCall.exception = exception;
+            proxyCall.callId = id;
+
+            return proxyCall;
+        }
+        createSpyCall.toString = callProto.toString; // used by mocks
+
+        sinon.spyCall = createSpyCall;
+        return createSpyCall;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        require("./match");
+        module.exports = makeApi(sinon);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+},{"./match":59,"./util/core":68}],55:[function(require,module,exports){
+/**
+ * @depend util/core.js
+ * @depend stub.js
+ * @depend mock.js
+ */
+/**
+ * Collections of stubs, spies and mocks.
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+(function (sinon) {
+    var push = [].push;
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+    function getFakes(fakeCollection) {
+        if (!fakeCollection.fakes) {
+            fakeCollection.fakes = [];
+        }
+
+        return fakeCollection.fakes;
+    }
+
+    function each(fakeCollection, method) {
+        var fakes = getFakes(fakeCollection);
+
+        for (var i = 0, l = fakes.length; i < l; i += 1) {
+            if (typeof fakes[i][method] == "function") {
+                fakes[i][method]();
+            }
+        }
+    }
+
+    function compact(fakeCollection) {
+        var fakes = getFakes(fakeCollection);
+        var i = 0;
+        while (i < fakes.length) {
+            fakes.splice(i, 1);
+        }
+    }
+
+    function makeApi(sinon) {
+        var collection = {
+            verify: function resolve() {
+                each(this, "verify");
+            },
+
+            restore: function restore() {
+                each(this, "restore");
+                compact(this);
+            },
+
+            reset: function restore() {
+                each(this, "reset");
+            },
+
+            verifyAndRestore: function verifyAndRestore() {
+                var exception;
+
+                try {
+                    this.verify();
+                } catch (e) {
+                    exception = e;
+                }
+
+                this.restore();
+
+                if (exception) {
+                    throw exception;
+                }
+            },
+
+            add: function add(fake) {
+                push.call(getFakes(this), fake);
+                return fake;
+            },
+
+            spy: function spy() {
+                return this.add(sinon.spy.apply(sinon, arguments));
+            },
+
+            stub: function stub(object, property, value) {
+                if (property) {
+                    var original = object[property];
+
+                    if (typeof original != "function") {
+                        if (!hasOwnProperty.call(object, property)) {
+                            throw new TypeError("Cannot stub non-existent own property " + property);
+                        }
+
+                        object[property] = value;
+
+                        return this.add({
+                            restore: function () {
+                                object[property] = original;
+                            }
+                        });
+                    }
+                }
+                if (!property && !!object && typeof object == "object") {
+                    var stubbedObj = sinon.stub.apply(sinon, arguments);
+
+                    for (var prop in stubbedObj) {
+                        if (typeof stubbedObj[prop] === "function") {
+                            this.add(stubbedObj[prop]);
+                        }
+                    }
+
+                    return stubbedObj;
+                }
+
+                return this.add(sinon.stub.apply(sinon, arguments));
+            },
+
+            mock: function mock() {
+                return this.add(sinon.mock.apply(sinon, arguments));
+            },
+
+            inject: function inject(obj) {
+                var col = this;
+
+                obj.spy = function () {
+                    return col.spy.apply(col, arguments);
+                };
+
+                obj.stub = function () {
+                    return col.stub.apply(col, arguments);
+                };
+
+                obj.mock = function () {
+                    return col.mock.apply(col, arguments);
+                };
+
+                return obj;
+            }
+        };
+
+        sinon.collection = collection;
+        return collection;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        require("./mock");
+        require("./spy");
+        require("./stub");
+        module.exports = makeApi(sinon);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+},{"./mock":60,"./spy":62,"./stub":63,"./util/core":68}],56:[function(require,module,exports){
+/**
+ * @depend ../sinon.js
+ */
+"use strict";
+
+(function (sinon) {
+    function makeApi(sinon) {
+
+        // Adapted from https://developer.mozilla.org/en/docs/ECMAScript_DontEnum_attribute#JScript_DontEnum_Bug
+        var hasDontEnumBug = (function () {
+            var obj = {
+                constructor: function () {
+                    return "0";
+                },
+                toString: function () {
+                    return "1";
+                },
+                valueOf: function () {
+                    return "2";
+                },
+                toLocaleString: function () {
+                    return "3";
+                },
+                prototype: function () {
+                    return "4";
+                },
+                isPrototypeOf: function () {
+                    return "5";
+                },
+                propertyIsEnumerable: function () {
+                    return "6";
+                },
+                hasOwnProperty: function () {
+                    return "7";
+                },
+                length: function () {
+                    return "8";
+                },
+                unique: function () {
+                    return "9"
+                }
+            };
+
+            var result = [];
+            for (var prop in obj) {
+                result.push(obj[prop]());
+            }
+            return result.join("") !== "0123456789";
+        })();
+
+        /* Public: Extend target in place with all (own) properties from sources in-order. Thus, last source will
+         *         override properties in previous sources.
+         *
+         * target - The Object to extend
+         * sources - Objects to copy properties from.
+         *
+         * Returns the extended target
+         */
+        function extend(target /*, sources */) {
+            var sources = Array.prototype.slice.call(arguments, 1),
+                source, i, prop;
+
+            for (i = 0; i < sources.length; i++) {
+                source = sources[i];
+
+                for (prop in source) {
+                    if (source.hasOwnProperty(prop)) {
+                        target[prop] = source[prop];
+                    }
+                }
+
+                // Make sure we copy (own) toString method even when in JScript with DontEnum bug
+                // See https://developer.mozilla.org/en/docs/ECMAScript_DontEnum_attribute#JScript_DontEnum_Bug
+                if (hasDontEnumBug && source.hasOwnProperty("toString") && source.toString !== target.toString) {
+                    target.toString = source.toString;
+                }
+            }
+
+            return target;
+        };
+
+        sinon.extend = extend;
+        return sinon.extend;
+    }
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        module.exports = makeApi(sinon);
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+},{"./util/core":68}],57:[function(require,module,exports){
+/**
+ * @depend ../sinon.js
+ */
+/**
+ * Format functions
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2014 Christian Johansen
+ */
+"use strict";
+
+(function (sinon, formatio) {
+    function makeApi(sinon) {
+        function valueFormatter(value) {
+            return "" + value;
+        }
+
+        function getFormatioFormatter() {
+            var formatter = formatio.configure({
+                    quoteStrings: false,
+                    limitChildrenCount: 250
+                });
+
+            function format() {
+                return formatter.ascii.apply(formatter, arguments);
+            };
+
+            return format;
+        }
+
+        function getNodeFormatter(value) {
+            function format(value) {
+                return typeof value == "object" && value.toString === Object.prototype.toString ? util.inspect(value) : value;
+            };
+
+            try {
+                var util = require("util");
+            } catch (e) {
+                /* Node, but no util module - would be very old, but better safe than sorry */
+            }
+
+            return util ? format : valueFormatter;
+        }
+
+        var isNode = typeof module !== "undefined" && module.exports && typeof require == "function",
+            formatter;
+
+        if (isNode) {
+            try {
+                formatio = require("formatio");
+            } catch (e) {}
+        }
+
+        if (formatio) {
+            formatter = getFormatioFormatter()
+        } else if (isNode) {
+            formatter = getNodeFormatter();
+        } else {
+            formatter = valueFormatter;
+        }
+
+        sinon.format = formatter;
+        return sinon.format;
+    }
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        module.exports = makeApi(sinon);
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(
+    (typeof sinon == "object" && sinon || null),
+    (typeof formatio == "object" && formatio)
+));
+
+},{"./util/core":68,"formatio":73,"util":14}],58:[function(require,module,exports){
+/**
+ * @depend ../sinon.js
+ */
+/**
+ * Logs errors
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2014 Christian Johansen
+ */
+"use strict";
+
+(function (sinon) {
+    // cache a reference to setTimeout, so that our reference won't be stubbed out
+    // when using fake timers and errors will still get logged
+    // https://github.com/cjohansen/Sinon.JS/issues/381
+    var realSetTimeout = setTimeout;
+
+    function makeApi(sinon) {
+
+        function log() {}
+
+        function logError(label, err) {
+            var msg = label + " threw exception: ";
+
+            sinon.log(msg + "[" + err.name + "] " + err.message);
+
+            if (err.stack) {
+                sinon.log(err.stack);
+            }
+
+            logError.setTimeout(function () {
+                err.message = msg + err.message;
+                throw err;
+            }, 0);
+        };
+
+        // wrap realSetTimeout with something we can stub in tests
+        logError.setTimeout = function (func, timeout) {
+            realSetTimeout(func, timeout);
+        }
+
+        var exports = {};
+        exports.log = sinon.log = log;
+        exports.logError = sinon.logError = logError;
+
+        return exports;
+    }
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        module.exports = makeApi(sinon);
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+},{"./util/core":68}],59:[function(require,module,exports){
+/**
+ * @depend util/core.js
+ * @depend typeOf.js
+ */
+/*jslint eqeqeq: false, onevar: false, plusplus: false*/
+/*global module, require, sinon*/
+/**
+ * Match functions
+ *
+ * @author Maximilian Antoni (mail@maxantoni.de)
+ * @license BSD
+ *
+ * Copyright (c) 2012 Maximilian Antoni
+ */
+"use strict";
+
+(function (sinon) {
+    function makeApi(sinon) {
+        function assertType(value, type, name) {
+            var actual = sinon.typeOf(value);
+            if (actual !== type) {
+                throw new TypeError("Expected type of " + name + " to be " +
+                    type + ", but was " + actual);
+            }
+        }
+
+        var matcher = {
+            toString: function () {
+                return this.message;
+            }
+        };
+
+        function isMatcher(object) {
+            return matcher.isPrototypeOf(object);
+        }
+
+        function matchObject(expectation, actual) {
+            if (actual === null || actual === undefined) {
+                return false;
+            }
+            for (var key in expectation) {
+                if (expectation.hasOwnProperty(key)) {
+                    var exp = expectation[key];
+                    var act = actual[key];
+                    if (match.isMatcher(exp)) {
+                        if (!exp.test(act)) {
+                            return false;
+                        }
+                    } else if (sinon.typeOf(exp) === "object") {
+                        if (!matchObject(exp, act)) {
+                            return false;
+                        }
+                    } else if (!sinon.deepEqual(exp, act)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        matcher.or = function (m2) {
+            if (!arguments.length) {
+                throw new TypeError("Matcher expected");
+            } else if (!isMatcher(m2)) {
+                m2 = match(m2);
+            }
+            var m1 = this;
+            var or = sinon.create(matcher);
+            or.test = function (actual) {
+                return m1.test(actual) || m2.test(actual);
+            };
+            or.message = m1.message + ".or(" + m2.message + ")";
+            return or;
+        };
+
+        matcher.and = function (m2) {
+            if (!arguments.length) {
+                throw new TypeError("Matcher expected");
+            } else if (!isMatcher(m2)) {
+                m2 = match(m2);
+            }
+            var m1 = this;
+            var and = sinon.create(matcher);
+            and.test = function (actual) {
+                return m1.test(actual) && m2.test(actual);
+            };
+            and.message = m1.message + ".and(" + m2.message + ")";
+            return and;
+        };
+
+        var match = function (expectation, message) {
+            var m = sinon.create(matcher);
+            var type = sinon.typeOf(expectation);
+            switch (type) {
+            case "object":
+                if (typeof expectation.test === "function") {
+                    m.test = function (actual) {
+                        return expectation.test(actual) === true;
+                    };
+                    m.message = "match(" + sinon.functionName(expectation.test) + ")";
+                    return m;
+                }
+                var str = [];
+                for (var key in expectation) {
+                    if (expectation.hasOwnProperty(key)) {
+                        str.push(key + ": " + expectation[key]);
+                    }
+                }
+                m.test = function (actual) {
+                    return matchObject(expectation, actual);
+                };
+                m.message = "match(" + str.join(", ") + ")";
+                break;
+            case "number":
+                m.test = function (actual) {
+                    return expectation == actual;
+                };
+                break;
+            case "string":
+                m.test = function (actual) {
+                    if (typeof actual !== "string") {
+                        return false;
+                    }
+                    return actual.indexOf(expectation) !== -1;
+                };
+                m.message = "match(\"" + expectation + "\")";
+                break;
+            case "regexp":
+                m.test = function (actual) {
+                    if (typeof actual !== "string") {
+                        return false;
+                    }
+                    return expectation.test(actual);
+                };
+                break;
+            case "function":
+                m.test = expectation;
+                if (message) {
+                    m.message = message;
+                } else {
+                    m.message = "match(" + sinon.functionName(expectation) + ")";
+                }
+                break;
+            default:
+                m.test = function (actual) {
+                    return sinon.deepEqual(expectation, actual);
+                };
+            }
+            if (!m.message) {
+                m.message = "match(" + expectation + ")";
+            }
+            return m;
+        };
+
+        match.isMatcher = isMatcher;
+
+        match.any = match(function () {
+            return true;
+        }, "any");
+
+        match.defined = match(function (actual) {
+            return actual !== null && actual !== undefined;
+        }, "defined");
+
+        match.truthy = match(function (actual) {
+            return !!actual;
+        }, "truthy");
+
+        match.falsy = match(function (actual) {
+            return !actual;
+        }, "falsy");
+
+        match.same = function (expectation) {
+            return match(function (actual) {
+                return expectation === actual;
+            }, "same(" + expectation + ")");
+        };
+
+        match.typeOf = function (type) {
+            assertType(type, "string", "type");
+            return match(function (actual) {
+                return sinon.typeOf(actual) === type;
+            }, "typeOf(\"" + type + "\")");
+        };
+
+        match.instanceOf = function (type) {
+            assertType(type, "function", "type");
+            return match(function (actual) {
+                return actual instanceof type;
+            }, "instanceOf(" + sinon.functionName(type) + ")");
+        };
+
+        function createPropertyMatcher(propertyTest, messagePrefix) {
+            return function (property, value) {
+                assertType(property, "string", "property");
+                var onlyProperty = arguments.length === 1;
+                var message = messagePrefix + "(\"" + property + "\"";
+                if (!onlyProperty) {
+                    message += ", " + value;
+                }
+                message += ")";
+                return match(function (actual) {
+                    if (actual === undefined || actual === null ||
+                            !propertyTest(actual, property)) {
+                        return false;
+                    }
+                    return onlyProperty || sinon.deepEqual(value, actual[property]);
+                }, message);
+            };
+        }
+
+        match.has = createPropertyMatcher(function (actual, property) {
+            if (typeof actual === "object") {
+                return property in actual;
+            }
+            return actual[property] !== undefined;
+        }, "has");
+
+        match.hasOwn = createPropertyMatcher(function (actual, property) {
+            return actual.hasOwnProperty(property);
+        }, "hasOwn");
+
+        match.bool = match.typeOf("boolean");
+        match.number = match.typeOf("number");
+        match.string = match.typeOf("string");
+        match.object = match.typeOf("object");
+        match.func = match.typeOf("function");
+        match.array = match.typeOf("array");
+        match.regexp = match.typeOf("regexp");
+        match.date = match.typeOf("date");
+
+        sinon.match = match;
+        return match;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        module.exports = makeApi(sinon);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+},{"./util/core":68}],60:[function(require,module,exports){
+/**
+ * @depend times_in_words.js
+ * @depend util/core.js
+ * @depend extend.js
+ * @depend stub.js
+ * @depend format.js
+ */
+/**
+ * Mock functions.
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+(function (sinon) {
+    function makeApi(sinon) {
+        var push = [].push;
+        var match = sinon.match;
+
+        function mock(object) {
+            if (!object) {
+                return sinon.expectation.create("Anonymous mock");
+            }
+
+            return mock.create(object);
+        }
+
+        function each(collection, callback) {
+            if (!collection) {
+                return;
+            }
+
+            for (var i = 0, l = collection.length; i < l; i += 1) {
+                callback(collection[i]);
+            }
+        }
+
+        sinon.extend(mock, {
+            create: function create(object) {
+                if (!object) {
+                    throw new TypeError("object is null");
+                }
+
+                var mockObject = sinon.extend({}, mock);
+                mockObject.object = object;
+                delete mockObject.create;
+
+                return mockObject;
+            },
+
+            expects: function expects(method) {
+                if (!method) {
+                    throw new TypeError("method is falsy");
+                }
+
+                if (!this.expectations) {
+                    this.expectations = {};
+                    this.proxies = [];
+                }
+
+                if (!this.expectations[method]) {
+                    this.expectations[method] = [];
+                    var mockObject = this;
+
+                    sinon.wrapMethod(this.object, method, function () {
+                        return mockObject.invokeMethod(method, this, arguments);
+                    });
+
+                    push.call(this.proxies, method);
+                }
+
+                var expectation = sinon.expectation.create(method);
+                push.call(this.expectations[method], expectation);
+
+                return expectation;
+            },
+
+            restore: function restore() {
+                var object = this.object;
+
+                each(this.proxies, function (proxy) {
+                    if (typeof object[proxy].restore == "function") {
+                        object[proxy].restore();
+                    }
+                });
+            },
+
+            verify: function verify() {
+                var expectations = this.expectations || {};
+                var messages = [], met = [];
+
+                each(this.proxies, function (proxy) {
+                    each(expectations[proxy], function (expectation) {
+                        if (!expectation.met()) {
+                            push.call(messages, expectation.toString());
+                        } else {
+                            push.call(met, expectation.toString());
+                        }
+                    });
+                });
+
+                this.restore();
+
+                if (messages.length > 0) {
+                    sinon.expectation.fail(messages.concat(met).join("\n"));
+                } else if (met.length > 0) {
+                    sinon.expectation.pass(messages.concat(met).join("\n"));
+                }
+
+                return true;
+            },
+
+            invokeMethod: function invokeMethod(method, thisValue, args) {
+                var expectations = this.expectations && this.expectations[method];
+                var length = expectations && expectations.length || 0, i;
+
+                for (i = 0; i < length; i += 1) {
+                    if (!expectations[i].met() &&
+                        expectations[i].allowsCall(thisValue, args)) {
+                        return expectations[i].apply(thisValue, args);
+                    }
+                }
+
+                var messages = [], available, exhausted = 0;
+
+                for (i = 0; i < length; i += 1) {
+                    if (expectations[i].allowsCall(thisValue, args)) {
+                        available = available || expectations[i];
+                    } else {
+                        exhausted += 1;
+                    }
+                    push.call(messages, "    " + expectations[i].toString());
+                }
+
+                if (exhausted === 0) {
+                    return available.apply(thisValue, args);
+                }
+
+                messages.unshift("Unexpected call: " + sinon.spyCall.toString.call({
+                    proxy: method,
+                    args: args
+                }));
+
+                sinon.expectation.fail(messages.join("\n"));
+            }
+        });
+
+        var times = sinon.timesInWords;
+        var slice = Array.prototype.slice;
+
+        function callCountInWords(callCount) {
+            if (callCount == 0) {
+                return "never called";
+            } else {
+                return "called " + times(callCount);
+            }
+        }
+
+        function expectedCallCountInWords(expectation) {
+            var min = expectation.minCalls;
+            var max = expectation.maxCalls;
+
+            if (typeof min == "number" && typeof max == "number") {
+                var str = times(min);
+
+                if (min != max) {
+                    str = "at least " + str + " and at most " + times(max);
+                }
+
+                return str;
+            }
+
+            if (typeof min == "number") {
+                return "at least " + times(min);
+            }
+
+            return "at most " + times(max);
+        }
+
+        function receivedMinCalls(expectation) {
+            var hasMinLimit = typeof expectation.minCalls == "number";
+            return !hasMinLimit || expectation.callCount >= expectation.minCalls;
+        }
+
+        function receivedMaxCalls(expectation) {
+            if (typeof expectation.maxCalls != "number") {
+                return false;
+            }
+
+            return expectation.callCount == expectation.maxCalls;
+        }
+
+        function verifyMatcher(possibleMatcher, arg) {
+            if (match && match.isMatcher(possibleMatcher)) {
+                return possibleMatcher.test(arg);
+            } else {
+                return true;
+            }
+        }
+
+        sinon.expectation = {
+            minCalls: 1,
+            maxCalls: 1,
+
+            create: function create(methodName) {
+                var expectation = sinon.extend(sinon.stub.create(), sinon.expectation);
+                delete expectation.create;
+                expectation.method = methodName;
+
+                return expectation;
+            },
+
+            invoke: function invoke(func, thisValue, args) {
+                this.verifyCallAllowed(thisValue, args);
+
+                return sinon.spy.invoke.apply(this, arguments);
+            },
+
+            atLeast: function atLeast(num) {
+                if (typeof num != "number") {
+                    throw new TypeError("'" + num + "' is not number");
+                }
+
+                if (!this.limitsSet) {
+                    this.maxCalls = null;
+                    this.limitsSet = true;
+                }
+
+                this.minCalls = num;
+
+                return this;
+            },
+
+            atMost: function atMost(num) {
+                if (typeof num != "number") {
+                    throw new TypeError("'" + num + "' is not number");
+                }
+
+                if (!this.limitsSet) {
+                    this.minCalls = null;
+                    this.limitsSet = true;
+                }
+
+                this.maxCalls = num;
+
+                return this;
+            },
+
+            never: function never() {
+                return this.exactly(0);
+            },
+
+            once: function once() {
+                return this.exactly(1);
+            },
+
+            twice: function twice() {
+                return this.exactly(2);
+            },
+
+            thrice: function thrice() {
+                return this.exactly(3);
+            },
+
+            exactly: function exactly(num) {
+                if (typeof num != "number") {
+                    throw new TypeError("'" + num + "' is not a number");
+                }
+
+                this.atLeast(num);
+                return this.atMost(num);
+            },
+
+            met: function met() {
+                return !this.failed && receivedMinCalls(this);
+            },
+
+            verifyCallAllowed: function verifyCallAllowed(thisValue, args) {
+                if (receivedMaxCalls(this)) {
+                    this.failed = true;
+                    sinon.expectation.fail(this.method + " already called " + times(this.maxCalls));
+                }
+
+                if ("expectedThis" in this && this.expectedThis !== thisValue) {
+                    sinon.expectation.fail(this.method + " called with " + thisValue + " as thisValue, expected " +
+                        this.expectedThis);
+                }
+
+                if (!("expectedArguments" in this)) {
+                    return;
+                }
+
+                if (!args) {
+                    sinon.expectation.fail(this.method + " received no arguments, expected " +
+                        sinon.format(this.expectedArguments));
+                }
+
+                if (args.length < this.expectedArguments.length) {
+                    sinon.expectation.fail(this.method + " received too few arguments (" + sinon.format(args) +
+                        "), expected " + sinon.format(this.expectedArguments));
+                }
+
+                if (this.expectsExactArgCount &&
+                    args.length != this.expectedArguments.length) {
+                    sinon.expectation.fail(this.method + " received too many arguments (" + sinon.format(args) +
+                        "), expected " + sinon.format(this.expectedArguments));
+                }
+
+                for (var i = 0, l = this.expectedArguments.length; i < l; i += 1) {
+
+                    if (!verifyMatcher(this.expectedArguments[i], args[i])) {
+                        sinon.expectation.fail(this.method + " received wrong arguments " + sinon.format(args) +
+                            ", didn't match " + this.expectedArguments.toString());
+                    }
+
+                    if (!sinon.deepEqual(this.expectedArguments[i], args[i])) {
+                        sinon.expectation.fail(this.method + " received wrong arguments " + sinon.format(args) +
+                            ", expected " + sinon.format(this.expectedArguments));
+                    }
+                }
+            },
+
+            allowsCall: function allowsCall(thisValue, args) {
+                if (this.met() && receivedMaxCalls(this)) {
+                    return false;
+                }
+
+                if ("expectedThis" in this && this.expectedThis !== thisValue) {
+                    return false;
+                }
+
+                if (!("expectedArguments" in this)) {
+                    return true;
+                }
+
+                args = args || [];
+
+                if (args.length < this.expectedArguments.length) {
+                    return false;
+                }
+
+                if (this.expectsExactArgCount &&
+                    args.length != this.expectedArguments.length) {
+                    return false;
+                }
+
+                for (var i = 0, l = this.expectedArguments.length; i < l; i += 1) {
+                    if (!verifyMatcher(this.expectedArguments[i], args[i])) {
+                        return false;
+                    }
+
+                    if (!sinon.deepEqual(this.expectedArguments[i], args[i])) {
+                        return false;
+                    }
+                }
+
+                return true;
+            },
+
+            withArgs: function withArgs() {
+                this.expectedArguments = slice.call(arguments);
+                return this;
+            },
+
+            withExactArgs: function withExactArgs() {
+                this.withArgs.apply(this, arguments);
+                this.expectsExactArgCount = true;
+                return this;
+            },
+
+            on: function on(thisValue) {
+                this.expectedThis = thisValue;
+                return this;
+            },
+
+            toString: function () {
+                var args = (this.expectedArguments || []).slice();
+
+                if (!this.expectsExactArgCount) {
+                    push.call(args, "[...]");
+                }
+
+                var callStr = sinon.spyCall.toString.call({
+                    proxy: this.method || "anonymous mock expectation",
+                    args: args
+                });
+
+                var message = callStr.replace(", [...", "[, ...") + " " +
+                    expectedCallCountInWords(this);
+
+                if (this.met()) {
+                    return "Expectation met: " + message;
+                }
+
+                return "Expected " + message + " (" +
+                    callCountInWords(this.callCount) + ")";
+            },
+
+            verify: function verify() {
+                if (!this.met()) {
+                    sinon.expectation.fail(this.toString());
+                } else {
+                    sinon.expectation.pass(this.toString());
+                }
+
+                return true;
+            },
+
+            pass: function pass(message) {
+                sinon.assert.pass(message);
+            },
+
+            fail: function fail(message) {
+                var exception = new Error(message);
+                exception.name = "ExpectationError";
+
+                throw exception;
+            }
+        };
+
+        sinon.mock = mock;
+        return mock;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        require("./call");
+        require("./match");
+        require("./spy");
+        module.exports = makeApi(sinon);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+},{"./call":54,"./match":59,"./spy":62,"./util/core":68}],61:[function(require,module,exports){
+/**
+ * @depend util/core.js
+ * @depend extend.js
+ * @depend collection.js
+ * @depend util/fake_timers.js
+ * @depend util/fake_server_with_clock.js
+ */
+/**
+ * Manages fake collections as well as fake utilities such as Sinon's
+ * timers and fake XHR implementation in one convenient object.
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+(function () {
+    function makeApi(sinon) {
+        var push = [].push;
+
+        function exposeValue(sandbox, config, key, value) {
+            if (!value) {
+                return;
+            }
+
+            if (config.injectInto && !(key in config.injectInto)) {
+                config.injectInto[key] = value;
+                sandbox.injectedKeys.push(key);
+            } else {
+                push.call(sandbox.args, value);
+            }
+        }
+
+        function prepareSandboxFromConfig(config) {
+            var sandbox = sinon.create(sinon.sandbox);
+
+            if (config.useFakeServer) {
+                if (typeof config.useFakeServer == "object") {
+                    sandbox.serverPrototype = config.useFakeServer;
+                }
+
+                sandbox.useFakeServer();
+            }
+
+            if (config.useFakeTimers) {
+                if (typeof config.useFakeTimers == "object") {
+                    sandbox.useFakeTimers.apply(sandbox, config.useFakeTimers);
+                } else {
+                    sandbox.useFakeTimers();
+                }
+            }
+
+            return sandbox;
+        }
+
+        sinon.sandbox = sinon.extend(sinon.create(sinon.collection), {
+            useFakeTimers: function useFakeTimers() {
+                this.clock = sinon.useFakeTimers.apply(sinon, arguments);
+
+                return this.add(this.clock);
+            },
+
+            serverPrototype: sinon.fakeServer,
+
+            useFakeServer: function useFakeServer() {
+                var proto = this.serverPrototype || sinon.fakeServer;
+
+                if (!proto || !proto.create) {
+                    return null;
+                }
+
+                this.server = proto.create();
+                return this.add(this.server);
+            },
+
+            inject: function (obj) {
+                sinon.collection.inject.call(this, obj);
+
+                if (this.clock) {
+                    obj.clock = this.clock;
+                }
+
+                if (this.server) {
+                    obj.server = this.server;
+                    obj.requests = this.server.requests;
+                }
+
+                obj.match = sinon.match;
+
+                return obj;
+            },
+
+            restore: function () {
+                sinon.collection.restore.apply(this, arguments);
+                this.restoreContext();
+            },
+
+            restoreContext: function () {
+                if (this.injectedKeys) {
+                    for (var i = 0, j = this.injectedKeys.length; i < j; i++) {
+                        delete this.injectInto[this.injectedKeys[i]];
+                    }
+                    this.injectedKeys = [];
+                }
+            },
+
+            create: function (config) {
+                if (!config) {
+                    return sinon.create(sinon.sandbox);
+                }
+
+                var sandbox = prepareSandboxFromConfig(config);
+                sandbox.args = sandbox.args || [];
+                sandbox.injectedKeys = [];
+                sandbox.injectInto = config.injectInto;
+                var prop, value, exposed = sandbox.inject({});
+
+                if (config.properties) {
+                    for (var i = 0, l = config.properties.length; i < l; i++) {
+                        prop = config.properties[i];
+                        value = exposed[prop] || prop == "sandbox" && sandbox;
+                        exposeValue(sandbox, config, prop, value);
+                    }
+                } else {
+                    exposeValue(sandbox, config, "sandbox", value);
+                }
+
+                return sandbox;
+            },
+
+            match: sinon.match
+        });
+
+        sinon.sandbox.useFakeXMLHttpRequest = sinon.sandbox.useFakeServer;
+
+        return sinon.sandbox;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        require("./util/fake_server");
+        require("./util/fake_timers");
+        require("./collection");
+        module.exports = makeApi(sinon);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}());
+
+},{"./collection":55,"./util/core":68,"./util/fake_server":70,"./util/fake_timers":71}],62:[function(require,module,exports){
+/**
+  * @depend times_in_words.js
+  * @depend util/core.js
+  * @depend extend.js
+  * @depend call.js
+  * @depend format.js
+  */
+/**
+  * Spy functions
+  *
+  * @author Christian Johansen (christian@cjohansen.no)
+  * @license BSD
+  *
+  * Copyright (c) 2010-2013 Christian Johansen
+  */
+"use strict";
+
+(function (sinon) {
+    function makeApi(sinon) {
+        var push = Array.prototype.push;
+        var slice = Array.prototype.slice;
+        var callId = 0;
+
+        function spy(object, property) {
+            if (!property && typeof object == "function") {
+                return spy.create(object);
+            }
+
+            if (!object && !property) {
+                return spy.create(function () { });
+            }
+
+            var method = object[property];
+            return sinon.wrapMethod(object, property, spy.create(method));
+        }
+
+        function matchingFake(fakes, args, strict) {
+            if (!fakes) {
+                return;
+            }
+
+            for (var i = 0, l = fakes.length; i < l; i++) {
+                if (fakes[i].matches(args, strict)) {
+                    return fakes[i];
+                }
+            }
+        }
+
+        function incrementCallCount() {
+            this.called = true;
+            this.callCount += 1;
+            this.notCalled = false;
+            this.calledOnce = this.callCount == 1;
+            this.calledTwice = this.callCount == 2;
+            this.calledThrice = this.callCount == 3;
+        }
+
+        function createCallProperties() {
+            this.firstCall = this.getCall(0);
+            this.secondCall = this.getCall(1);
+            this.thirdCall = this.getCall(2);
+            this.lastCall = this.getCall(this.callCount - 1);
+        }
+
+        var vars = "a,b,c,d,e,f,g,h,i,j,k,l";
+        function createProxy(func) {
+            // Retain the function length:
+            var p;
+            if (func.length) {
+                eval("p = (function proxy(" + vars.substring(0, func.length * 2 - 1) +
+                    ") { return p.invoke(func, this, slice.call(arguments)); });");
+            } else {
+                p = function proxy() {
+                    return p.invoke(func, this, slice.call(arguments));
+                };
+            }
+            return p;
+        }
+
+        var uuid = 0;
+
+        // Public API
+        var spyApi = {
+            reset: function () {
+                if (this.invoking) {
+                    var err = new Error("Cannot reset Sinon function while invoking it. " +
+                                        "Move the call to .reset outside of the callback.");
+                    err.name = "InvalidResetException";
+                    throw err;
+                }
+
+                this.called = false;
+                this.notCalled = true;
+                this.calledOnce = false;
+                this.calledTwice = false;
+                this.calledThrice = false;
+                this.callCount = 0;
+                this.firstCall = null;
+                this.secondCall = null;
+                this.thirdCall = null;
+                this.lastCall = null;
+                this.args = [];
+                this.returnValues = [];
+                this.thisValues = [];
+                this.exceptions = [];
+                this.callIds = [];
+                if (this.fakes) {
+                    for (var i = 0; i < this.fakes.length; i++) {
+                        this.fakes[i].reset();
+                    }
+                }
+            },
+
+            create: function create(func) {
+                var name;
+
+                if (typeof func != "function") {
+                    func = function () { };
+                } else {
+                    name = sinon.functionName(func);
+                }
+
+                var proxy = createProxy(func);
+
+                sinon.extend(proxy, spy);
+                delete proxy.create;
+                sinon.extend(proxy, func);
+
+                proxy.reset();
+                proxy.prototype = func.prototype;
+                proxy.displayName = name || "spy";
+                proxy.toString = sinon.functionToString;
+                proxy.instantiateFake = sinon.spy.create;
+                proxy.id = "spy#" + uuid++;
+
+                return proxy;
+            },
+
+            invoke: function invoke(func, thisValue, args) {
+                var matching = matchingFake(this.fakes, args);
+                var exception, returnValue;
+
+                incrementCallCount.call(this);
+                push.call(this.thisValues, thisValue);
+                push.call(this.args, args);
+                push.call(this.callIds, callId++);
+
+                // Make call properties available from within the spied function:
+                createCallProperties.call(this);
+
+                try {
+                    this.invoking = true;
+
+                    if (matching) {
+                        returnValue = matching.invoke(func, thisValue, args);
+                    } else {
+                        returnValue = (this.func || func).apply(thisValue, args);
+                    }
+
+                    var thisCall = this.getCall(this.callCount - 1);
+                    if (thisCall.calledWithNew() && typeof returnValue !== "object") {
+                        returnValue = thisValue;
+                    }
+                } catch (e) {
+                    exception = e;
+                } finally {
+                    delete this.invoking;
+                }
+
+                push.call(this.exceptions, exception);
+                push.call(this.returnValues, returnValue);
+
+                // Make return value and exception available in the calls:
+                createCallProperties.call(this);
+
+                if (exception !== undefined) {
+                    throw exception;
+                }
+
+                return returnValue;
+            },
+
+            named: function named(name) {
+                this.displayName = name;
+                return this;
+            },
+
+            getCall: function getCall(i) {
+                if (i < 0 || i >= this.callCount) {
+                    return null;
+                }
+
+                return sinon.spyCall(this, this.thisValues[i], this.args[i],
+                                        this.returnValues[i], this.exceptions[i],
+                                        this.callIds[i]);
+            },
+
+            getCalls: function () {
+                var calls = [];
+                var i;
+
+                for (i = 0; i < this.callCount; i++) {
+                    calls.push(this.getCall(i));
+                }
+
+                return calls;
+            },
+
+            calledBefore: function calledBefore(spyFn) {
+                if (!this.called) {
+                    return false;
+                }
+
+                if (!spyFn.called) {
+                    return true;
+                }
+
+                return this.callIds[0] < spyFn.callIds[spyFn.callIds.length - 1];
+            },
+
+            calledAfter: function calledAfter(spyFn) {
+                if (!this.called || !spyFn.called) {
+                    return false;
+                }
+
+                return this.callIds[this.callCount - 1] > spyFn.callIds[spyFn.callCount - 1];
+            },
+
+            withArgs: function () {
+                var args = slice.call(arguments);
+
+                if (this.fakes) {
+                    var match = matchingFake(this.fakes, args, true);
+
+                    if (match) {
+                        return match;
+                    }
+                } else {
+                    this.fakes = [];
+                }
+
+                var original = this;
+                var fake = this.instantiateFake();
+                fake.matchingAguments = args;
+                fake.parent = this;
+                push.call(this.fakes, fake);
+
+                fake.withArgs = function () {
+                    return original.withArgs.apply(original, arguments);
+                };
+
+                for (var i = 0; i < this.args.length; i++) {
+                    if (fake.matches(this.args[i])) {
+                        incrementCallCount.call(fake);
+                        push.call(fake.thisValues, this.thisValues[i]);
+                        push.call(fake.args, this.args[i]);
+                        push.call(fake.returnValues, this.returnValues[i]);
+                        push.call(fake.exceptions, this.exceptions[i]);
+                        push.call(fake.callIds, this.callIds[i]);
+                    }
+                }
+                createCallProperties.call(fake);
+
+                return fake;
+            },
+
+            matches: function (args, strict) {
+                var margs = this.matchingAguments;
+
+                if (margs.length <= args.length &&
+                    sinon.deepEqual(margs, args.slice(0, margs.length))) {
+                    return !strict || margs.length == args.length;
+                }
+            },
+
+            printf: function (format) {
+                var spy = this;
+                var args = slice.call(arguments, 1);
+                var formatter;
+
+                return (format || "").replace(/%(.)/g, function (match, specifyer) {
+                    formatter = spyApi.formatters[specifyer];
+
+                    if (typeof formatter == "function") {
+                        return formatter.call(null, spy, args);
+                    } else if (!isNaN(parseInt(specifyer, 10))) {
+                        return sinon.format(args[specifyer - 1]);
+                    }
+
+                    return "%" + specifyer;
+                });
+            }
+        };
+
+        function delegateToCalls(method, matchAny, actual, notCalled) {
+            spyApi[method] = function () {
+                if (!this.called) {
+                    if (notCalled) {
+                        return notCalled.apply(this, arguments);
+                    }
+                    return false;
+                }
+
+                var currentCall;
+                var matches = 0;
+
+                for (var i = 0, l = this.callCount; i < l; i += 1) {
+                    currentCall = this.getCall(i);
+
+                    if (currentCall[actual || method].apply(currentCall, arguments)) {
+                        matches += 1;
+
+                        if (matchAny) {
+                            return true;
+                        }
+                    }
+                }
+
+                return matches === this.callCount;
+            };
+        }
+
+        delegateToCalls("calledOn", true);
+        delegateToCalls("alwaysCalledOn", false, "calledOn");
+        delegateToCalls("calledWith", true);
+        delegateToCalls("calledWithMatch", true);
+        delegateToCalls("alwaysCalledWith", false, "calledWith");
+        delegateToCalls("alwaysCalledWithMatch", false, "calledWithMatch");
+        delegateToCalls("calledWithExactly", true);
+        delegateToCalls("alwaysCalledWithExactly", false, "calledWithExactly");
+        delegateToCalls("neverCalledWith", false, "notCalledWith",
+            function () { return true; });
+        delegateToCalls("neverCalledWithMatch", false, "notCalledWithMatch",
+            function () { return true; });
+        delegateToCalls("threw", true);
+        delegateToCalls("alwaysThrew", false, "threw");
+        delegateToCalls("returned", true);
+        delegateToCalls("alwaysReturned", false, "returned");
+        delegateToCalls("calledWithNew", true);
+        delegateToCalls("alwaysCalledWithNew", false, "calledWithNew");
+        delegateToCalls("callArg", false, "callArgWith", function () {
+            throw new Error(this.toString() + " cannot call arg since it was not yet invoked.");
+        });
+        spyApi.callArgWith = spyApi.callArg;
+        delegateToCalls("callArgOn", false, "callArgOnWith", function () {
+            throw new Error(this.toString() + " cannot call arg since it was not yet invoked.");
+        });
+        spyApi.callArgOnWith = spyApi.callArgOn;
+        delegateToCalls("yield", false, "yield", function () {
+            throw new Error(this.toString() + " cannot yield since it was not yet invoked.");
+        });
+        // "invokeCallback" is an alias for "yield" since "yield" is invalid in strict mode.
+        spyApi.invokeCallback = spyApi.yield;
+        delegateToCalls("yieldOn", false, "yieldOn", function () {
+            throw new Error(this.toString() + " cannot yield since it was not yet invoked.");
+        });
+        delegateToCalls("yieldTo", false, "yieldTo", function (property) {
+            throw new Error(this.toString() + " cannot yield to '" + property +
+                "' since it was not yet invoked.");
+        });
+        delegateToCalls("yieldToOn", false, "yieldToOn", function (property) {
+            throw new Error(this.toString() + " cannot yield to '" + property +
+                "' since it was not yet invoked.");
+        });
+
+        spyApi.formatters = {
+            c: function (spy) {
+                return sinon.timesInWords(spy.callCount);
+            },
+
+            n: function (spy) {
+                return spy.toString();
+            },
+
+            C: function (spy) {
+                var calls = [];
+
+                for (var i = 0, l = spy.callCount; i < l; ++i) {
+                    var stringifiedCall = "    " + spy.getCall(i).toString();
+                    if (/\n/.test(calls[i - 1])) {
+                        stringifiedCall = "\n" + stringifiedCall;
+                    }
+                    push.call(calls, stringifiedCall);
+                }
+
+                return calls.length > 0 ? "\n" + calls.join("\n") : "";
+            },
+
+            t: function (spy) {
+                var objects = [];
+
+                for (var i = 0, l = spy.callCount; i < l; ++i) {
+                    push.call(objects, sinon.format(spy.thisValues[i]));
+                }
+
+                return objects.join(", ");
+            },
+
+            "*": function (spy, args) {
+                var formatted = [];
+
+                for (var i = 0, l = args.length; i < l; ++i) {
+                    push.call(formatted, sinon.format(args[i]));
+                }
+
+                return formatted.join(", ");
+            }
+        };
+
+        sinon.extend(spy, spyApi);
+
+        spy.spyCall = sinon.spyCall;
+        sinon.spy = spy;
+
+        return spy;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        require("./call");
+        module.exports = makeApi(sinon);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+},{"./call":54,"./util/core":68}],63:[function(require,module,exports){
+/**
+ * @depend util/core.js
+ * @depend extend.js
+ * @depend spy.js
+ * @depend behavior.js
+ */
+/**
+ * Stub functions
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+(function (sinon) {
+    function makeApi(sinon) {
+        function stub(object, property, func) {
+            if (!!func && typeof func != "function") {
+                throw new TypeError("Custom stub should be function");
+            }
+
+            var wrapper;
+
+            if (func) {
+                wrapper = sinon.spy && sinon.spy.create ? sinon.spy.create(func) : func;
+            } else {
+                wrapper = stub.create();
+            }
+
+            if (!object && typeof property === "undefined") {
+                return sinon.stub.create();
+            }
+
+            if (typeof property === "undefined" && typeof object == "object") {
+                for (var prop in object) {
+                    if (typeof object[prop] === "function") {
+                        stub(object, prop);
+                    }
+                }
+
+                return object;
+            }
+
+            return sinon.wrapMethod(object, property, wrapper);
+        }
+
+        function getDefaultBehavior(stub) {
+            return stub.defaultBehavior || getParentBehaviour(stub) || sinon.behavior.create(stub);
+        }
+
+        function getParentBehaviour(stub) {
+            return (stub.parent && getCurrentBehavior(stub.parent));
+        }
+
+        function getCurrentBehavior(stub) {
+            var behavior = stub.behaviors[stub.callCount - 1];
+            return behavior && behavior.isPresent() ? behavior : getDefaultBehavior(stub);
+        }
+
+        var uuid = 0;
+
+        var proto = {
+            create: function create() {
+                var functionStub = function () {
+                    return getCurrentBehavior(functionStub).invoke(this, arguments);
+                };
+
+                functionStub.id = "stub#" + uuid++;
+                var orig = functionStub;
+                functionStub = sinon.spy.create(functionStub);
+                functionStub.func = orig;
+
+                sinon.extend(functionStub, stub);
+                functionStub.instantiateFake = sinon.stub.create;
+                functionStub.displayName = "stub";
+                functionStub.toString = sinon.functionToString;
+
+                functionStub.defaultBehavior = null;
+                functionStub.behaviors = [];
+
+                return functionStub;
+            },
+
+            resetBehavior: function () {
+                var i;
+
+                this.defaultBehavior = null;
+                this.behaviors = [];
+
+                delete this.returnValue;
+                delete this.returnArgAt;
+                this.returnThis = false;
+
+                if (this.fakes) {
+                    for (i = 0; i < this.fakes.length; i++) {
+                        this.fakes[i].resetBehavior();
+                    }
+                }
+            },
+
+            onCall: function onCall(index) {
+                if (!this.behaviors[index]) {
+                    this.behaviors[index] = sinon.behavior.create(this);
+                }
+
+                return this.behaviors[index];
+            },
+
+            onFirstCall: function onFirstCall() {
+                return this.onCall(0);
+            },
+
+            onSecondCall: function onSecondCall() {
+                return this.onCall(1);
+            },
+
+            onThirdCall: function onThirdCall() {
+                return this.onCall(2);
+            }
+        };
+
+        for (var method in sinon.behavior) {
+            if (sinon.behavior.hasOwnProperty(method) &&
+                !proto.hasOwnProperty(method) &&
+                method != "create" &&
+                method != "withArgs" &&
+                method != "invoke") {
+                proto[method] = (function (behaviorMethod) {
+                    return function () {
+                        this.defaultBehavior = this.defaultBehavior || sinon.behavior.create(this);
+                        this.defaultBehavior[behaviorMethod].apply(this.defaultBehavior, arguments);
+                        return this;
+                    };
+                }(method));
+            }
+        }
+
+        sinon.extend(stub, proto);
+        sinon.stub = stub;
+
+        return stub;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        require("./behavior");
+        require("./spy");
+        module.exports = makeApi(sinon);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+},{"./behavior":53,"./spy":62,"./util/core":68}],64:[function(require,module,exports){
+/**
+ * @depend util/core.js
+ * @depend stub.js
+ * @depend mock.js
+ * @depend sandbox.js
+ */
+/**
+ * Test function, sandboxes fakes
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+(function (sinon) {
+    function makeApi(sinon) {
+        function test(callback) {
+            var type = typeof callback;
+
+            if (type != "function") {
+                throw new TypeError("sinon.test needs to wrap a test function, got " + type);
+            }
+
+            function sinonSandboxedTest() {
+                var config = sinon.getConfig(sinon.config);
+                config.injectInto = config.injectIntoThis && this || config.injectInto;
+                var sandbox = sinon.sandbox.create(config);
+                var exception, result;
+                var doneIsWrapped = false;
+                var argumentsCopy = Array.prototype.slice.call(arguments);
+                if (argumentsCopy.length > 0 && typeof argumentsCopy[arguments.length - 1] == "function") {
+                    var oldDone = argumentsCopy[arguments.length - 1];
+                    argumentsCopy[arguments.length - 1] = function done(result) {
+                        if (result) {
+                            sandbox.restore();
+                            throw exception;
+                        } else {
+                            sandbox.verifyAndRestore();
+                        }
+                        oldDone(result);
+                    }
+                    doneIsWrapped = true;
+                }
+
+                var args = argumentsCopy.concat(sandbox.args);
+
+                try {
+                    result = callback.apply(this, args);
+                } catch (e) {
+                    exception = e;
+                }
+
+                if (!doneIsWrapped) {
+                    if (typeof exception !== "undefined") {
+                        sandbox.restore();
+                        throw exception;
+                    } else {
+                        sandbox.verifyAndRestore();
+                    }
+                }
+
+                return result;
+            };
+
+            if (callback.length) {
+                return function sinonAsyncSandboxedTest(callback) {
+                    return sinonSandboxedTest.apply(this, arguments);
+                };
+            }
+
+            return sinonSandboxedTest;
+        }
+
+        test.config = {
+            injectIntoThis: true,
+            injectInto: null,
+            properties: ["spy", "stub", "mock", "clock", "server", "requests"],
+            useFakeTimers: true,
+            useFakeServer: true
+        };
+
+        sinon.test = test;
+        return test;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        require("./sandbox");
+        module.exports = makeApi(sinon);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+},{"./sandbox":61,"./util/core":68}],65:[function(require,module,exports){
+/**
+ * @depend util/core.js
+ * @depend test.js
+ */
+/**
+ * Test case, sandboxes all test functions
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+(function (sinon) {
+    function createTest(property, setUp, tearDown) {
+        return function () {
+            if (setUp) {
+                setUp.apply(this, arguments);
+            }
+
+            var exception, result;
+
+            try {
+                result = property.apply(this, arguments);
+            } catch (e) {
+                exception = e;
+            }
+
+            if (tearDown) {
+                tearDown.apply(this, arguments);
+            }
+
+            if (exception) {
+                throw exception;
+            }
+
+            return result;
+        };
+    }
+
+    function makeApi(sinon) {
+        function testCase(tests, prefix) {
+            /*jsl:ignore*/
+            if (!tests || typeof tests != "object") {
+                throw new TypeError("sinon.testCase needs an object with test functions");
+            }
+            /*jsl:end*/
+
+            prefix = prefix || "test";
+            var rPrefix = new RegExp("^" + prefix);
+            var methods = {}, testName, property, method;
+            var setUp = tests.setUp;
+            var tearDown = tests.tearDown;
+
+            for (testName in tests) {
+                if (tests.hasOwnProperty(testName)) {
+                    property = tests[testName];
+
+                    if (/^(setUp|tearDown)$/.test(testName)) {
+                        continue;
+                    }
+
+                    if (typeof property == "function" && rPrefix.test(testName)) {
+                        method = property;
+
+                        if (setUp || tearDown) {
+                            method = createTest(property, setUp, tearDown);
+                        }
+
+                        methods[testName] = sinon.test(method);
+                    } else {
+                        methods[testName] = tests[testName];
+                    }
+                }
+            }
+
+            return methods;
+        }
+
+        sinon.testCase = testCase;
+        return testCase;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        require("./test");
+        module.exports = makeApi(sinon);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+},{"./test":64,"./util/core":68}],66:[function(require,module,exports){
+/**
+ * @depend ../sinon.js
+ */
+"use strict";
+
+(function (sinon) {
+    function makeApi(sinon) {
+
+        function timesInWords(count) {
+            switch (count) {
+                case 1:
+                    return "once";
+                case 2:
+                    return "twice";
+                case 3:
+                    return "thrice";
+                default:
+                    return (count || 0) + " times";
+            }
+        }
+
+        sinon.timesInWords = timesInWords;
+        return sinon.timesInWords;
+    }
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        module.exports = makeApi(sinon);
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+},{"./util/core":68}],67:[function(require,module,exports){
+/**
+ * @depend ../sinon.js
+ */
+/**
+ * Format functions
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2014 Christian Johansen
+ */
+"use strict";
+
+(function (sinon, formatio) {
+    function makeApi(sinon) {
+        function typeOf(value) {
+            if (value === null) {
+                return "null";
+            } else if (value === undefined) {
+                return "undefined";
+            }
+            var string = Object.prototype.toString.call(value);
+            return string.substring(8, string.length - 1).toLowerCase();
+        };
+
+        sinon.typeOf = typeOf;
+        return sinon.typeOf;
+    }
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./util/core");
+        module.exports = makeApi(sinon);
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(
+    (typeof sinon == "object" && sinon || null),
+    (typeof formatio == "object" && formatio)
+));
+
+},{"./util/core":68}],68:[function(require,module,exports){
+/**
+ * @depend ../../sinon.js
+ */
+/**
+ * Sinon core utilities. For internal use only.
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+(function (sinon) {
+    var div = typeof document != "undefined" && document.createElement("div");
+    var hasOwn = Object.prototype.hasOwnProperty;
+
+    function isDOMNode(obj) {
+        var success = false;
+
+        try {
+            obj.appendChild(div);
+            success = div.parentNode == obj;
+        } catch (e) {
+            return false;
+        } finally {
+            try {
+                obj.removeChild(div);
+            } catch (e) {
+                // Remove failed, not much we can do about that
+            }
+        }
+
+        return success;
+    }
+
+    function isElement(obj) {
+        return div && obj && obj.nodeType === 1 && isDOMNode(obj);
+    }
+
+    function isFunction(obj) {
+        return typeof obj === "function" || !!(obj && obj.constructor && obj.call && obj.apply);
+    }
+
+    function isReallyNaN(val) {
+        return typeof val === "number" && isNaN(val);
+    }
+
+    function mirrorProperties(target, source) {
+        for (var prop in source) {
+            if (!hasOwn.call(target, prop)) {
+                target[prop] = source[prop];
+            }
+        }
+    }
+
+    function isRestorable(obj) {
+        return typeof obj === "function" && typeof obj.restore === "function" && obj.restore.sinon;
+    }
+
+    function makeApi(sinon) {
+        sinon.wrapMethod = function wrapMethod(object, property, method) {
+            if (!object) {
+                throw new TypeError("Should wrap property of object");
+            }
+
+            if (typeof method != "function") {
+                throw new TypeError("Method wrapper should be function");
+            }
+
+            var wrappedMethod = object[property],
+                error;
+
+            if (!isFunction(wrappedMethod)) {
+                error = new TypeError("Attempted to wrap " + (typeof wrappedMethod) + " property " +
+                                    property + " as function");
+            } else if (wrappedMethod.restore && wrappedMethod.restore.sinon) {
+                error = new TypeError("Attempted to wrap " + property + " which is already wrapped");
+            } else if (wrappedMethod.calledBefore) {
+                var verb = !!wrappedMethod.returns ? "stubbed" : "spied on";
+                error = new TypeError("Attempted to wrap " + property + " which is already " + verb);
+            }
+
+            if (error) {
+                if (wrappedMethod && wrappedMethod.stackTrace) {
+                    error.stack += "\n--------------\n" + wrappedMethod.stackTrace;
+                }
+                throw error;
+            }
+
+            // IE 8 does not support hasOwnProperty on the window object and Firefox has a problem
+            // when using hasOwn.call on objects from other frames.
+            var owned = object.hasOwnProperty ? object.hasOwnProperty(property) : hasOwn.call(object, property);
+            object[property] = method;
+            method.displayName = property;
+            // Set up a stack trace which can be used later to find what line of
+            // code the original method was created on.
+            method.stackTrace = (new Error("Stack Trace for original")).stack;
+
+            method.restore = function () {
+                // For prototype properties try to reset by delete first.
+                // If this fails (ex: localStorage on mobile safari) then force a reset
+                // via direct assignment.
+                if (!owned) {
+                    delete object[property];
+                }
+                if (object[property] === method) {
+                    object[property] = wrappedMethod;
+                }
+            };
+
+            method.restore.sinon = true;
+            mirrorProperties(method, wrappedMethod);
+
+            return method;
+        };
+
+        sinon.create = function create(proto) {
+            var F = function () {};
+            F.prototype = proto;
+            return new F();
+        };
+
+        sinon.deepEqual = function deepEqual(a, b) {
+            if (sinon.match && sinon.match.isMatcher(a)) {
+                return a.test(b);
+            }
+
+            if (typeof a != "object" || typeof b != "object") {
+                if (isReallyNaN(a) && isReallyNaN(b)) {
+                    return true;
+                } else {
+                    return a === b;
+                }
+            }
+
+            if (isElement(a) || isElement(b)) {
+                return a === b;
+            }
+
+            if (a === b) {
+                return true;
+            }
+
+            if ((a === null && b !== null) || (a !== null && b === null)) {
+                return false;
+            }
+
+            if (a instanceof RegExp && b instanceof RegExp) {
+                return (a.source === b.source) && (a.global === b.global) &&
+                    (a.ignoreCase === b.ignoreCase) && (a.multiline === b.multiline);
+            }
+
+            var aString = Object.prototype.toString.call(a);
+            if (aString != Object.prototype.toString.call(b)) {
+                return false;
+            }
+
+            if (aString == "[object Date]") {
+                return a.valueOf() === b.valueOf();
+            }
+
+            var prop, aLength = 0, bLength = 0;
+
+            if (aString == "[object Array]" && a.length !== b.length) {
+                return false;
+            }
+
+            for (prop in a) {
+                aLength += 1;
+
+                if (!(prop in b)) {
+                    return false;
+                }
+
+                if (!deepEqual(a[prop], b[prop])) {
+                    return false;
+                }
+            }
+
+            for (prop in b) {
+                bLength += 1;
+            }
+
+            return aLength == bLength;
+        };
+
+        sinon.functionName = function functionName(func) {
+            var name = func.displayName || func.name;
+
+            // Use function decomposition as a last resort to get function
+            // name. Does not rely on function decomposition to work - if it
+            // doesn't debugging will be slightly less informative
+            // (i.e. toString will say 'spy' rather than 'myFunc').
+            if (!name) {
+                var matches = func.toString().match(/function ([^\s\(]+)/);
+                name = matches && matches[1];
+            }
+
+            return name;
+        };
+
+        sinon.functionToString = function toString() {
+            if (this.getCall && this.callCount) {
+                var thisValue, prop, i = this.callCount;
+
+                while (i--) {
+                    thisValue = this.getCall(i).thisValue;
+
+                    for (prop in thisValue) {
+                        if (thisValue[prop] === this) {
+                            return prop;
+                        }
+                    }
+                }
+            }
+
+            return this.displayName || "sinon fake";
+        };
+
+        sinon.getConfig = function (custom) {
+            var config = {};
+            custom = custom || {};
+            var defaults = sinon.defaultConfig;
+
+            for (var prop in defaults) {
+                if (defaults.hasOwnProperty(prop)) {
+                    config[prop] = custom.hasOwnProperty(prop) ? custom[prop] : defaults[prop];
+                }
+            }
+
+            return config;
+        };
+
+        sinon.defaultConfig = {
+            injectIntoThis: true,
+            injectInto: null,
+            properties: ["spy", "stub", "mock", "clock", "server", "requests"],
+            useFakeTimers: true,
+            useFakeServer: true
+        };
+
+        sinon.timesInWords = function timesInWords(count) {
+            return count == 1 && "once" ||
+                count == 2 && "twice" ||
+                count == 3 && "thrice" ||
+                (count || 0) + " times";
+        };
+
+        sinon.calledInOrder = function (spies) {
+            for (var i = 1, l = spies.length; i < l; i++) {
+                if (!spies[i - 1].calledBefore(spies[i]) || !spies[i].called) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
+        sinon.orderByFirstCall = function (spies) {
+            return spies.sort(function (a, b) {
+                // uuid, won't ever be equal
+                var aCall = a.getCall(0);
+                var bCall = b.getCall(0);
+                var aId = aCall && aCall.callId || -1;
+                var bId = bCall && bCall.callId || -1;
+
+                return aId < bId ? -1 : 1;
+            });
+        };
+
+        sinon.createStubInstance = function (constructor) {
+            if (typeof constructor !== "function") {
+                throw new TypeError("The constructor should be a function.");
+            }
+            return sinon.stub(sinon.create(constructor.prototype));
+        };
+
+        sinon.restore = function (object) {
+            if (object !== null && typeof object === "object") {
+                for (var prop in object) {
+                    if (isRestorable(object[prop])) {
+                        object[prop].restore();
+                    }
+                }
+            } else if (isRestorable(object)) {
+                object.restore();
+            }
+        };
+
+        return sinon;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports) {
+        makeApi(exports);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports);
+    } else if (!sinon) {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+}(typeof sinon == "object" && sinon || null));
+
+},{}],69:[function(require,module,exports){
+/**
+ * Minimal Event interface implementation
+ *
+ * Original implementation by Sven Fuchs: https://gist.github.com/995028
+ * Modifications and tests by Christian Johansen.
+ *
+ * @author Sven Fuchs (svenfuchs@artweb-design.de)
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2011 Sven Fuchs, Christian Johansen
+ */
+"use strict";
+
+if (typeof sinon == "undefined") {
+    this.sinon = {};
+}
+
+(function () {
+    var push = [].push;
+
+    function makeApi(sinon) {
+        sinon.Event = function Event(type, bubbles, cancelable, target) {
+            this.initEvent(type, bubbles, cancelable, target);
+        };
+
+        sinon.Event.prototype = {
+            initEvent: function (type, bubbles, cancelable, target) {
+                this.type = type;
+                this.bubbles = bubbles;
+                this.cancelable = cancelable;
+                this.target = target;
+            },
+
+            stopPropagation: function () {},
+
+            preventDefault: function () {
+                this.defaultPrevented = true;
+            }
+        };
+
+        sinon.ProgressEvent = function ProgressEvent(type, progressEventRaw, target) {
+            this.initEvent(type, false, false, target);
+            this.loaded = progressEventRaw.loaded || null;
+            this.total = progressEventRaw.total || null;
+        };
+
+        sinon.ProgressEvent.prototype = new sinon.Event();
+
+        sinon.ProgressEvent.prototype.constructor =  sinon.ProgressEvent;
+
+        sinon.CustomEvent = function CustomEvent(type, customData, target) {
+            this.initEvent(type, false, false, target);
+            this.detail = customData.detail || null;
+        };
+
+        sinon.CustomEvent.prototype = new sinon.Event();
+
+        sinon.CustomEvent.prototype.constructor =  sinon.CustomEvent;
+
+        sinon.EventTarget = {
+            addEventListener: function addEventListener(event, listener) {
+                this.eventListeners = this.eventListeners || {};
+                this.eventListeners[event] = this.eventListeners[event] || [];
+                push.call(this.eventListeners[event], listener);
+            },
+
+            removeEventListener: function removeEventListener(event, listener) {
+                var listeners = this.eventListeners && this.eventListeners[event] || [];
+
+                for (var i = 0, l = listeners.length; i < l; ++i) {
+                    if (listeners[i] == listener) {
+                        return listeners.splice(i, 1);
+                    }
+                }
+            },
+
+            dispatchEvent: function dispatchEvent(event) {
+                var type = event.type;
+                var listeners = this.eventListeners && this.eventListeners[type] || [];
+
+                for (var i = 0; i < listeners.length; i++) {
+                    if (typeof listeners[i] == "function") {
+                        listeners[i].call(this, event);
+                    } else {
+                        listeners[i].handleEvent(event);
+                    }
+                }
+
+                return !!event.defaultPrevented;
+            }
+        };
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require) {
+        var sinon = require("./core");
+        makeApi(sinon);
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require);
+    } else {
+        makeApi(sinon);
+    }
+}());
+
+},{"./core":68}],70:[function(require,module,exports){
+/**
+ * @depend fake_xml_http_request.js
+ * @depend ../format.js
+ * @depend ../log_error.js
+ */
+/**
+ * The Sinon "server" mimics a web server that receives requests from
+ * sinon.FakeXMLHttpRequest and provides an API to respond to those requests,
+ * both synchronously and asynchronously. To respond synchronuously, canned
+ * answers have to be provided upfront.
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+if (typeof sinon == "undefined") {
+    var sinon = {};
+}
+
+(function () {
+    var push = [].push;
+    function F() {}
+
+    function create(proto) {
+        F.prototype = proto;
+        return new F();
+    }
+
+    function responseArray(handler) {
+        var response = handler;
+
+        if (Object.prototype.toString.call(handler) != "[object Array]") {
+            response = [200, {}, handler];
+        }
+
+        if (typeof response[2] != "string") {
+            throw new TypeError("Fake server response body should be string, but was " +
+                                typeof response[2]);
+        }
+
+        return response;
+    }
+
+    var wloc = typeof window !== "undefined" ? window.location : {};
+    var rCurrLoc = new RegExp("^" + wloc.protocol + "//" + wloc.host);
+
+    function matchOne(response, reqMethod, reqUrl) {
+        var rmeth = response.method;
+        var matchMethod = !rmeth || rmeth.toLowerCase() == reqMethod.toLowerCase();
+        var url = response.url;
+        var matchUrl = !url || url == reqUrl || (typeof url.test == "function" && url.test(reqUrl));
+
+        return matchMethod && matchUrl;
+    }
+
+    function match(response, request) {
+        var requestUrl = request.url;
+
+        if (!/^https?:\/\//.test(requestUrl) || rCurrLoc.test(requestUrl)) {
+            requestUrl = requestUrl.replace(rCurrLoc, "");
+        }
+
+        if (matchOne(response, this.getHTTPMethod(request), requestUrl)) {
+            if (typeof response.response == "function") {
+                var ru = response.url;
+                var args = [request].concat(ru && typeof ru.exec == "function" ? ru.exec(requestUrl).slice(1) : []);
+                return response.response.apply(response, args);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    function makeApi(sinon) {
+        sinon.fakeServer = {
+            create: function () {
+                var server = create(this);
+                this.xhr = sinon.useFakeXMLHttpRequest();
+                server.requests = [];
+
+                this.xhr.onCreate = function (xhrObj) {
+                    server.addRequest(xhrObj);
+                };
+
+                return server;
+            },
+
+            addRequest: function addRequest(xhrObj) {
+                var server = this;
+                push.call(this.requests, xhrObj);
+
+                xhrObj.onSend = function () {
+                    server.handleRequest(this);
+
+                    if (server.autoRespond && !server.responding) {
+                        setTimeout(function () {
+                            server.responding = false;
+                            server.respond();
+                        }, server.autoRespondAfter || 10);
+
+                        server.responding = true;
+                    }
+                };
+            },
+
+            getHTTPMethod: function getHTTPMethod(request) {
+                if (this.fakeHTTPMethods && /post/i.test(request.method)) {
+                    var matches = (request.requestBody || "").match(/_method=([^\b;]+)/);
+                    return !!matches ? matches[1] : request.method;
+                }
+
+                return request.method;
+            },
+
+            handleRequest: function handleRequest(xhr) {
+                if (xhr.async) {
+                    if (!this.queue) {
+                        this.queue = [];
+                    }
+
+                    push.call(this.queue, xhr);
+                } else {
+                    this.processRequest(xhr);
+                }
+            },
+
+            log: function log(response, request) {
+                var str;
+
+                str =  "Request:\n"  + sinon.format(request)  + "\n\n";
+                str += "Response:\n" + sinon.format(response) + "\n\n";
+
+                sinon.log(str);
+            },
+
+            respondWith: function respondWith(method, url, body) {
+                if (arguments.length == 1 && typeof method != "function") {
+                    this.response = responseArray(method);
+                    return;
+                }
+
+                if (!this.responses) { this.responses = []; }
+
+                if (arguments.length == 1) {
+                    body = method;
+                    url = method = null;
+                }
+
+                if (arguments.length == 2) {
+                    body = url;
+                    url = method;
+                    method = null;
+                }
+
+                push.call(this.responses, {
+                    method: method,
+                    url: url,
+                    response: typeof body == "function" ? body : responseArray(body)
+                });
+            },
+
+            respond: function respond() {
+                if (arguments.length > 0) {
+                    this.respondWith.apply(this, arguments);
+                }
+
+                var queue = this.queue || [];
+                var requests = queue.splice(0, queue.length);
+                var request;
+
+                while (request = requests.shift()) {
+                    this.processRequest(request);
+                }
+            },
+
+            processRequest: function processRequest(request) {
+                try {
+                    if (request.aborted) {
+                        return;
+                    }
+
+                    var response = this.response || [404, {}, ""];
+
+                    if (this.responses) {
+                        for (var l = this.responses.length, i = l - 1; i >= 0; i--) {
+                            if (match.call(this, this.responses[i], request)) {
+                                response = this.responses[i].response;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (request.readyState != 4) {
+                        this.log(response, request);
+
+                        request.respond(response[0], response[1], response[2]);
+                    }
+                } catch (e) {
+                    sinon.logError("Fake server request processing", e);
+                }
+            },
+
+            restore: function restore() {
+                return this.xhr.restore && this.xhr.restore.apply(this.xhr, arguments);
+            }
+        };
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./core");
+        require("./fake_xml_http_request");
+        makeApi(sinon);
+        module.exports = sinon;
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else {
+        makeApi(sinon);
+    }
+}());
+
+},{"./core":68,"./fake_xml_http_request":72}],71:[function(require,module,exports){
+(function (global){
+/*global lolex */
+
+/**
+ * Fake timer API
+ * setTimeout
+ * setInterval
+ * clearTimeout
+ * clearInterval
+ * tick
+ * reset
+ * Date
+ *
+ * Inspired by jsUnitMockTimeOut from JsUnit
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+if (typeof sinon == "undefined") {
+    var sinon = {};
+}
+
+(function (global) {
+    function makeApi(sinon, lol) {
+        var llx = typeof lolex !== "undefined" ? lolex : lol;
+
+        sinon.useFakeTimers = function () {
+            var now, methods = Array.prototype.slice.call(arguments);
+
+            if (typeof methods[0] === "string") {
+                now = 0;
+            } else {
+                now = methods.shift();
+            }
+
+            var clock = llx.install(now || 0, methods);
+            clock.restore = clock.uninstall;
+            return clock;
+        };
+
+        sinon.clock = {
+            create: function (now) {
+                return llx.createClock(now);
+            }
+        };
+
+        sinon.timers = {
+            setTimeout: setTimeout,
+            clearTimeout: clearTimeout,
+            setImmediate: (typeof setImmediate !== "undefined" ? setImmediate : undefined),
+            clearImmediate: (typeof clearImmediate !== "undefined" ? clearImmediate : undefined),
+            setInterval: setInterval,
+            clearInterval: clearInterval,
+            Date: Date
+        };
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, epxorts, module) {
+        var sinon = require("./core");
+        makeApi(sinon, require("lolex"));
+        module.exports = sinon;
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else {
+        makeApi(sinon);
+    }
+}(typeof global != "undefined" && typeof global !== "function" ? global : this));
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./core":68,"lolex":75}],72:[function(require,module,exports){
+/**
+ * @depend core.js
+ * @depend ../extend.js
+ * @depend event.js
+ * @depend ../log_error.js
+ */
+/**
+ * Fake XMLHttpRequest object
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+(function (global) {
+
+    var supportsProgress = typeof ProgressEvent !== "undefined";
+    var supportsCustomEvent = typeof CustomEvent !== "undefined";
+    var sinonXhr = { XMLHttpRequest: global.XMLHttpRequest };
+    sinonXhr.GlobalXMLHttpRequest = global.XMLHttpRequest;
+    sinonXhr.GlobalActiveXObject = global.ActiveXObject;
+    sinonXhr.supportsActiveX = typeof sinonXhr.GlobalActiveXObject != "undefined";
+    sinonXhr.supportsXHR = typeof sinonXhr.GlobalXMLHttpRequest != "undefined";
+    sinonXhr.workingXHR = sinonXhr.supportsXHR ? sinonXhr.GlobalXMLHttpRequest : sinonXhr.supportsActiveX
+                                     ? function () { return new sinonXhr.GlobalActiveXObject("MSXML2.XMLHTTP.3.0") } : false;
+    sinonXhr.supportsCORS = sinonXhr.supportsXHR && "withCredentials" in (new sinonXhr.GlobalXMLHttpRequest());
+
+    /*jsl:ignore*/
+    var unsafeHeaders = {
+        "Accept-Charset": true,
+        "Accept-Encoding": true,
+        Connection: true,
+        "Content-Length": true,
+        Cookie: true,
+        Cookie2: true,
+        "Content-Transfer-Encoding": true,
+        Date: true,
+        Expect: true,
+        Host: true,
+        "Keep-Alive": true,
+        Referer: true,
+        TE: true,
+        Trailer: true,
+        "Transfer-Encoding": true,
+        Upgrade: true,
+        "User-Agent": true,
+        Via: true
+    };
+    /*jsl:end*/
+
+    function FakeXMLHttpRequest() {
+        this.readyState = FakeXMLHttpRequest.UNSENT;
+        this.requestHeaders = {};
+        this.requestBody = null;
+        this.status = 0;
+        this.statusText = "";
+        this.upload = new UploadProgress();
+        if (sinonXhr.supportsCORS) {
+            this.withCredentials = false;
+        }
+
+        var xhr = this;
+        var events = ["loadstart", "load", "abort", "loadend"];
+
+        function addEventListener(eventName) {
+            xhr.addEventListener(eventName, function (event) {
+                var listener = xhr["on" + eventName];
+
+                if (listener && typeof listener == "function") {
+                    listener.call(this, event);
+                }
+            });
+        }
+
+        for (var i = events.length - 1; i >= 0; i--) {
+            addEventListener(events[i]);
+        }
+
+        if (typeof FakeXMLHttpRequest.onCreate == "function") {
+            FakeXMLHttpRequest.onCreate(this);
+        }
+    }
+
+    // An upload object is created for each
+    // FakeXMLHttpRequest and allows upload
+    // events to be simulated using uploadProgress
+    // and uploadError.
+    function UploadProgress() {
+        this.eventListeners = {
+            progress: [],
+            load: [],
+            abort: [],
+            error: []
+        }
+    }
+
+    UploadProgress.prototype.addEventListener = function addEventListener(event, listener) {
+        this.eventListeners[event].push(listener);
+    };
+
+    UploadProgress.prototype.removeEventListener = function removeEventListener(event, listener) {
+        var listeners = this.eventListeners[event] || [];
+
+        for (var i = 0, l = listeners.length; i < l; ++i) {
+            if (listeners[i] == listener) {
+                return listeners.splice(i, 1);
+            }
+        }
+    };
+
+    UploadProgress.prototype.dispatchEvent = function dispatchEvent(event) {
+        var listeners = this.eventListeners[event.type] || [];
+
+        for (var i = 0, listener; (listener = listeners[i]) != null; i++) {
+            listener(event);
+        }
+    };
+
+    function verifyState(xhr) {
+        if (xhr.readyState !== FakeXMLHttpRequest.OPENED) {
+            throw new Error("INVALID_STATE_ERR");
+        }
+
+        if (xhr.sendFlag) {
+            throw new Error("INVALID_STATE_ERR");
+        }
+    }
+
+    function getHeader(headers, header) {
+        header = header.toLowerCase();
+
+        for (var h in headers) {
+            if (h.toLowerCase() == header) {
+                return h;
+            }
+        }
+
+        return null;
+    }
+
+    // filtering to enable a white-list version of Sinon FakeXhr,
+    // where whitelisted requests are passed through to real XHR
+    function each(collection, callback) {
+        if (!collection) {
+            return;
+        }
+
+        for (var i = 0, l = collection.length; i < l; i += 1) {
+            callback(collection[i]);
+        }
+    }
+    function some(collection, callback) {
+        for (var index = 0; index < collection.length; index++) {
+            if (callback(collection[index]) === true) {
+                return true;
+            }
+        }
+        return false;
+    }
+    // largest arity in XHR is 5 - XHR#open
+    var apply = function (obj, method, args) {
+        switch (args.length) {
+        case 0: return obj[method]();
+        case 1: return obj[method](args[0]);
+        case 2: return obj[method](args[0], args[1]);
+        case 3: return obj[method](args[0], args[1], args[2]);
+        case 4: return obj[method](args[0], args[1], args[2], args[3]);
+        case 5: return obj[method](args[0], args[1], args[2], args[3], args[4]);
+        }
+    };
+
+    FakeXMLHttpRequest.filters = [];
+    FakeXMLHttpRequest.addFilter = function addFilter(fn) {
+        this.filters.push(fn)
+    };
+    var IE6Re = /MSIE 6/;
+    FakeXMLHttpRequest.defake = function defake(fakeXhr, xhrArgs) {
+        var xhr = new sinonXhr.workingXHR();
+        each([
+            "open",
+            "setRequestHeader",
+            "send",
+            "abort",
+            "getResponseHeader",
+            "getAllResponseHeaders",
+            "addEventListener",
+            "overrideMimeType",
+            "removeEventListener"
+        ], function (method) {
+            fakeXhr[method] = function () {
+                return apply(xhr, method, arguments);
+            };
+        });
+
+        var copyAttrs = function (args) {
+            each(args, function (attr) {
+                try {
+                    fakeXhr[attr] = xhr[attr]
+                } catch (e) {
+                    if (!IE6Re.test(navigator.userAgent)) {
+                        throw e;
+                    }
+                }
+            });
+        };
+
+        var stateChange = function stateChange() {
+            fakeXhr.readyState = xhr.readyState;
+            if (xhr.readyState >= FakeXMLHttpRequest.HEADERS_RECEIVED) {
+                copyAttrs(["status", "statusText"]);
+            }
+            if (xhr.readyState >= FakeXMLHttpRequest.LOADING) {
+                copyAttrs(["responseText", "response"]);
+            }
+            if (xhr.readyState === FakeXMLHttpRequest.DONE) {
+                copyAttrs(["responseXML"]);
+            }
+            if (fakeXhr.onreadystatechange) {
+                fakeXhr.onreadystatechange.call(fakeXhr, { target: fakeXhr });
+            }
+        };
+
+        if (xhr.addEventListener) {
+            for (var event in fakeXhr.eventListeners) {
+                if (fakeXhr.eventListeners.hasOwnProperty(event)) {
+                    each(fakeXhr.eventListeners[event], function (handler) {
+                        xhr.addEventListener(event, handler);
+                    });
+                }
+            }
+            xhr.addEventListener("readystatechange", stateChange);
+        } else {
+            xhr.onreadystatechange = stateChange;
+        }
+        apply(xhr, "open", xhrArgs);
+    };
+    FakeXMLHttpRequest.useFilters = false;
+
+    function verifyRequestOpened(xhr) {
+        if (xhr.readyState != FakeXMLHttpRequest.OPENED) {
+            throw new Error("INVALID_STATE_ERR - " + xhr.readyState);
+        }
+    }
+
+    function verifyRequestSent(xhr) {
+        if (xhr.readyState == FakeXMLHttpRequest.DONE) {
+            throw new Error("Request done");
+        }
+    }
+
+    function verifyHeadersReceived(xhr) {
+        if (xhr.async && xhr.readyState != FakeXMLHttpRequest.HEADERS_RECEIVED) {
+            throw new Error("No headers received");
+        }
+    }
+
+    function verifyResponseBodyType(body) {
+        if (typeof body != "string") {
+            var error = new Error("Attempted to respond to fake XMLHttpRequest with " +
+                                 body + ", which is not a string.");
+            error.name = "InvalidBodyException";
+            throw error;
+        }
+    }
+
+    FakeXMLHttpRequest.parseXML = function parseXML(text) {
+        var xmlDoc;
+
+        if (typeof DOMParser != "undefined") {
+            var parser = new DOMParser();
+            xmlDoc = parser.parseFromString(text, "text/xml");
+        } else {
+            xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+            xmlDoc.async = "false";
+            xmlDoc.loadXML(text);
+        }
+
+        return xmlDoc;
+    };
+
+    FakeXMLHttpRequest.statusCodes = {
+        100: "Continue",
+        101: "Switching Protocols",
+        200: "OK",
+        201: "Created",
+        202: "Accepted",
+        203: "Non-Authoritative Information",
+        204: "No Content",
+        205: "Reset Content",
+        206: "Partial Content",
+        207: "Multi-Status",
+        300: "Multiple Choice",
+        301: "Moved Permanently",
+        302: "Found",
+        303: "See Other",
+        304: "Not Modified",
+        305: "Use Proxy",
+        307: "Temporary Redirect",
+        400: "Bad Request",
+        401: "Unauthorized",
+        402: "Payment Required",
+        403: "Forbidden",
+        404: "Not Found",
+        405: "Method Not Allowed",
+        406: "Not Acceptable",
+        407: "Proxy Authentication Required",
+        408: "Request Timeout",
+        409: "Conflict",
+        410: "Gone",
+        411: "Length Required",
+        412: "Precondition Failed",
+        413: "Request Entity Too Large",
+        414: "Request-URI Too Long",
+        415: "Unsupported Media Type",
+        416: "Requested Range Not Satisfiable",
+        417: "Expectation Failed",
+        422: "Unprocessable Entity",
+        500: "Internal Server Error",
+        501: "Not Implemented",
+        502: "Bad Gateway",
+        503: "Service Unavailable",
+        504: "Gateway Timeout",
+        505: "HTTP Version Not Supported"
+    };
+
+    function makeApi(sinon) {
+        sinon.xhr = sinonXhr;
+
+        sinon.extend(FakeXMLHttpRequest.prototype, sinon.EventTarget, {
+            async: true,
+
+            open: function open(method, url, async, username, password) {
+                this.method = method;
+                this.url = url;
+                this.async = typeof async == "boolean" ? async : true;
+                this.username = username;
+                this.password = password;
+                this.responseText = null;
+                this.responseXML = null;
+                this.requestHeaders = {};
+                this.sendFlag = false;
+
+                if (FakeXMLHttpRequest.useFilters === true) {
+                    var xhrArgs = arguments;
+                    var defake = some(FakeXMLHttpRequest.filters, function (filter) {
+                        return filter.apply(this, xhrArgs)
+                    });
+                    if (defake) {
+                        return FakeXMLHttpRequest.defake(this, arguments);
+                    }
+                }
+                this.readyStateChange(FakeXMLHttpRequest.OPENED);
+            },
+
+            readyStateChange: function readyStateChange(state) {
+                this.readyState = state;
+
+                if (typeof this.onreadystatechange == "function") {
+                    try {
+                        this.onreadystatechange();
+                    } catch (e) {
+                        sinon.logError("Fake XHR onreadystatechange handler", e);
+                    }
+                }
+
+                this.dispatchEvent(new sinon.Event("readystatechange"));
+
+                switch (this.readyState) {
+                    case FakeXMLHttpRequest.DONE:
+                        this.dispatchEvent(new sinon.Event("load", false, false, this));
+                        this.dispatchEvent(new sinon.Event("loadend", false, false, this));
+                        this.upload.dispatchEvent(new sinon.Event("load", false, false, this));
+                        if (supportsProgress) {
+                            this.upload.dispatchEvent(new sinon.ProgressEvent("progress", {loaded: 100, total: 100}));
+                        }
+                        break;
+                }
+            },
+
+            setRequestHeader: function setRequestHeader(header, value) {
+                verifyState(this);
+
+                if (unsafeHeaders[header] || /^(Sec-|Proxy-)/.test(header)) {
+                    throw new Error("Refused to set unsafe header \"" + header + "\"");
+                }
+
+                if (this.requestHeaders[header]) {
+                    this.requestHeaders[header] += "," + value;
+                } else {
+                    this.requestHeaders[header] = value;
+                }
+            },
+
+            // Helps testing
+            setResponseHeaders: function setResponseHeaders(headers) {
+                verifyRequestOpened(this);
+                this.responseHeaders = {};
+
+                for (var header in headers) {
+                    if (headers.hasOwnProperty(header)) {
+                        this.responseHeaders[header] = headers[header];
+                    }
+                }
+
+                if (this.async) {
+                    this.readyStateChange(FakeXMLHttpRequest.HEADERS_RECEIVED);
+                } else {
+                    this.readyState = FakeXMLHttpRequest.HEADERS_RECEIVED;
+                }
+            },
+
+            // Currently treats ALL data as a DOMString (i.e. no Document)
+            send: function send(data) {
+                verifyState(this);
+
+                if (!/^(get|head)$/i.test(this.method)) {
+                    var contentType = getHeader(this.requestHeaders, "Content-Type");
+                    if (this.requestHeaders[contentType]) {
+                        var value = this.requestHeaders[contentType].split(";");
+                        this.requestHeaders[contentType] = value[0] + ";charset=utf-8";
+                    } else {
+                        this.requestHeaders["Content-Type"] = "text/plain;charset=utf-8";
+                    }
+
+                    this.requestBody = data;
+                }
+
+                this.errorFlag = false;
+                this.sendFlag = this.async;
+                this.readyStateChange(FakeXMLHttpRequest.OPENED);
+
+                if (typeof this.onSend == "function") {
+                    this.onSend(this);
+                }
+
+                this.dispatchEvent(new sinon.Event("loadstart", false, false, this));
+            },
+
+            abort: function abort() {
+                this.aborted = true;
+                this.responseText = null;
+                this.errorFlag = true;
+                this.requestHeaders = {};
+
+                if (this.readyState > FakeXMLHttpRequest.UNSENT && this.sendFlag) {
+                    this.readyStateChange(FakeXMLHttpRequest.DONE);
+                    this.sendFlag = false;
+                }
+
+                this.readyState = FakeXMLHttpRequest.UNSENT;
+
+                this.dispatchEvent(new sinon.Event("abort", false, false, this));
+
+                this.upload.dispatchEvent(new sinon.Event("abort", false, false, this));
+
+                if (typeof this.onerror === "function") {
+                    this.onerror();
+                }
+            },
+
+            getResponseHeader: function getResponseHeader(header) {
+                if (this.readyState < FakeXMLHttpRequest.HEADERS_RECEIVED) {
+                    return null;
+                }
+
+                if (/^Set-Cookie2?$/i.test(header)) {
+                    return null;
+                }
+
+                header = getHeader(this.responseHeaders, header);
+
+                return this.responseHeaders[header] || null;
+            },
+
+            getAllResponseHeaders: function getAllResponseHeaders() {
+                if (this.readyState < FakeXMLHttpRequest.HEADERS_RECEIVED) {
+                    return "";
+                }
+
+                var headers = "";
+
+                for (var header in this.responseHeaders) {
+                    if (this.responseHeaders.hasOwnProperty(header) &&
+                        !/^Set-Cookie2?$/i.test(header)) {
+                        headers += header + ": " + this.responseHeaders[header] + "\r\n";
+                    }
+                }
+
+                return headers;
+            },
+
+            setResponseBody: function setResponseBody(body) {
+                verifyRequestSent(this);
+                verifyHeadersReceived(this);
+                verifyResponseBodyType(body);
+
+                var chunkSize = this.chunkSize || 10;
+                var index = 0;
+                this.responseText = "";
+
+                do {
+                    if (this.async) {
+                        this.readyStateChange(FakeXMLHttpRequest.LOADING);
+                    }
+
+                    this.responseText += body.substring(index, index + chunkSize);
+                    index += chunkSize;
+                } while (index < body.length);
+
+                var type = this.getResponseHeader("Content-Type");
+
+                if (this.responseText &&
+                    (!type || /(text\/xml)|(application\/xml)|(\+xml)/.test(type))) {
+                    try {
+                        this.responseXML = FakeXMLHttpRequest.parseXML(this.responseText);
+                    } catch (e) {
+                        // Unable to parse XML - no biggie
+                    }
+                }
+
+                this.readyStateChange(FakeXMLHttpRequest.DONE);
+            },
+
+            respond: function respond(status, headers, body) {
+                this.status = typeof status == "number" ? status : 200;
+                this.statusText = FakeXMLHttpRequest.statusCodes[this.status];
+                this.setResponseHeaders(headers || {});
+                this.setResponseBody(body || "");
+            },
+
+            uploadProgress: function uploadProgress(progressEventRaw) {
+                if (supportsProgress) {
+                    this.upload.dispatchEvent(new sinon.ProgressEvent("progress", progressEventRaw));
+                }
+            },
+
+            uploadError: function uploadError(error) {
+                if (supportsCustomEvent) {
+                    this.upload.dispatchEvent(new sinon.CustomEvent("error", {detail: error}));
+                }
+            }
+        });
+
+        sinon.extend(FakeXMLHttpRequest, {
+            UNSENT: 0,
+            OPENED: 1,
+            HEADERS_RECEIVED: 2,
+            LOADING: 3,
+            DONE: 4
+        });
+
+        sinon.useFakeXMLHttpRequest = function () {
+            FakeXMLHttpRequest.restore = function restore(keepOnCreate) {
+                if (sinonXhr.supportsXHR) {
+                    global.XMLHttpRequest = sinonXhr.GlobalXMLHttpRequest;
+                }
+
+                if (sinonXhr.supportsActiveX) {
+                    global.ActiveXObject = sinonXhr.GlobalActiveXObject;
+                }
+
+                delete FakeXMLHttpRequest.restore;
+
+                if (keepOnCreate !== true) {
+                    delete FakeXMLHttpRequest.onCreate;
+                }
+            };
+            if (sinonXhr.supportsXHR) {
+                global.XMLHttpRequest = FakeXMLHttpRequest;
+            }
+
+            if (sinonXhr.supportsActiveX) {
+                global.ActiveXObject = function ActiveXObject(objId) {
+                    if (objId == "Microsoft.XMLHTTP" || /^Msxml2\.XMLHTTP/i.test(objId)) {
+
+                        return new FakeXMLHttpRequest();
+                    }
+
+                    return new sinonXhr.GlobalActiveXObject(objId);
+                };
+            }
+
+            return FakeXMLHttpRequest;
+        };
+
+        sinon.FakeXMLHttpRequest = FakeXMLHttpRequest;
+    }
+
+    var isNode = typeof module !== "undefined" && module.exports && typeof require == "function";
+    var isAMD = typeof define === "function" && typeof define.amd === "object" && define.amd;
+
+    function loadDependencies(require, exports, module) {
+        var sinon = require("./core");
+        require("./event");
+        makeApi(sinon);
+        module.exports = sinon;
+    }
+
+    if (isAMD) {
+        define(loadDependencies);
+    } else if (isNode) {
+        loadDependencies(require, module.exports, module);
+    } else if (typeof sinon === "undefined") {
+        return;
+    } else {
+        makeApi(sinon);
+    }
+
+})(typeof self !== "undefined" ? self : this);
+
+},{"./core":68,"./event":69}],73:[function(require,module,exports){
+(function (global){
+((typeof define === "function" && define.amd && function (m) {
+    define("formatio", ["samsam"], m);
+}) || (typeof module === "object" && function (m) {
+    module.exports = m(require("samsam"));
+}) || function (m) { this.formatio = m(this.samsam); }
+)(function (samsam) {
+    "use strict";
+
+    var formatio = {
+        excludeConstructors: ["Object", /^.$/],
+        quoteStrings: true,
+        limitChildrenCount: 0
+    };
+
+    var hasOwn = Object.prototype.hasOwnProperty;
+
+    var specialObjects = [];
+    if (typeof global !== "undefined") {
+        specialObjects.push({ object: global, value: "[object global]" });
+    }
+    if (typeof document !== "undefined") {
+        specialObjects.push({
+            object: document,
+            value: "[object HTMLDocument]"
+        });
+    }
+    if (typeof window !== "undefined") {
+        specialObjects.push({ object: window, value: "[object Window]" });
+    }
+
+    function functionName(func) {
+        if (!func) { return ""; }
+        if (func.displayName) { return func.displayName; }
+        if (func.name) { return func.name; }
+        var matches = func.toString().match(/function\s+([^\(]+)/m);
+        return (matches && matches[1]) || "";
+    }
+
+    function constructorName(f, object) {
+        var name = functionName(object && object.constructor);
+        var excludes = f.excludeConstructors ||
+                formatio.excludeConstructors || [];
+
+        var i, l;
+        for (i = 0, l = excludes.length; i < l; ++i) {
+            if (typeof excludes[i] === "string" && excludes[i] === name) {
+                return "";
+            } else if (excludes[i].test && excludes[i].test(name)) {
+                return "";
+            }
+        }
+
+        return name;
+    }
+
+    function isCircular(object, objects) {
+        if (typeof object !== "object") { return false; }
+        var i, l;
+        for (i = 0, l = objects.length; i < l; ++i) {
+            if (objects[i] === object) { return true; }
+        }
+        return false;
+    }
+
+    function ascii(f, object, processed, indent) {
+        if (typeof object === "string") {
+            var qs = f.quoteStrings;
+            var quote = typeof qs !== "boolean" || qs;
+            return processed || quote ? '"' + object + '"' : object;
+        }
+
+        if (typeof object === "function" && !(object instanceof RegExp)) {
+            return ascii.func(object);
+        }
+
+        processed = processed || [];
+
+        if (isCircular(object, processed)) { return "[Circular]"; }
+
+        if (Object.prototype.toString.call(object) === "[object Array]") {
+            return ascii.array.call(f, object, processed);
+        }
+
+        if (!object) { return String((1/object) === -Infinity ? "-0" : object); }
+        if (samsam.isElement(object)) { return ascii.element(object); }
+
+        if (typeof object.toString === "function" &&
+                object.toString !== Object.prototype.toString) {
+            return object.toString();
+        }
+
+        var i, l;
+        for (i = 0, l = specialObjects.length; i < l; i++) {
+            if (object === specialObjects[i].object) {
+                return specialObjects[i].value;
+            }
+        }
+
+        return ascii.object.call(f, object, processed, indent);
+    }
+
+    ascii.func = function (func) {
+        return "function " + functionName(func) + "() {}";
+    };
+
+    ascii.array = function (array, processed) {
+        processed = processed || [];
+        processed.push(array);
+        var pieces = [];
+        var i, l;
+        l = (this.limitChildrenCount > 0) ? 
+            Math.min(this.limitChildrenCount, array.length) : array.length;
+
+        for (i = 0; i < l; ++i) {
+            pieces.push(ascii(this, array[i], processed));
+        }
+
+        if(l < array.length)
+            pieces.push("[... " + (array.length - l) + " more elements]");
+
+        return "[" + pieces.join(", ") + "]";
+    };
+
+    ascii.object = function (object, processed, indent) {
+        processed = processed || [];
+        processed.push(object);
+        indent = indent || 0;
+        var pieces = [], properties = samsam.keys(object).sort();
+        var length = 3;
+        var prop, str, obj, i, k, l;
+        l = (this.limitChildrenCount > 0) ? 
+            Math.min(this.limitChildrenCount, properties.length) : properties.length;
+
+        for (i = 0; i < l; ++i) {
+            prop = properties[i];
+            obj = object[prop];
+
+            if (isCircular(obj, processed)) {
+                str = "[Circular]";
+            } else {
+                str = ascii(this, obj, processed, indent + 2);
+            }
+
+            str = (/\s/.test(prop) ? '"' + prop + '"' : prop) + ": " + str;
+            length += str.length;
+            pieces.push(str);
+        }
+
+        var cons = constructorName(this, object);
+        var prefix = cons ? "[" + cons + "] " : "";
+        var is = "";
+        for (i = 0, k = indent; i < k; ++i) { is += " "; }
+
+        if(l < properties.length)
+            pieces.push("[... " + (properties.length - l) + " more elements]");
+
+        if (length + indent > 80) {
+            return prefix + "{\n  " + is + pieces.join(",\n  " + is) + "\n" +
+                is + "}";
+        }
+        return prefix + "{ " + pieces.join(", ") + " }";
+    };
+
+    ascii.element = function (element) {
+        var tagName = element.tagName.toLowerCase();
+        var attrs = element.attributes, attr, pairs = [], attrName, i, l, val;
+
+        for (i = 0, l = attrs.length; i < l; ++i) {
+            attr = attrs.item(i);
+            attrName = attr.nodeName.toLowerCase().replace("html:", "");
+            val = attr.nodeValue;
+            if (attrName !== "contenteditable" || val !== "inherit") {
+                if (!!val) { pairs.push(attrName + "=\"" + val + "\""); }
+            }
+        }
+
+        var formatted = "<" + tagName + (pairs.length > 0 ? " " : "");
+        var content = element.innerHTML;
+
+        if (content.length > 20) {
+            content = content.substr(0, 20) + "[...]";
+        }
+
+        var res = formatted + pairs.join(" ") + ">" + content +
+                "</" + tagName + ">";
+
+        return res.replace(/ contentEditable="inherit"/, "");
+    };
+
+    function Formatio(options) {
+        for (var opt in options) {
+            this[opt] = options[opt];
+        }
+    }
+
+    Formatio.prototype = {
+        functionName: functionName,
+
+        configure: function (options) {
+            return new Formatio(options);
+        },
+
+        constructorName: function (object) {
+            return constructorName(this, object);
+        },
+
+        ascii: function (object, processed, indent) {
+            return ascii(this, object, processed, indent);
+        }
+    };
+
+    return Formatio.prototype;
+});
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"samsam":74}],74:[function(require,module,exports){
+((typeof define === "function" && define.amd && function (m) { define("samsam", m); }) ||
+ (typeof module === "object" &&
+      function (m) { module.exports = m(); }) || // Node
+ function (m) { this.samsam = m(); } // Browser globals
+)(function () {
+    var o = Object.prototype;
+    var div = typeof document !== "undefined" && document.createElement("div");
+
+    function isNaN(value) {
+        // Unlike global isNaN, this avoids type coercion
+        // typeof check avoids IE host object issues, hat tip to
+        // lodash
+        var val = value; // JsLint thinks value !== value is "weird"
+        return typeof value === "number" && value !== val;
+    }
+
+    function getClass(value) {
+        // Returns the internal [[Class]] by calling Object.prototype.toString
+        // with the provided value as this. Return value is a string, naming the
+        // internal class, e.g. "Array"
+        return o.toString.call(value).split(/[ \]]/)[1];
+    }
+
+    /**
+     * @name samsam.isArguments
+     * @param Object object
+     *
+     * Returns ``true`` if ``object`` is an ``arguments`` object,
+     * ``false`` otherwise.
+     */
+    function isArguments(object) {
+        if (getClass(object) === 'Arguments') { return true; }
+        if (typeof object !== "object" || typeof object.length !== "number" ||
+                getClass(object) === "Array") {
+            return false;
+        }
+        if (typeof object.callee == "function") { return true; }
+        try {
+            object[object.length] = 6;
+            delete object[object.length];
+        } catch (e) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @name samsam.isElement
+     * @param Object object
+     *
+     * Returns ``true`` if ``object`` is a DOM element node. Unlike
+     * Underscore.js/lodash, this function will return ``false`` if ``object``
+     * is an *element-like* object, i.e. a regular object with a ``nodeType``
+     * property that holds the value ``1``.
+     */
+    function isElement(object) {
+        if (!object || object.nodeType !== 1 || !div) { return false; }
+        try {
+            object.appendChild(div);
+            object.removeChild(div);
+        } catch (e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @name samsam.keys
+     * @param Object object
+     *
+     * Return an array of own property names.
+     */
+    function keys(object) {
+        var ks = [], prop;
+        for (prop in object) {
+            if (o.hasOwnProperty.call(object, prop)) { ks.push(prop); }
+        }
+        return ks;
+    }
+
+    /**
+     * @name samsam.isDate
+     * @param Object value
+     *
+     * Returns true if the object is a ``Date``, or *date-like*. Duck typing
+     * of date objects work by checking that the object has a ``getTime``
+     * function whose return value equals the return value from the object's
+     * ``valueOf``.
+     */
+    function isDate(value) {
+        return typeof value.getTime == "function" &&
+            value.getTime() == value.valueOf();
+    }
+
+    /**
+     * @name samsam.isNegZero
+     * @param Object value
+     *
+     * Returns ``true`` if ``value`` is ``-0``.
+     */
+    function isNegZero(value) {
+        return value === 0 && 1 / value === -Infinity;
+    }
+
+    /**
+     * @name samsam.equal
+     * @param Object obj1
+     * @param Object obj2
+     *
+     * Returns ``true`` if two objects are strictly equal. Compared to
+     * ``===`` there are two exceptions:
+     *
+     *   - NaN is considered equal to NaN
+     *   - -0 and +0 are not considered equal
+     */
+    function identical(obj1, obj2) {
+        if (obj1 === obj2 || (isNaN(obj1) && isNaN(obj2))) {
+            return obj1 !== 0 || isNegZero(obj1) === isNegZero(obj2);
+        }
+    }
+
+
+    /**
+     * @name samsam.deepEqual
+     * @param Object obj1
+     * @param Object obj2
+     *
+     * Deep equal comparison. Two values are "deep equal" if:
+     *
+     *   - They are equal, according to samsam.identical
+     *   - They are both date objects representing the same time
+     *   - They are both arrays containing elements that are all deepEqual
+     *   - They are objects with the same set of properties, and each property
+     *     in ``obj1`` is deepEqual to the corresponding property in ``obj2``
+     *
+     * Supports cyclic objects.
+     */
+    function deepEqualCyclic(obj1, obj2) {
+
+        // used for cyclic comparison
+        // contain already visited objects
+        var objects1 = [],
+            objects2 = [],
+        // contain pathes (position in the object structure)
+        // of the already visited objects
+        // indexes same as in objects arrays
+            paths1 = [],
+            paths2 = [],
+        // contains combinations of already compared objects
+        // in the manner: { "$1['ref']$2['ref']": true }
+            compared = {};
+
+        /**
+         * used to check, if the value of a property is an object
+         * (cyclic logic is only needed for objects)
+         * only needed for cyclic logic
+         */
+        function isObject(value) {
+
+            if (typeof value === 'object' && value !== null &&
+                    !(value instanceof Boolean) &&
+                    !(value instanceof Date)    &&
+                    !(value instanceof Number)  &&
+                    !(value instanceof RegExp)  &&
+                    !(value instanceof String)) {
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /**
+         * returns the index of the given object in the
+         * given objects array, -1 if not contained
+         * only needed for cyclic logic
+         */
+        function getIndex(objects, obj) {
+
+            var i;
+            for (i = 0; i < objects.length; i++) {
+                if (objects[i] === obj) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        // does the recursion for the deep equal check
+        return (function deepEqual(obj1, obj2, path1, path2) {
+            var type1 = typeof obj1;
+            var type2 = typeof obj2;
+
+            // == null also matches undefined
+            if (obj1 === obj2 ||
+                    isNaN(obj1) || isNaN(obj2) ||
+                    obj1 == null || obj2 == null ||
+                    type1 !== "object" || type2 !== "object") {
+
+                return identical(obj1, obj2);
+            }
+
+            // Elements are only equal if identical(expected, actual)
+            if (isElement(obj1) || isElement(obj2)) { return false; }
+
+            var isDate1 = isDate(obj1), isDate2 = isDate(obj2);
+            if (isDate1 || isDate2) {
+                if (!isDate1 || !isDate2 || obj1.getTime() !== obj2.getTime()) {
+                    return false;
+                }
+            }
+
+            if (obj1 instanceof RegExp && obj2 instanceof RegExp) {
+                if (obj1.toString() !== obj2.toString()) { return false; }
+            }
+
+            var class1 = getClass(obj1);
+            var class2 = getClass(obj2);
+            var keys1 = keys(obj1);
+            var keys2 = keys(obj2);
+
+            if (isArguments(obj1) || isArguments(obj2)) {
+                if (obj1.length !== obj2.length) { return false; }
+            } else {
+                if (type1 !== type2 || class1 !== class2 ||
+                        keys1.length !== keys2.length) {
+                    return false;
+                }
+            }
+
+            var key, i, l,
+                // following vars are used for the cyclic logic
+                value1, value2,
+                isObject1, isObject2,
+                index1, index2,
+                newPath1, newPath2;
+
+            for (i = 0, l = keys1.length; i < l; i++) {
+                key = keys1[i];
+                if (!o.hasOwnProperty.call(obj2, key)) {
+                    return false;
+                }
+
+                // Start of the cyclic logic
+
+                value1 = obj1[key];
+                value2 = obj2[key];
+
+                isObject1 = isObject(value1);
+                isObject2 = isObject(value2);
+
+                // determine, if the objects were already visited
+                // (it's faster to check for isObject first, than to
+                // get -1 from getIndex for non objects)
+                index1 = isObject1 ? getIndex(objects1, value1) : -1;
+                index2 = isObject2 ? getIndex(objects2, value2) : -1;
+
+                // determine the new pathes of the objects
+                // - for non cyclic objects the current path will be extended
+                //   by current property name
+                // - for cyclic objects the stored path is taken
+                newPath1 = index1 !== -1
+                    ? paths1[index1]
+                    : path1 + '[' + JSON.stringify(key) + ']';
+                newPath2 = index2 !== -1
+                    ? paths2[index2]
+                    : path2 + '[' + JSON.stringify(key) + ']';
+
+                // stop recursion if current objects are already compared
+                if (compared[newPath1 + newPath2]) {
+                    return true;
+                }
+
+                // remember the current objects and their pathes
+                if (index1 === -1 && isObject1) {
+                    objects1.push(value1);
+                    paths1.push(newPath1);
+                }
+                if (index2 === -1 && isObject2) {
+                    objects2.push(value2);
+                    paths2.push(newPath2);
+                }
+
+                // remember that the current objects are already compared
+                if (isObject1 && isObject2) {
+                    compared[newPath1 + newPath2] = true;
+                }
+
+                // End of cyclic logic
+
+                // neither value1 nor value2 is a cycle
+                // continue with next level
+                if (!deepEqual(value1, value2, newPath1, newPath2)) {
+                    return false;
+                }
+            }
+
+            return true;
+
+        }(obj1, obj2, '$1', '$2'));
+    }
+
+    var match;
+
+    function arrayContains(array, subset) {
+        if (subset.length === 0) { return true; }
+        var i, l, j, k;
+        for (i = 0, l = array.length; i < l; ++i) {
+            if (match(array[i], subset[0])) {
+                for (j = 0, k = subset.length; j < k; ++j) {
+                    if (!match(array[i + j], subset[j])) { return false; }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @name samsam.match
+     * @param Object object
+     * @param Object matcher
+     *
+     * Compare arbitrary value ``object`` with matcher.
+     */
+    match = function match(object, matcher) {
+        if (matcher && typeof matcher.test === "function") {
+            return matcher.test(object);
+        }
+
+        if (typeof matcher === "function") {
+            return matcher(object) === true;
+        }
+
+        if (typeof matcher === "string") {
+            matcher = matcher.toLowerCase();
+            var notNull = typeof object === "string" || !!object;
+            return notNull &&
+                (String(object)).toLowerCase().indexOf(matcher) >= 0;
+        }
+
+        if (typeof matcher === "number") {
+            return matcher === object;
+        }
+
+        if (typeof matcher === "boolean") {
+            return matcher === object;
+        }
+
+        if (typeof(matcher) === "undefined") {
+            return typeof(object) === "undefined";
+        }
+
+        if (matcher === null) {
+            return object === null;
+        }
+
+        if (getClass(object) === "Array" && getClass(matcher) === "Array") {
+            return arrayContains(object, matcher);
+        }
+
+        if (matcher && typeof matcher === "object") {
+            if (matcher === object) {
+                return true;
+            }
+            var prop;
+            for (prop in matcher) {
+                var value = object[prop];
+                if (typeof value === "undefined" &&
+                        typeof object.getAttribute === "function") {
+                    value = object.getAttribute(prop);
+                }
+                if (matcher[prop] === null || typeof matcher[prop] === 'undefined') {
+                    if (value !== matcher[prop]) {
+                        return false;
+                    }
+                } else if (typeof  value === "undefined" || !match(value, matcher[prop])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        throw new Error("Matcher was not a string, a number, a " +
+                        "function, a boolean or an object");
+    };
+
+    return {
+        isArguments: isArguments,
+        isElement: isElement,
+        isDate: isDate,
+        isNegZero: isNegZero,
+        identical: identical,
+        deepEqual: deepEqualCyclic,
+        match: match,
+        keys: keys
+    };
+});
+
+},{}],75:[function(require,module,exports){
+(function (global){
+/*jslint eqeqeq: false, plusplus: false, evil: true, onevar: false, browser: true, forin: false*/
+/*global global*/
+/**
+ * @author Christian Johansen (christian@cjohansen.no) and contributors
+ * @license BSD
+ *
+ * Copyright (c) 2010-2014 Christian Johansen
+ */
+"use strict";
+
+// node expects setTimeout/setInterval to return a fn object w/ .ref()/.unref()
+// browsers, a number.
+// see https://github.com/cjohansen/Sinon.JS/pull/436
+var timeoutResult = setTimeout(function() {}, 0);
+var addTimerReturnsObject = typeof timeoutResult === "object";
+clearTimeout(timeoutResult);
+
+var NativeDate = Date;
+var id = 1;
+
+/**
+ * Parse strings like "01:10:00" (meaning 1 hour, 10 minutes, 0 seconds) into
+ * number of milliseconds. This is used to support human-readable strings passed
+ * to clock.tick()
+ */
+function parseTime(str) {
+    if (!str) {
+        return 0;
+    }
+
+    var strings = str.split(":");
+    var l = strings.length, i = l;
+    var ms = 0, parsed;
+
+    if (l > 3 || !/^(\d\d:){0,2}\d\d?$/.test(str)) {
+        throw new Error("tick only understands numbers and 'h:m:s'");
+    }
+
+    while (i--) {
+        parsed = parseInt(strings[i], 10);
+
+        if (parsed >= 60) {
+            throw new Error("Invalid time " + str);
+        }
+
+        ms += parsed * Math.pow(60, (l - i - 1));
+    }
+
+    return ms * 1000;
+}
+
+/**
+ * Used to grok the `now` parameter to createClock.
+ */
+function getEpoch(epoch) {
+    if (!epoch) { return 0; }
+    if (typeof epoch.getTime === "function") { return epoch.getTime(); }
+    if (typeof epoch === "number") { return epoch; }
+    throw new TypeError("now should be milliseconds since UNIX epoch");
+}
+
+function inRange(from, to, timer) {
+    return timer && timer.callAt >= from && timer.callAt <= to;
+}
+
+function mirrorDateProperties(target, source) {
+    if (source.now) {
+        target.now = function now() {
+            return target.clock.now;
+        };
+    } else {
+        delete target.now;
+    }
+
+    if (source.toSource) {
+        target.toSource = function toSource() {
+            return source.toSource();
+        };
+    } else {
+        delete target.toSource;
+    }
+
+    target.toString = function toString() {
+        return source.toString();
+    };
+
+    target.prototype = source.prototype;
+    target.parse = source.parse;
+    target.UTC = source.UTC;
+    target.prototype.toUTCString = source.prototype.toUTCString;
+
+    for (var prop in source) {
+        if (source.hasOwnProperty(prop)) {
+            target[prop] = source[prop];
+        }
+    }
+
+    return target;
+}
+
+function createDate() {
+    function ClockDate(year, month, date, hour, minute, second, ms) {
+        // Defensive and verbose to avoid potential harm in passing
+        // explicit undefined when user does not pass argument
+        switch (arguments.length) {
+        case 0:
+            return new NativeDate(ClockDate.clock.now);
+        case 1:
+            return new NativeDate(year);
+        case 2:
+            return new NativeDate(year, month);
+        case 3:
+            return new NativeDate(year, month, date);
+        case 4:
+            return new NativeDate(year, month, date, hour);
+        case 5:
+            return new NativeDate(year, month, date, hour, minute);
+        case 6:
+            return new NativeDate(year, month, date, hour, minute, second);
+        default:
+            return new NativeDate(year, month, date, hour, minute, second, ms);
+        }
+    }
+
+    return mirrorDateProperties(ClockDate, NativeDate);
+}
+
+function addTimer(clock, timer) {
+    if (typeof timer.func === "undefined") {
+        throw new Error("Callback must be provided to timer calls");
+    }
+
+    if (!clock.timers) {
+        clock.timers = {};
+    }
+
+    timer.id = id++;
+    timer.createdAt = clock.now;
+    timer.callAt = clock.now + (timer.delay || 0);
+
+    clock.timers[timer.id] = timer;
+
+    if (addTimerReturnsObject) {
+        return {
+            id: timer.id,
+            ref: function() {},
+            unref: function() {}
+        };
+    }
+    else {
+        return timer.id;
+    }
+}
+
+function firstTimerInRange(clock, from, to) {
+    var timers = clock.timers, timer = null;
+
+    for (var id in timers) {
+        if (!inRange(from, to, timers[id])) {
+            continue;
+        }
+
+        if (!timer || ~compareTimers(timer, timers[id])) {
+            timer = timers[id];
+        }
+    }
+
+    return timer;
+}
+
+function compareTimers(a, b) {
+    // Sort first by absolute timing
+    if (a.callAt < b.callAt) {
+        return -1;
+    }
+    if (a.callAt > b.callAt) {
+        return 1;
+    }
+
+    // Sort next by immediate, immediate timers take precedence
+    if (a.immediate && !b.immediate) {
+        return -1;
+    }
+    if (!a.immediate && b.immediate) {
+        return 1;
+    }
+
+    // Sort next by creation time, earlier-created timers take precedence
+    if (a.createdAt < b.createdAt) {
+        return -1;
+    }
+    if (a.createdAt > b.createdAt) {
+        return 1;
+    }
+
+    // Sort next by id, lower-id timers take precedence
+    if (a.id < b.id) {
+        return -1;
+    }
+    if (a.id > b.id) {
+        return 1;
+    }
+
+    // As timer ids are unique, no fallback `0` is necessary
+}
+
+function callTimer(clock, timer) {
+    if (typeof timer.interval == "number") {
+        clock.timers[timer.id].callAt += timer.interval;
+    } else {
+        delete clock.timers[timer.id];
+    }
+
+    try {
+        if (typeof timer.func == "function") {
+            timer.func.apply(null, timer.args);
+        } else {
+            eval(timer.func);
+        }
+    } catch (e) {
+        var exception = e;
+    }
+
+    if (!clock.timers[timer.id]) {
+        if (exception) {
+            throw exception;
+        }
+        return;
+    }
+
+    if (exception) {
+        throw exception;
+    }
+}
+
+function uninstall(clock, target) {
+    var method;
+
+    for (var i = 0, l = clock.methods.length; i < l; i++) {
+        method = clock.methods[i];
+
+        if (target[method].hadOwnProperty) {
+            target[method] = clock["_" + method];
+        } else {
+            try {
+                delete target[method];
+            } catch (e) {}
+        }
+    }
+
+    // Prevent multiple executions which will completely remove these props
+    clock.methods = [];
+}
+
+function hijackMethod(target, method, clock) {
+    clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(target, method);
+    clock["_" + method] = target[method];
+
+    if (method == "Date") {
+        var date = mirrorDateProperties(clock[method], target[method]);
+        target[method] = date;
+    } else {
+        target[method] = function () {
+            return clock[method].apply(clock, arguments);
+        };
+
+        for (var prop in clock[method]) {
+            if (clock[method].hasOwnProperty(prop)) {
+                target[method][prop] = clock[method][prop];
+            }
+        }
+    }
+
+    target[method].clock = clock;
+}
+
+var timers = {
+    setTimeout: setTimeout,
+    clearTimeout: clearTimeout,
+    setImmediate: (typeof setImmediate !== "undefined" ? setImmediate : undefined),
+    clearImmediate: (typeof clearImmediate !== "undefined" ? clearImmediate: undefined),
+    setInterval: setInterval,
+    clearInterval: clearInterval,
+    Date: Date
+};
+
+var keys = Object.keys || function (obj) {
+    var ks = [];
+    for (var key in obj) {
+        ks.push(key);
+    }
+    return ks;
+};
+
+exports.timers = timers;
+
+var createClock = exports.createClock = function (now) {
+    var clock = {
+        now: getEpoch(now),
+        timeouts: {},
+        Date: createDate()
+    };
+
+    clock.Date.clock = clock;
+
+    clock.setTimeout = function setTimeout(func, timeout) {
+        return addTimer(clock, {
+            func: func,
+            args: Array.prototype.slice.call(arguments, 2),
+            delay: timeout
+        });
+    };
+
+    clock.clearTimeout = function clearTimeout(timerId) {
+        if (!timerId) {
+            // null appears to be allowed in most browsers, and appears to be
+            // relied upon by some libraries, like Bootstrap carousel
+            return;
+        }
+        if (!clock.timers) {
+            clock.timers = [];
+        }
+        // in Node, timerId is an object with .ref()/.unref(), and
+        // its .id field is the actual timer id.
+        if (typeof timerId === "object") {
+            timerId = timerId.id
+        }
+        if (timerId in clock.timers) {
+            delete clock.timers[timerId];
+        }
+    };
+
+    clock.setInterval = function setInterval(func, timeout) {
+        return addTimer(clock, {
+            func: func,
+            args: Array.prototype.slice.call(arguments, 2),
+            delay: timeout,
+            interval: timeout
+        });
+    };
+
+    clock.clearInterval = function clearInterval(timerId) {
+        clock.clearTimeout(timerId);
+    };
+
+    clock.setImmediate = function setImmediate(func) {
+        return addTimer(clock, {
+            func: func,
+            args: Array.prototype.slice.call(arguments, 1),
+            immediate: true
+        });
+    };
+
+    clock.clearImmediate = function clearImmediate(timerId) {
+        clock.clearTimeout(timerId);
+    };
+
+    clock.tick = function tick(ms) {
+        ms = typeof ms == "number" ? ms : parseTime(ms);
+        var tickFrom = clock.now, tickTo = clock.now + ms, previous = clock.now;
+        var timer = firstTimerInRange(clock, tickFrom, tickTo);
+
+        var firstException;
+        while (timer && tickFrom <= tickTo) {
+            if (clock.timers[timer.id]) {
+                tickFrom = clock.now = timer.callAt;
+                try {
+                    callTimer(clock, timer);
+                } catch (e) {
+                    firstException = firstException || e;
+                }
+            }
+
+            timer = firstTimerInRange(clock, previous, tickTo);
+            previous = tickFrom;
+        }
+
+        clock.now = tickTo;
+
+        if (firstException) {
+            throw firstException;
+        }
+
+        return clock.now;
+    };
+
+    clock.reset = function reset() {
+        clock.timers = {};
+    };
+
+    return clock;
+};
+
+exports.install = function install(target, now, toFake) {
+    if (typeof target === "number") {
+        toFake = now;
+        now = target;
+        target = null;
+    }
+
+    if (!target) {
+        target = global;
+    }
+
+    var clock = createClock(now);
+
+    clock.uninstall = function () {
+        uninstall(clock, target);
+    };
+
+    clock.methods = toFake || [];
+
+    if (clock.methods.length === 0) {
+        clock.methods = keys(timers);
+    }
+
+    for (var i = 0, l = clock.methods.length; i < l; i++) {
+        hijackMethod(target, clock.methods[i], clock);
+    }
+
+    return clock;
+};
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],76:[function(require,module,exports){
 //     Underscore.js 1.7.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -11016,7 +26269,7 @@ process.umask = function() { return 0; };
   }
 }.call(this));
 
-},{}],48:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 var Model = require("./model");
 var utils = require("./utils");
 var dataAgent = require('./dataAgent');
@@ -11048,7 +26301,7 @@ Config.prototype.init = function(config, cb) {
         //load hard coded static config first
         self.staticConfig(config);
         //attempt to load config from mbaas then local storage.
-        self.refresh(true, cb);
+        self.refresh(false, cb);
     }
 };
 Config.prototype.isStudioMode = function() {
@@ -11095,7 +26348,12 @@ Config.prototype.refresh = function(fromRemote, cb) {
             log.e("Config loadLocal ", err);
         }
 
-        dataAgent.refreshRead(self, _handler);
+        if(fromRemote){
+            dataAgent.refreshRead(self, _handler);
+        } else {
+            cb(err, self);
+        }
+        
     });
 };
 Config.prototype.getCloudHost = function() {
@@ -11172,7 +26430,7 @@ module.exports = getConfig();
 
 
 
-},{"../libs/appProps":2,"../libs/constants.js":3,"../libs/device":4,"../libs/waitForCloud":6,"./dataAgent":49,"./log":68,"./model":69,"./utils":78,"underscore":47}],49:[function(require,module,exports){
+},{"../libs/appProps":2,"../libs/constants.js":3,"../libs/device":4,"../libs/waitForCloud":6,"./dataAgent":78,"./log":81,"./model":82,"./utils":85,"underscore":76}],78:[function(require,module,exports){
 var storeMbaas = require("./storeMbaas");
 var localStorage = require("./localStorage");
 var utils = require("./utils");
@@ -11296,765 +26554,7 @@ DataAgent.checkOnlineStatus = function(cb) {
 
 module.exports = DataAgent;
 
-},{"./config":48,"./localStorage":67,"./log":68,"./store":72,"./storeMbaas":73,"./utils":78}],50:[function(require,module,exports){
-/**
- * Field model for form
- * @param  {[type]} module [description]
- * @return {[type]}        [description]
- */
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-var utils = require("./utils");
-var fieldCheckboxes = require("./fieldCheckboxes");
-var fieldFile = require("./fieldFile");
-var fieldImage = require("./fieldImage");
-var fieldLocation = require("./fieldLocation");
-var fieldMatrix = require("./fieldMatrix");
-var fieldRadio = require("./fieldRadio");
-
-function Field(opt, form) {
-    opt = opt || {};
-    if (opt) {
-        this.fromJSON(opt);
-        this.getLocalId();
-    }
-    if (form) {
-        this.form = form;
-    }
-}
-
-utils.extend(Field, Model);
-utils.extend(Field, fieldCheckboxes);
-utils.extend(Field, fieldFile);
-utils.extend(Field, fieldLocation);
-utils.extend(Field, fieldMatrix);
-utils.extend(Field, fieldRadio);
-utils.extend(Field, fieldImage);
-
-Field.prototype.isRequired = function() {
-    return this.get('required');
-};
-Field.prototype.getFieldValidation = function() {
-    return this.getFieldOptions().validation || {};
-};
-Field.prototype.getFieldDefinition = function() {
-    return this.getFieldOptions().definition || {};
-};
-Field.prototype.getMinRepeat = function() {
-    var def = this.getFieldDefinition();
-    return def.minRepeat || 1;
-};
-Field.prototype.getMaxRepeat = function() {
-    var def = this.getFieldDefinition();
-    return def.maxRepeat || 1;
-};
-Field.prototype.getFieldOptions = function() {
-    return this.get('fieldOptions', {
-        'validation': {},
-        'definition': {}
-    });
-};
-Field.prototype.getPhotoOptions = function() {
-    var photoOptions = {
-        "targetWidth": null,
-        "targetHeight": null,
-        "quality": null,
-        "saveToPhotoAlbum": null,
-        "pictureSource": null,
-        "encodingType": null
-    };
-
-    var fieldDef = this.getFieldDefinition();
-    photoOptions.targetWidth = fieldDef.photoWidth;
-    photoOptions.targetHeight = fieldDef.photoHeight;
-    photoOptions.quality = fieldDef.photoQuality;
-    photoOptions.saveToPhotoAlbum = fieldDef.saveToPhotoAlbum;
-    photoOptions.pictureSource = fieldDef.photoSource;
-    photoOptions.encodingType = fieldDef.photoType;
-
-    return photoOptions;
-};
-Field.prototype.isRepeating = function() {
-    return this.get('repeating', false);
-};
-/**
- * retrieve field type.
- * @return {[type]} [description]
- */
-Field.prototype.getType = function() {
-    return this.get('type', 'text');
-};
-
-Field.prototype.setType = function(type) {
-    return this.set('type', type || 'text');
-};
-
-Field.prototype.getFieldId = function() {
-    return this.get('_id', '');
-};
-Field.prototype.getName = function() {
-    return this.get('name', 'unknown');
-};
-
-Field.prototype.getCode = function() {
-    return this.get('fieldCode', null);
-};
-Field.prototype.getHelpText = function() {
-    return this.get('helpText', '');
-};
-
-/**
- * return default value for a field
- *
- */
-Field.prototype.getDefaultValue = function() {
-    var def = this.getFieldDefinition();
-    if (def) {
-        return def.defaultValue;
-    }
-    return "";
-};
-
-Field.prototype.isAdminField = function() {
-    return this.get("adminOnly");
-};
-
-
-/**
- * Process an input value. convert to submission format. run Field.prototype.validate before this
- * @param  {[type]} params {"value", "isStore":optional}
- * @param {cb} cb(err,res)
- * @return {[type]}           submission json used for fieldValues for the field
- */
-Field.prototype.processInput = function(params, cb) {
-    var type = this.getType();
-    var processorName = 'process_' + type;
-    var inputValue = params.value;
-    if (typeof inputValue === 'undefined' || inputValue === null) {
-        //if user input is empty, keep going.
-        return cb(null, inputValue);
-    }
-    // try to find specified processor
-    if (this[processorName] && typeof this[processorName] === 'function') {
-        this[processorName](params, cb);
-    } else {
-        cb(null, inputValue);
-    }
-};
-/**
- * Convert the submission value back to input value.
- * @param  {[type]} submissionValue [description]
- * @param { function} cb callback
- * @return {[type]}                 [description]
- */
-Field.prototype.convertSubmission = function(submissionValue, cb) {
-    var type = this.getType();
-    var processorName = 'convert_' + type;
-    // try to find specified processor
-    if (this[processorName] && typeof this[processorName] === 'function') {
-        this[processorName](submissionValue, cb);
-    } else {
-        cb(null, submissionValue);
-    }
-};
-/**
- * validate an input with this Field.prototype.
- * @param  {[type]} inputValue [description]
- * @return true / error message
- */
-Field.prototype.validate = function(inputValue, inputValueIndex, cb) {
-    if (typeof(inputValueIndex) === 'function') {
-        cb = inputValueIndex;
-        inputValueIndex = 0;
-    }
-    this.form.getRuleEngine().validateFieldValue(this.getFieldId(), inputValue, inputValueIndex, cb);
-};
-/**
- * return rule array attached to this Field.prototype.
- * @return {[type]} [description]
- */
-Field.prototype.getRules = function() {
-    var id = this.getFieldId();
-    return this.form.getRulesByFieldId(id);
-};
-Field.prototype.setVisible = function(isVisible) {
-    this.set('visible', isVisible);
-    if (isVisible) {
-        this.emit('visible');
-    } else {
-        this.emit('hidden');
-    }
-};
-
-module.exports = Field;
-
-},{"./config":48,"./fieldCheckboxes":51,"./fieldFile":52,"./fieldImage":53,"./fieldLocation":54,"./fieldMatrix":55,"./fieldRadio":56,"./log":68,"./model":69,"./utils":78}],51:[function(require,module,exports){
-/**
- * extension of Field class to support checkbox field
- */
-
-function getCheckBoxOptions() {
-    var def = this.getFieldDefinition();
-    if (def.options) {
-        return def.options;
-    } else {
-        throw 'checkbox choice definition is not found in field definition';
-    }
-}
-
-function process_checkboxes(params, cb) {
-    var inputValue = params.value;
-    if (!inputValue || !inputValue.selections || !(inputValue.selections instanceof Array)) {
-        cb('the input value for processing checkbox field should be like {selections: [val1,val2]}');
-    } else {
-        cb(null, inputValue);
-    }
-}
-
-function convert_checkboxes(value, cb) {
-    var rtn = [];
-    for (var i = 0; i < value.length; i++) {
-        rtn.push(value[i].selections);
-    }
-    cb(null, rtn);
-}
-
-module.exports = {
-    prototype: {
-        getCheckBoxOptions: getCheckBoxOptions,
-        process_checkboxes: process_checkboxes,
-        convert_checkboxes: convert_checkboxes
-    }
-};
-},{}],52:[function(require,module,exports){
-/**
- * extension of Field class to support file field
- */
-var Model = require("./model.js");
-var log = require("./log.js");
-var config = require("./config.js");
-var localStorage = require("./localStorage.js");
-var utils = require('./utils.js');
-
-function checkFileObj(obj) {
-    return obj.fileName && obj.fileType && obj.hashName;
-}
-
-function process_file(params, cb) {
-    var inputValue = params.value;
-    var isStore = params.isStore === undefined ? true : params.isStore;
-    var lastModDate = new Date().getTime();
-    var previousFile = params.previousFile || {};
-    var hashName = null;
-    if (typeof inputValue === 'undefined' || inputValue === null) {
-        return cb("No input value to process_file", null);
-    }
-
-    function getFileType(fileType, fileNameString) {
-        fileType = fileType || "";
-        fileNameString = fileNameString || "";
-
-        //The type if file is already known. No need to parse it out.
-        if (fileType.length > 0) {
-            return fileType;
-        }
-
-        //Camera does not sent file type. Have to parse it from the file name.
-        if (fileNameString.indexOf(".png") > -1) {
-            return "image/png";
-        } else if (fileNameString.indexOf(".jpg") > -1) {
-            return "image/jpeg";
-        } else {
-            return "application/octet-stream";
-        }
-    }
-
-    function getFileName(fileNameString, filePathString) {
-        fileNameString = fileNameString || "";
-        if (fileNameString.length > 0) {
-            return fileNameString;
-        } else {
-            //Need to extract the name from the file path
-            var indexOfName = filePathString.lastIndexOf("/");
-            if (indexOfName > -1) {
-                return filePathString.slice(indexOfName);
-            } else {
-                return null;
-            }
-        }
-    }
-
-    var file = inputValue;
-    if (inputValue instanceof HTMLInputElement) {
-        file = inputValue.files[0] || {}; // 1st file only, not support many files yet.
-    }
-
-    if (typeof(file.lastModifiedDate) === 'undefined') {
-        lastModDate = utils.getTime().getTime();
-    }
-
-    if (file.lastModifiedDate instanceof Date) {
-        lastModDate = file.lastModifiedDate.getTime();
-    }
-
-    var fileName = getFileName(file.name || file.fileName, file.fullPath);
-
-    var fileType = getFileType(file.type || file.fileType, fileName);
-
-    //Placeholder files do not have a file type. It inherits from previous types
-    if (fileName === null && !previousFile.fileName) {
-        return cb("Expected picture to be PNG or JPEG but was null");
-    }
-
-    if (previousFile.hashName) {
-        if (fileName === previousFile.hashName || file.hashName === previousFile.hashName) {
-            //Submitting an existing file already saved, no need to save.
-            return cb(null, previousFile);
-        }
-    }
-
-    var rtnJSON = {
-        'fileName': fileName,
-        'fileSize': file.size,
-        'fileType': fileType,
-        'fileUpdateTime': lastModDate,
-        'hashName': '',
-        'imgHeader': '',
-        'contentType': 'binary'
-    };
-
-    //The file to be submitted is new
-    previousFile = rtnJSON;
-
-    var name = fileName + new Date().getTime() + Math.ceil(Math.random() * 100000);
-    utils.md5(name, function(err, res) {
-        hashName = res;
-        if (err) {
-            hashName = name;
-        }
-        hashName = 'filePlaceHolder' + hashName;
-
-        if (fileName.length === 0) {
-            previousFile.fileName = hashName;
-        }
-
-        previousFile.hashName = hashName;
-        if (isStore) {
-            localStorage.saveFile(hashName, file, function(err, res) {
-                if (err) {
-                    log.e(err);
-                    cb(err);
-                } else {
-                    cb(null, previousFile);
-                }
-            });
-        } else {
-            cb(null, previousFile);
-        }
-    });
-}
-
-module.exports = {
-    prototype: {
-        checkFileObj: checkFileObj,
-        process_file: process_file
-    }
-
-};
-},{"./config.js":48,"./localStorage.js":67,"./log.js":68,"./model.js":69,"./utils.js":78}],53:[function(require,module,exports){
-/**
- * extension of Field class to support file field
- */
-
-var localStorage = require("./localStorage.js");
-var fileSystem = require("./fileSystem.js");
-var log = require("./log.js");
-var config = require("./config.js");
-var async = require("async");
-var _ = require("underscore");
-
-function imageProcess(params, cb) {
-    var self = this;
-    var inputValue = params.value;
-    var isStore = params.isStore === undefined ? true : params.isStore;
-    var previousFile = params.previousFile || {};
-    if (typeof(inputValue) !== "string") {
-        return cb("Expected base64 string image or file URI but parameter was not a string", null);
-    }
-
-    //Input value can be either a base64 String or file uri, the behaviour of upload will change accordingly.
-
-    if (inputValue.length < 1) {
-        return cb("Expected base64 string or file uri but got string of lenght 0:  " + inputValue, null);
-    }
-
-    if (inputValue.indexOf(";base64,") > -1) {
-        var imgName = '';
-        var dataArr = inputValue.split(';base64,');
-        var imgType = dataArr[0].split(':')[1];
-        var extension = imgType.split('/')[1];
-        var size = inputValue.length;
-        genImageName(function(err, n) {
-            imgName = previousFile.hashName ? previousFile.hashName : 'filePlaceHolder' + n;
-            //TODO Abstract this out
-            var meta = {
-                'fileName': imgName + '.' + extension,
-                'hashName': imgName,
-                'contentType': 'base64',
-                'fileSize': size,
-                'fileType': imgType,
-                'imgHeader': 'data:' + imgType + ';base64,',
-                'fileUpdateTime': new Date().getTime()
-            };
-            if (isStore) {
-                localStorage.updateTextFile(imgName, dataArr[1], function(err, res) {
-                    if (err) {
-                        log.e(err);
-                        cb(err);
-                    } else {
-                        cb(null, meta);
-                    }
-                });
-            } else {
-                cb(null, meta);
-            }
-        });
-    } else {
-        //Image is a file uri, the file needs to be saved as a file.
-        //Can use the process_file function to do this.
-        //Need to read the file as a file first
-        fileSystem.readAsFile(inputValue, function(err, file) {
-            if (err) {
-                return cb(err);
-            }
-
-            params.value = file;
-            self.process_file(params, cb);
-        });
-    }
-}
-
-function genImageName(cb) {
-    var name = new Date().getTime() + '' + Math.ceil(Math.random() * 100000);
-    utils.md5(name, cb);
-}
-
-//TODO - Dont make functions here!
-function convertImage(value, cb) {
-    async.map(value || [], function(meta, cb) {
-        _loadImage(meta, function() {
-            cb(null, value);
-        });
-    }, cb);
-}
-
-//An image can be either a base64 image or a binary image.
-//If base64, need to load the data as text.
-//If binary, just need to load the file uri.
-function _loadImage(meta, cb) {
-    if (meta) {
-
-        /**
-         * If the file already contains a local uri, then no need to load it.
-         */
-        if (meta.localURI) {
-            return cb(null, meta);
-        }
-
-        var name = meta.hashName;
-        if (meta.contentType === "base64") {
-            localStorage.readFileText(name, function(err, text) {
-                if (err) {
-                    log.e(err);
-                }
-                meta.data = text;
-                cb(err, meta);
-            });
-        } else if (meta.contentType === "binary") {
-            localStorage.readFile(name, function(err, file) {
-                if (err) {
-                    log.e("Error reading file " + name, err);
-                }
-
-                if (file && file.fullPath) {
-                    meta.data = file.fullPath;
-                } else {
-                    meta.data = "file-not-found";
-                }
-
-                cb(err, meta);
-            });
-        } else {
-            log.e("Error load image with invalid meta" + meta.contentType);
-        }
-    } else {
-        cb(null, meta);
-    }
-}
-
-module.exports = {
-    prototype: {
-        process_signature: imageProcess,
-        convert_signature: convertImage,
-        process_photo: imageProcess,
-        convert_photo: convertImage
-    }
-
-};
-},{"./config.js":48,"./fileSystem.js":60,"./localStorage.js":67,"./log.js":68,"async":7,"underscore":47}],54:[function(require,module,exports){
-    /**
-     * extension of Field class to support latitude longitude field
-     */
-
-    var Model = require("./model");
-    var log = require("./log");
-    var config = require("./config");
-
-    function process_location(params, cb) {
-        var inputValue = params.value;
-        var def = this.getFieldDefinition();
-        var obj = {};
-        switch (def.locationUnit) {
-            case 'latlong':
-                if (!inputValue.lat || !inputValue.long) {
-                    cb('the input values for latlong field is {lat: number, long: number}');
-                } else {
-                    obj = {
-                        'lat': inputValue.lat,
-                        'long': inputValue.long
-                    };
-                    cb(null, obj);
-                }
-                break;
-            case 'eastnorth':
-                if (!inputValue.zone || !inputValue.eastings || !inputValue.northings) {
-                    cb('the input values for northeast field is {zone: text, eastings: text, northings:text}');
-                } else {
-                    obj = {
-                        'zone': inputValue.zone,
-                        'eastings': inputValue.eastings,
-                        'northings': inputValue.northings
-                    };
-                    cb(null, obj);
-                }
-                break;
-            default:
-                cb('Invalid subtype type of location field, allowed types: latlong and eastnorth, was: ' + def.locationUnit);
-                break;
-        }
-    }
-
-    module.exports = {
-        prototype: {
-            process_location: process_location
-        }
-    };
-},{"./config":48,"./log":68,"./model":69}],55:[function(require,module,exports){
-/**
- * extension of Field class to support matrix field
- */
-
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-
-function getMatrixRows() {
-    var def = this.getFieldDefinition();
-    if (def.rows) {
-        return def.rows;
-    } else {
-        log.e('matrix rows definition is not found in field definition');
-        return null;
-    }
-}
-
-function getMatrixCols() {
-    var def = this.getFieldDefinition();
-    if (def.columns) {
-        return def.columns;
-    } else {
-        log.e('matrix columns definition is not found in field definition');
-        return null;
-    }
-}
-
-module.exports = {
-    prototype: {
-        getMatrixRows: getMatrixRows,
-        getMatrixCols: getMatrixCols
-    }
-};
-},{"./config":48,"./log":68,"./model":69}],56:[function(require,module,exports){
-/**
- * extension of Field class to support radio field
- */
-
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-
-function getRadioOption() {
-    var def = this.getFieldDefinition();
-    if (def.options) {
-        return def.options;
-    } else {
-        log.e('Radio options definition is not found in field definition');
-    }
-}
-
-module.exports = {
-    prototype: {
-        getRadioOption: getRadioOption
-    }
-};
-},{"./config":48,"./log":68,"./model":69}],57:[function(require,module,exports){
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-var localStorage = require("./localStorage");
-var utils = require("./utils");
-
-function FileSubmission(fileData) {
-    log.d("FileSubmission ", fileData);
-    Model.call(this, {
-        '_type': 'fileSubmission',
-        'data': fileData
-    });
-}
-
-utils.extend(FileSubmission, Model);
-
-FileSubmission.prototype.loadFile = function(cb) {
-    log.d("FileSubmission loadFile");
-    var fileName = this.getHashName();
-    var that = this;
-    localStorage.readFile(fileName, function(err, file) {
-        if (err) {
-            log.e("FileSubmission loadFile. Error reading file", fileName, err);
-            cb(err);
-        } else {
-            log.d("FileSubmission loadFile. File read correctly", fileName, file);
-            that.fileObj = file;
-            cb(null);
-        }
-    });
-};
-FileSubmission.prototype.getProps = function() {
-    if (this.fileObj) {
-        log.d("FileSubmissionDownload: file object found");
-        return this.fileObj;
-    } else {
-        log.e("FileSubmissionDownload: no file object found");
-    }
-};
-FileSubmission.prototype.setSubmissionId = function(submissionId) {
-    log.d("FileSubmission setSubmissionId.", submissionId);
-    this.set('submissionId', submissionId);
-};
-FileSubmission.prototype.getSubmissionId = function() {
-    return this.get('submissionId');
-};
-FileSubmission.prototype.getHashName = function() {
-    return this.get('data').hashName;
-};
-FileSubmission.prototype.getFieldId = function() {
-    return this.get('data').fieldId;
-};
-
-module.exports = FileSubmission;
-
-},{"./config":48,"./localStorage":67,"./log":68,"./model":69,"./utils":78}],58:[function(require,module,exports){
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-var localStorage = require("./localStorage");
-var FileSubmission = require("./fileSubmission");
-var utils = require("./utils");
-
-function Base64FileSubmission(fileData) {
-    FileSubmission.call(this, fileData);
-    this.set('_type', 'base64fileSubmission');
-}
-
-utils.extend(Base64FileSubmission, Model);
-
-module.exports = Base64FileSubmission;
-
-},{"./config":48,"./fileSubmission":57,"./localStorage":67,"./log":68,"./model":69,"./utils":78}],59:[function(require,module,exports){
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-var localStorage = require("./localStorage");
-var FileSubmission = require("./fileSubmission");
-var utils = require("./utils");
-
-
-function FileSubmissionDownload(fileData) {
-    log.d("FileSubmissionDownload ", fileData);
-    Model.call(this, {
-        '_type': 'fileSubmissionDownload',
-        'data': fileData
-    });
-}
-
-utils.extend(FileSubmissionDownload, Model);
-
-FileSubmissionDownload.prototype.setSubmissionId = function(submissionId) {
-    log.d("FileSubmission setSubmissionId.", submissionId);
-    this.set('submissionId', submissionId);
-};
-FileSubmissionDownload.prototype.getSubmissionId = function() {
-    log.d("FileSubmission getSubmissionId: ", this.get('submissionId'));
-    return this.get('submissionId', "");
-};
-FileSubmissionDownload.prototype.getHashName = function() {
-    log.d("FileSubmission getHashName: ", this.get('data').hashName);
-    return this.get('data', {}).hashName;
-};
-FileSubmissionDownload.prototype.getFieldId = function() {
-    log.d("FileSubmission getFieldId: ", this.get('data').fieldId);
-    return this.get('data', {}).fieldId;
-};
-FileSubmissionDownload.prototype.getFileMetaData = function() {
-    log.d("FileSubmission getFileMetaData: ", this.get('data'));
-    if (this.get('data')) {
-        log.d("FileSubmission getFileMetaData: data found", this.get('data'));
-    } else {
-        log.e("FileSubmission getFileMetaData: No data found");
-    }
-    return this.get('data', {});
-};
-FileSubmissionDownload.prototype.getFileGroupId = function() {
-    log.d("FileSubmission getFileGroupId: ", this.get('data'));
-    return this.get('data', {}).groupId || "notset";
-};
-FileSubmissionDownload.prototype.getRemoteFileURL = function() {
-    var self = this;
-    log.d("FileSubmission getRemoteFileURL: ");
-
-    //RemoteFileUrl = cloudHost + /mbaas/forms/submission/:submissionId/file/:fileGroupId
-    //Returned by the mbaas.
-    function buildRemoteFileUrl() {
-        var submissionId = self.getSubmissionId();
-        var fileGroupId = self.getFileGroupId();
-        var urlTemplate = config.get('formUrls', {}).fileSubmissionDownload;
-        if (urlTemplate) {
-            urlTemplate = urlTemplate.replace(":submissionId", submissionId);
-            urlTemplate = urlTemplate.replace(":fileGroupId", fileGroupId);
-            urlTemplate = urlTemplate.replace(":appId", config.get('appId', "notSet"));
-            return config.getCloudHost() + "/mbaas" + urlTemplate;
-        } else {
-            return "notset";
-        }
-    }
-
-    return buildRemoteFileUrl();
-};
-
-module.exports = FileSubmissionDownload;
-
-},{"./config":48,"./fileSubmission":57,"./localStorage":67,"./log":68,"./model":69,"./utils":78}],60:[function(require,module,exports){
+},{"./config":77,"./localStorage":80,"./log":81,"./store":83,"./storeMbaas":84,"./utils":85}],79:[function(require,module,exports){
 var utils = require("./utils");
 var async = require('async');
 
@@ -12422,466 +26922,7 @@ module.exports = {
     fileToBase64: fileToBase64,
     getBasePath: getBasePath
 };
-},{"./utils":78,"async":7}],61:[function(require,module,exports){
-var Page = require("./page");
-var Field = require("./field");
-var RulesEngine = require("./rulesEngine");
-var utils = require("./utils");
-var log = require("./log");
-var submission = require("./submission");
-var Model = require("./model");
-var forms = require("./forms");
-var _ = require('underscore');
-
-var _forms = {};
-//cache of all forms. single instance for 1 formid
-/**
- * [Form description]
- * @param {[type]}   params  {formId: string, fromRemote:boolean(false), rawMode:false, rawData:JSON}
- * @param {Function} cb         [description]
- */
-function Form(params, cb) {
-    var that = this;
-    var rawMode = params.rawMode || false;
-    var rawData = params.rawData || null;
-    var formId = params.formId;
-    var fromRemote = params.fromRemote;
-    log.d("Form: ", rawMode, rawData, formId, fromRemote);
-
-    if (typeof fromRemote === 'function' || typeof cb === 'function') {
-        if (typeof fromRemote === 'function') {
-            cb = fromRemote;
-            fromRemote = false;
-        }
-    } else {
-        return log.e('A callback function is required for initialising form data. new Form (formId, [isFromRemote], cb)');
-    }
-
-    if (!formId) {
-        return cb('Cannot initialise a form object without an id. id:' + formId, null);
-    }
-
-    that.set('_id', formId);
-    that.set('_type', 'form');
-    that.setRemoteId(formId);
-    that.getLocalId();
-
-    function loadFromLocal() {
-        log.d("Form: loadFromLocal ", rawMode, rawData, formId, fromRemote);
-        if (_forms[formId]) {
-            //found form object in mem return it.
-            cb(null, _forms[formId]);
-            return _forms[formId];
-        }
-
-        function processRawFormJSON() {
-            that.fromJSON(rawData);
-            that.initialise();
-
-            _forms[that.getFormId()] = that;
-            return cb(null, that);
-        }
-
-        if (rawData) {
-            return processRawFormJSON();
-        } else {
-
-            /**
-             * No Form JSON object to process into Models, load the form from local
-             * storage.
-             */
-            that.refresh(false, function(err, form) {
-                if (err) {
-                    return cb(err);
-                }
-
-                form.initialise();
-
-                _forms[formId] = form;
-                return cb(null, form);
-            });
-        }
-    }
-
-
-    function loadFromRemote() {
-        log.d("Form: loadFromRemote", rawMode, rawData, formId, fromRemote);
-
-        function checkForUpdate(form) {
-            log.d("Form: checkForUpdate", rawMode, rawData, formId, fromRemote);
-            form.refresh(false, function(err, obj) {
-                if (err) {
-                    log.e("Error refreshing form from local: ", err);
-                }
-                if (forms.isFormUpdated(form)) {
-                    form.refresh(true, function(err, obj1) {
-                        if (err) {
-                            return cb(err, null);
-                        }
-                        form.initialise();
-
-                        _forms[formId] = obj1;
-                        return cb(err, obj1);
-                    });
-                } else {
-                    form.initialise();
-                    _forms[formId] = obj;
-                    cb(err, obj);
-                }
-            });
-        }
-
-        if (_forms[formId]) {
-            log.d("Form: loaded from cache", rawMode, rawData, formId, fromRemote);
-            //found form object in mem return it.
-            if (!forms.isFormUpdated(_forms[formId])) {
-                cb(null, _forms[formId]);
-                return _forms[formId];
-            }
-        }
-
-        checkForUpdate(that);
-    }
-
-    //Raw mode is for avoiding interaction with the mbaas
-    if (rawMode === true) {
-        loadFromLocal();
-    } else {
-        loadFromRemote();
-    }
-}
-
-utils.extend(Form, Model);
-
-Form.prototype.getLastUpdate = function() {
-    log.d("Form: getLastUpdate");
-    return this.get('lastUpdatedTimestamp');
-};
-/**
- * Initiliase form json to objects
- * @return {[type]} [description]
- */
-Form.prototype.initialise = function() {
-    this.filterAdminFields();
-    this.initialisePage();
-    this.initialiseFields();
-};
-/**
- * Admin fields should not be part of the form.
- */
-Form.prototype.filterAdminFields = function() {
-    var pages = this.getPagesDef();
-
-    pages = _.map(pages, function(page){
-        var pageFields = page.fields;
-        page.fields = _.filter(pageFields, function(field) {
-            return !field.adminOnly;
-        });
-
-        if (!page.fields) {
-            return null;
-        }
-
-        return page;
-    });
-
-    //Removing unnecessary pages.
-    pages = _.compact(pages);
-
-    this.set("pages", pages);
-    this.buildFieldRef();
-};
-
-Form.prototype.buildFieldRef = function() {
-    var pages = this.getPagesDef();
-    var newFieldRef = {};
-    var pageRef = {};
-
-    _.each(pages, function(page, pageIndex) {
-        pageRef[page._id] = pageIndex;
-        var fields = _.each(page.fields, function(field, fieldIndex) {
-            newFieldRef[field._id] = {
-                page: pageIndex,
-                field: fieldIndex
-            };
-        });
-    });
-
-    this.set('pageRef', pageRef);
-    this.set("fieldRef", newFieldRef);
-};
-
-Form.prototype.initialiseFields = function() {
-    log.d("Form: initialiseFields");
-    var fieldsRef = this.getFieldRef();
-    this.fields = {};
-    for (var fieldId in fieldsRef) {
-        var fieldRef = fieldsRef[fieldId];
-        var pageIndex = fieldRef.page;
-        var fieldIndex = fieldRef.field;
-        if (pageIndex === undefined || fieldIndex === undefined) {
-            throw 'Corruptted field reference';
-        }
-        var fieldDef = this.getFieldDefByIndex(pageIndex, fieldIndex);
-        if (fieldDef) {
-            this.fields[fieldId] = new Field(fieldDef, this);
-        } else {
-            throw 'Field def is not found.';
-        }
-    }
-};
-Form.prototype.initialisePage = function() {
-    log.d("Form: initialisePage");
-    var pages = this.getPagesDef();
-    this.pages = [];
-    for (var i = 0; i < pages.length; i++) {
-        var pageDef = pages[i];
-        var pageModel = new Page(pageDef, this);
-        this.pages.push(pageModel);
-    }
-};
-Form.prototype.getPageNumberByFieldId = function(fieldId) {
-    if (fieldId) {
-        return this.getFieldRef()[fieldId].page;
-    } else {
-        return null;
-    }
-};
-Form.prototype.getPageModelList = function() {
-    return this.pages;
-};
-Form.prototype.getName = function() {
-    return this.get('name', '');
-};
-Form.prototype.getDescription = function() {
-    return this.get('description', '');
-};
-Form.prototype.getFieldRef = function() {
-    return this.get('fieldRef', {});
-};
-Form.prototype.getPagesDef = function() {
-    return this.get('pages', []);
-};
-Form.prototype.getPageRef = function() {
-    return this.get('pageRef', {});
-};
-Form.prototype.getFieldModelById = function(fieldId) {
-    return this.fields[fieldId];
-};
-/**
- * Finding a field model by the Field Code specified in the studio if it exists
- * Otherwise return null;
- * @param code - The code of the field that is being searched for
- */
-Form.prototype.getFieldModelByCode = function(code) {
-    var self = this;
-    if (!code || typeof(code) !== "string") {
-        return null;
-    }
-
-    for (var fieldId in self.fields) {
-        var field = self.fields[fieldId];
-        if (field.getCode() !== null && field.getCode() === code) {
-            return field;
-        }
-    }
-
-    return null;
-};
-Form.prototype.getFieldDefByIndex = function(pageIndex, fieldIndex) {
-    log.d("Form: getFieldDefByIndex: ", pageIndex, fieldIndex);
-    var pages = this.getPagesDef();
-    var page = pages[pageIndex];
-    if (page) {
-        var fields = page.fields ? page.fields : [];
-        var field = fields[fieldIndex];
-        if (field) {
-            return field;
-        }
-    }
-    log.e("Form: getFieldDefByIndex: No field found for page and field index: ", pageIndex, fieldIndex);
-    return null;
-};
-Form.prototype.getPageModelById = function(pageId) {
-    log.d("Form: getPageModelById: ", pageId);
-    var index = this.getPageRef()[pageId];
-    if (typeof index === 'undefined') {
-        log.e('page id is not found in pageRef: ' + pageId);
-    } else {
-        return this.pages[index];
-    }
-};
-Form.prototype.newSubmission = function() {
-    log.d("Form: newSubmission");
-    return submission.newInstance(this);
-};
-Form.prototype.getFormId = function() {
-    return this.get('_id');
-};
-Form.prototype.removeFromCache = function() {
-    log.d("Form: removeFromCache");
-    if (_forms[this.getFormId()]) {
-        delete _forms[this.getFormId()];
-    }
-};
-Form.prototype.getFileFieldsId = function() {
-    log.d("Form: getFileFieldsId");
-    var fieldsId = [];
-    for (var fieldId in this.fields) {
-        var field = this.fields[fieldId];
-        if (field.getType() === 'file' || field.getType() === 'photo' || field.getType() === 'signature') {
-            fieldsId.push(fieldId);
-        }
-    }
-    return fieldsId;
-};
-
-Form.prototype.getRuleEngine = function() {
-    log.d("Form: getRuleEngine");
-    var formDefinition = this.getProps();
-    return new RulesEngine(formDefinition);
-};
-
-
-module.exports = Form;
-},{"./field":50,"./forms":66,"./log":68,"./model":69,"./page":70,"./rulesEngine":71,"./submission":74,"./utils":78,"underscore":47}],62:[function(require,module,exports){
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-var utils = require("./utils");
-
-function FormSubmission(submissionJSON) {
-    Model.call(this, {
-        '_type': 'formSubmission',
-        'data': submissionJSON
-    });
-}
-
-utils.extend(FormSubmission, Model);
-
-FormSubmission.prototype.getProps = function() {
-    return this.get('data');
-};
-FormSubmission.prototype.getFormId = function() {
-    if (!this.get('data')) {
-        log.e("No form data for form submission");
-    }
-
-    return this.get('data').formId;
-};
-
-module.exports = FormSubmission;
-},{"./config":48,"./log":68,"./model":69,"./utils":78}],63:[function(require,module,exports){
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-var utils = require("./utils");
-
-function FormSubmissionComplete(submissionTask) {
-    Model.call(this, {
-        '_type': 'completeSubmission',
-        'submissionId': submissionTask.get('submissionId'),
-        'localSubmissionId': submissionTask.get('localSubmissionId')
-    });
-}
-
-utils.extend(FormSubmissionComplete, Model);
-
-module.exports = FormSubmissionComplete;
-},{"./config":48,"./log":68,"./model":69,"./utils":78}],64:[function(require,module,exports){
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-var utils = require("./utils");
-
-function FormSubmissionDownload(uploadTask) {
-    Model.call(this, {
-        '_type': 'formSubmissionDownload',
-        'data': uploadTask
-    });
-}
-FormSubmissionDownload.prototype.getSubmissionId = function() {
-    return this.get('data').get("submissionId", "not-set");
-};
-
-utils.extend(FormSubmissionDownload, Model);
-
-module.exports = FormSubmissionDownload;
-},{"./config":48,"./log":68,"./model":69,"./utils":78}],65:[function(require,module,exports){
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-var utils = require("./utils");
-
-function FormSubmissionStatus(submissionTask) {
-    Model.call(this, {
-        '_type': 'submissionStatus',
-        'submissionId': submissionTask.get('submissionId'),
-        'localSubmissionId': submissionTask.get('localSubmissionId')
-    });
-}
-
-utils.extend(FormSubmissionStatus, Model);
-
-module.exports = FormSubmissionStatus;
-},{"./config":48,"./log":68,"./model":69,"./utils":78}],66:[function(require,module,exports){
-var Model = require("./model");
-var utils = require("./utils");
-var log = require("./log");
-
-var forms;
-
-function Forms() {
-    Model.call(this, {
-        '_type': 'forms',
-        '_ludid': 'forms_list',
-        'loaded': false
-    });
-}
-
-utils.extend(Forms, Model);
-
-Forms.prototype.isFormUpdated = function(formModel) {
-    var id = formModel.get('_id');
-    var formLastUpdate = formModel.getLastUpdate();
-    var formMeta = this.getFormMetaById(id);
-    if (formMeta) {
-        return formLastUpdate !== formMeta.lastUpdatedTimestamp;
-    } else {
-        //could have been deleted. leave it for now
-        return false;
-    }
-};
-Forms.prototype.setLocalId = function() {
-    log.e("Forms setLocalId. Not Permitted for Forms.prototype.");
-};
-Forms.prototype.getFormMetaById = function(formId) {
-    log.d("Forms getFormMetaById ", formId);
-    var forms = this.getFormsList();
-    for (var i = 0; i < forms.length; i++) {
-        var form = forms[i];
-        if (form._id === formId) {
-            return form;
-        }
-    }
-    log.e("Forms getFormMetaById: No form found for id: ", formId);
-    return null;
-};
-Forms.prototype.size = function() {
-    return this.get('forms').length;
-};
-Forms.prototype.getFormsList = function() {
-    return this.get('forms', []);
-};
-Forms.prototype.getFormIdByIndex = function(index) {
-    log.d("Forms getFormIdByIndex: ", index);
-    return this.getFormsList()[index]._id;
-};
-
-
-module.exports = new Forms();
-
-},{"./log":68,"./model":69,"./utils":78}],67:[function(require,module,exports){
+},{"./utils":85,"async":7}],80:[function(require,module,exports){
 /**
  * Local storage stores a model's json definition persistently.
  */
@@ -13045,7 +27086,7 @@ function _fhFileData(options, success, failure) {
     }
 
     function filenameForKey(key, cb) {
-        var appid = require("./config.js").get("appId", "unknownAppId");
+        var appid = require("./config.js").get("appId", "");
         key = key + appid;
         utils.md5(key, function(err, hash) {
             if (err) {
@@ -13166,7 +27207,7 @@ module.exports = function() {
 
     return localStorage;
 }();
-},{"../libs/lawnchair.js":5,"./config.js":48,"./fileSystem.js":60,"./store.js":72,"./utils.js":78}],68:[function(require,module,exports){
+},{"../libs/lawnchair.js":5,"./config.js":77,"./fileSystem.js":79,"./store.js":83,"./utils.js":85}],81:[function(require,module,exports){
 /**
  * Async log module
  * @param  {[type]} module [description]
@@ -13304,7 +27345,7 @@ Log.getProps = function() {
 
 module.exports = Log;
 
-},{"./config":48,"./localStorage":67,"./utils":78}],69:[function(require,module,exports){
+},{"./config":77,"./localStorage":80,"./utils":85}],82:[function(require,module,exports){
 var Event = require('eventemitter2').EventEmitter2;
 var utils = require("./utils");
 var localStorage = require("./localStorage");
@@ -13461,1657 +27502,7 @@ Model.prototype.clearLocal = function(cb) {
 
 module.exports = Model;
 
-},{"./dataAgent":49,"./localStorage":67,"./utils":78,"eventemitter2":44,"underscore":47}],70:[function(require,module,exports){
-/**
- * One form contains multiple pages
- */
-var log = require("./log");
-var config = require("./config");
-var Model = require("./model");
-var utils = require("./utils");
-var _ = require('underscore');
-
-function Page(opt, parentForm) {
-    if (typeof opt === 'undefined' || typeof parentForm === 'undefined') {
-        log.e('Page initialise failed: new Page(pageDefinitionJSON, parentFormModel)');
-        return;
-    }
-
-    this.setType('page');
-    this.fromJSON(opt);
-    this.form = parentForm;
-    this.initialise();
-}
-
-utils.extend(Page, Model);
-
-Page.prototype.initialise = function() {
-    var fieldsDef = this.getFieldDef();
-    this.fieldsIds = _.map(fieldsDef, function(fieldDef){
-        return fieldDef._id;  
-    });
-};
-Page.prototype.setVisible = function(isVisible) {
-    this.set('visible', isVisible);
-    if (isVisible) {
-        this.emit('visible');
-    } else {
-        this.emit('hidden');
-    }
-};
-Page.prototype.getFieldDef = function() {
-    return this.get("fields", []);
-};
-
-Page.prototype.getFieldModelList = function() {
-    var self = this;
-    var list = _.map(this.fieldsIds, function(fieldId){
-        return self.form.getFieldModelById(fieldId);
-    });
-    return list;
-};
-Page.prototype.checkForSectionBreaks = function() { //Checking for any sections
-
-    for (var i = 0; i < this.fieldsIds.length; i++) {
-        var fieldModel = this.form.getFieldModelById(this.fieldsIds[i]);
-        if (fieldModel && fieldModel.getType() === "sectionBreak") {
-            return true;
-        }
-    }
-    return false;
-};
-Page.prototype.getSections = function() { //Checking for any sections
-    var sectionList = {};
-    var currentSection = null;
-    var sectionBreaksExist = this.checkForSectionBreaks();
-    var insertSectionBreak = false;
-
-    if (sectionBreaksExist) {
-        //If there are section breaks, the first field in the form must be a section break. If not, add a placeholder
-        var firstField = this.form.getFieldModelById(this.fieldsIds[0]);
-
-        if (firstField.getType() !== "sectionBreak") {
-            insertSectionBreak = true;
-        }
-    } else {
-        return null;
-    }
-
-    for (var i = 0; i < this.fieldsIds.length; i++) {
-        var fieldModel = this.form.getFieldModelById(this.fieldsIds[i]);
-
-        if (insertSectionBreak && i === 0) { //Adding a first section.
-            currentSection = "sectionBreak" + i;
-            sectionList[currentSection] = sectionList[currentSection] ? sectionList[currentSection] : {
-                fields: []
-            };
-            sectionList[currentSection].title = "Section " + (i + 1);
-        }
-
-        if (currentSection !== null && fieldModel.getType() !== "sectionBreak") {
-            sectionList[currentSection].fields.push(fieldModel);
-        }
-
-        if (fieldModel.getType() === "sectionBreak") {
-            currentSection = "sectionBreak" + i;
-            sectionList[currentSection] = sectionList[currentSection] ? sectionList[currentSection] : {
-                fields: []
-            };
-            sectionList[currentSection].title = fieldModel.get('name', "Section " + (i + 1));
-            sectionList[currentSection].fields.push(fieldModel);
-        }
-    }
-
-    return sectionList;
-};
-Page.prototype.getFieldModelById = function(fieldId) {
-    return this.form.getFieldModelById(fieldId);
-};
-Page.prototype.getPageId = function() {
-    return this.get("_id", "");
-};
-Page.prototype.getFieldIds = function() {
-    return this.fieldsIds;
-};
-Page.prototype.getName = function() {
-    return this.get('name', '');
-};
-Page.prototype.getDescription = function() {
-    return this.get('description', '');
-};
-
-module.exports = Page;
-
-},{"./config":48,"./log":68,"./model":69,"./utils":78,"underscore":47}],71:[function(require,module,exports){
-/*! fh-forms - v0.8.00 -  */
-/*! async - v0.2.9 -  */
-/*! 2014-08-27 */
-/* This is the prefix file */
-
-var async = require('async');
-var _ = require('underscore');
-
-function rulesEngine(formDef) {
-    /*
-     * Sample Usage
-     *
-     * var engine = formsRulesEngine(form-definition);
-     *
-     * engine.validateForms(form-submission, function(err, res) {});
-     *      res:
-     *      {
-     *          "validation": {
-     *              "fieldId": {
-     *                  "fieldId": "",
-     *                  "valid": true,
-     *                  "errorMessages": [
-     *                      "length should be 3 to 5",
-     *                      "should not contain dammit",
-     *                      "should repeat at least 2 times"
-     *                  ]
-     *              },
-     *              "fieldId1": {
-     *
-     *              }
-     *          }
-     *      }
-     *
-     *
-     * engine.validateField(fieldId, submissionJSON, function(err,res) {});
-     *      // validate only field values on validation (no rules, no repeat checking)
-     *      res:
-     *      "validation":{
-     *              "fieldId":{
-     *                  "fieldId":"",
-     *                  "valid":true,
-     *                  "errorMessages":[
-     *                      "length should be 3 to 5",
-     *                      "should not contain dammit"
-     *                  ]
-     *              }
-     *          }
-     *
-     * engine.checkRules(submissionJSON, unction(err, res) {})
-     *      // check all rules actions
-     *      res:
-     *      {
-     *          "actions": {
-     *              "pages": {
-     *                  "targetId": {
-     *                      "targetId": "",
-     *                      "action": "show|hide"
-     *                  }
-     *              },
-     *              "fields": {
-     *
-     *              }
-     *          }
-     *      }
-     *
-     */
-
-    var FIELD_TYPE_CHECKBOX = "checkboxes";
-    var FIELD_TYPE_DATETIME = "dateTime";
-    var FIELD_TYPE_DATETIME_DATETIMEUNIT_DATEONLY = "date";
-    var FIELD_TYPE_DATETIME_DATETIMEUNIT_TIMEONLY = "time";
-    var FIELD_TYPE_DATETIME_DATETIMEUNIT_DATETIME = "datetime";
-
-    var formsRulesEngine = function(formDef) {
-        var initialised;
-
-        var definition = formDef;
-        var submission;
-
-        var fieldMap = {};
-        var adminFieldMap = {}; //Admin fields should not be part of a submission
-        var requiredFieldMap = {};
-        var submissionRequiredFieldsMap = {}; // map to hold the status of the required fields per submission
-        var fieldRulePredicateMap = {};
-        var fieldRuleSubjectMap = {};
-        var pageRulePredicateMap = {};
-        var pageRuleSubjectMap = {};
-        var submissionFieldsMap = {};
-        var validatorsMap = {
-            "text": validatorString,
-            "textarea": validatorString,
-            "number": validatorNumericString,
-            "emailAddress": validatorEmail,
-            "dropdown": validatorDropDown,
-            "radio": validatorDropDown,
-            "checkboxes": validatorCheckboxes,
-            "location": validatorLocation,
-            "locationMap": validatorLocationMap,
-            "photo": validatorFile,
-            "signature": validatorFile,
-            "file": validatorFile,
-            "dateTime": validatorDateTime,
-            "url": validatorString,
-            "sectionBreak": validatorSection
-        };
-
-        var validatorsClientMap = {
-            "text": validatorString,
-            "textarea": validatorString,
-            "number": validatorNumericString,
-            "emailAddress": validatorEmail,
-            "dropdown": validatorDropDown,
-            "radio": validatorDropDown,
-            "checkboxes": validatorCheckboxes,
-            "location": validatorLocation,
-            "locationMap": validatorLocationMap,
-            "photo": validatorAnyFile,
-            "signature": validatorAnyFile,
-            "file": validatorAnyFile,
-            "dateTime": validatorDateTime,
-            "url": validatorString,
-            "sectionBreak": validatorSection
-        };
-
-        var isFieldRuleSubject = function(fieldId) {
-            return !!fieldRuleSubjectMap[fieldId];
-        };
-
-        var isPageRuleSubject = function(pageId) {
-            return !!pageRuleSubjectMap[pageId];
-        };
-
-        function buildFieldMap(cb) {
-            // Iterate over all fields in form definition & build fieldMap
-            async.each(definition.pages, function(page, cbPages) {
-                async.each(page.fields, function(field, cbFields) {
-                    field.pageId = page._id;
-
-                    /**
-                     * If the field is an admin field, then it is not considered part of validation for a submission.
-                     */
-                    if (field.adminOnly) {
-                        adminFieldMap[field._id] = field;
-                        return cbFields();
-                    }
-
-                    field.fieldOptions = field.fieldOptions ? field.fieldOptions : {};
-                    field.fieldOptions.definition = field.fieldOptions.definition ? field.fieldOptions.definition : {};
-                    field.fieldOptions.validation = field.fieldOptions.validation ? field.fieldOptions.validation : {};
-
-                    fieldMap[field._id] = field;
-                    if (field.required) {
-                        requiredFieldMap[field._id] = {
-                            field: field,
-                            submitted: false,
-                            validated: false
-                        };
-                    }
-                    return cbFields();
-                }, function() {
-                    return cbPages();
-                });
-            }, cb);
-        }
-
-        function buildFieldRuleMaps(cb) {
-            // Iterate over all rules in form definition & build ruleSubjectMap
-            async.each(definition.fieldRules, function(rule, cbRules) {
-                async.each(rule.ruleConditionalStatements, function(ruleConditionalStatement, cbRuleConditionalStatements) {
-                    var fieldId = ruleConditionalStatement.sourceField;
-                    fieldRulePredicateMap[fieldId] = fieldRulePredicateMap[fieldId] || [];
-                    fieldRulePredicateMap[fieldId].push(rule);
-                    return cbRuleConditionalStatements();
-                }, function() {
-
-                    /**
-                     * Target fields are an array of fieldIds that can be targeted by a field rule
-                     * To maintain backwards compatibility, the case where the targetPage is not an array has to be considered
-                     * @type {*|Array}
-                     */
-                    if (Array.isArray(rule.targetField)) {
-                        async.each(rule.targetField, function(targetField, cb) {
-                            fieldRuleSubjectMap[targetField] = fieldRuleSubjectMap[targetField] || [];
-                            fieldRuleSubjectMap[targetField].push(rule);
-                            cb();
-                        }, cbRules);
-                    } else {
-                        fieldRuleSubjectMap[rule.targetField] = fieldRuleSubjectMap[rule.targetField] || [];
-                        fieldRuleSubjectMap[rule.targetField].push(rule);
-                        return cbRules();
-                    }
-                });
-            }, cb);
-        }
-
-        function buildPageRuleMap(cb) {
-            // Iterate over all rules in form definition & build ruleSubjectMap
-            async.each(definition.pageRules, function(rule, cbRules) {
-                async.each(rule.ruleConditionalStatements, function(ruleConditionalStatement, cbRulePredicates) {
-                    var fieldId = ruleConditionalStatement.sourceField;
-                    pageRulePredicateMap[fieldId] = pageRulePredicateMap[fieldId] || [];
-                    pageRulePredicateMap[fieldId].push(rule);
-                    return cbRulePredicates();
-                }, function() {
-
-                    /**
-                     * Target pages are an array of pageIds that can be targeted by a page rule
-                     * To maintain backwards compatibility, the case where the targetPage is not an array has to be considered
-                     * @type {*|Array}
-                     */
-                    if (Array.isArray(rule.targetPage)) {
-                        async.each(rule.targetPage, function(targetPage, cb) {
-                            pageRuleSubjectMap[targetPage] = pageRuleSubjectMap[targetPage] || [];
-                            pageRuleSubjectMap[targetPage].push(rule);
-                            cb();
-                        }, cbRules);
-                    } else {
-                        pageRuleSubjectMap[rule.targetPage] = pageRuleSubjectMap[rule.targetPage] || [];
-                        pageRuleSubjectMap[rule.targetPage].push(rule);
-                        return cbRules();
-                    }
-                });
-            }, cb);
-        }
-
-        function buildSubmissionFieldsMap(cb) {
-            submissionRequiredFieldsMap = JSON.parse(JSON.stringify(requiredFieldMap)); // clone the map for use with this submission
-            submissionFieldsMap = {}; // start with empty map, rulesEngine can be called with multiple submissions
-
-            // iterate over all the fields in the submissions and build a map for easier lookup
-            async.each(submission.formFields, function(formField, cb) {
-                if (!formField.fieldId) return cb(new Error("No fieldId in this submission entry: " + util.inspect(formField)));
-
-                /**
-                 * If the field passed in a submission is an admin field, then return an error.
-                 */
-                if (adminFieldMap[formField.fieldId]) {
-                    return cb("Submission " + formField.fieldId + " is an admin field. Admin fields cannot be passed to the rules engine.");
-                }
-
-                submissionFieldsMap[formField.fieldId] = formField;
-                return cb();
-            }, cb);
-        }
-
-        function init(cb) {
-            if (initialised) return cb();
-            async.parallel([
-                buildFieldMap,
-                buildFieldRuleMaps,
-                buildPageRuleMap
-            ], function(err) {
-                if (err) return cb(err);
-                initialised = true;
-                return cb();
-            });
-        }
-
-        function initSubmission(formSubmission, cb) {
-            init(function(err) {
-                if (err) return cb(err);
-
-                submission = formSubmission;
-                buildSubmissionFieldsMap(cb);
-            });
-        }
-
-        function getPreviousFieldValues(submittedField, previousSubmission, cb) {
-            if (previousSubmission && previousSubmission.formFields) {
-                async.filter(previousSubmission.formFields, function(formField, cb) {
-                    return cb(formField.fieldId.toString() === submittedField.fieldId.toString());
-                }, function(results) {
-                    var previousFieldValues = null;
-                    if (results && results[0] && results[0].fieldValues) {
-                        previousFieldValues = results[0].fieldValues;
-                    }
-                    return cb(undefined, previousFieldValues);
-                });
-            } else {
-                return cb();
-            }
-        }
-
-        function validateForm(submission, previousSubmission, cb) {
-            if ("function" === typeof previousSubmission) {
-                cb = previousSubmission;
-                previousSubmission = null;
-            }
-            init(function(err) {
-                if (err) return cb(err);
-
-                initSubmission(submission, function(err) {
-                    if (err) return cb(err);
-
-                    async.waterfall([
-
-                        function(cb) {
-                            return cb(undefined, {
-                                validation: {
-                                    valid: true
-                                }
-                            }); // any invalid fields will set this to false
-                        },
-                        function(res, cb) {
-                            validateSubmittedFields(res, previousSubmission, cb);
-                        },
-                        checkIfRequiredFieldsNotSubmitted
-                    ], function(err, results) {
-                        if (err) return cb(err);
-
-                        return cb(undefined, results);
-                    });
-                });
-            });
-        }
-
-        function validateSubmittedFields(res, previousSubmission, cb) {
-            // for each field, call validateField
-            async.each(submission.formFields, function(submittedField, callback) {
-                var fieldID = submittedField.fieldId;
-                var fieldDef = fieldMap[fieldID];
-
-                getPreviousFieldValues(submittedField, previousSubmission, function(err, previousFieldValues) {
-                    if (err) return callback(err);
-                    getFieldValidationStatus(submittedField, fieldDef, previousFieldValues, function(err, fieldRes) {
-                        if (err) return callback(err);
-
-                        if (!fieldRes.valid) {
-                            res.validation.valid = false; // indicate invalid form if any fields invalid
-                            res.validation[fieldID] = fieldRes; // add invalid field info to validate form result
-                        }
-
-                        return callback();
-                    });
-
-                });
-            }, function(err) {
-                if (err) {
-                    return cb(err);
-                }
-                return cb(undefined, res);
-            });
-        }
-
-        function checkIfRequiredFieldsNotSubmitted(res, cb) {
-            async.each(Object.keys(submissionRequiredFieldsMap), function(requiredFieldId, cb) {
-                var resField = {};
-                if (!submissionRequiredFieldsMap[requiredFieldId].submitted) {
-                    isFieldVisible(requiredFieldId, true, function(err, visible) {
-                        if (err) return cb(err);
-                        if (visible) { // we only care about required fields if they are visible
-                            resField.fieldId = requiredFieldId;
-                            resField.valid = false;
-                            resField.fieldErrorMessage = ["Required Field Not Submitted"];
-                            res.validation[requiredFieldId] = resField;
-                            res.validation.valid = false;
-                        }
-                        return cb();
-                    });
-                } else { // was included in submission
-                    return cb();
-                }
-            }, function(err) {
-                if (err) return cb(err);
-
-                return cb(undefined, res);
-            });
-        }
-
-        /*
-         * validate only field values on validation (no rules, no repeat checking)
-         *     res:
-         *     "validation":{
-         *             "fieldId":{
-         *                 "fieldId":"",
-         *                 "valid":true,
-         *                 "errorMessages":[
-         *                     "length should be 3 to 5",
-         *                     "should not contain dammit"
-         *                 ]
-         *             }
-         *         }
-         */
-        function validateField(fieldId, submission, cb) {
-            init(function(err) {
-                if (err) return cb(err);
-
-                initSubmission(submission, function(err) {
-                    if (err) return cb(err);
-
-                    var submissionField = submissionFieldsMap[fieldId];
-                    var fieldDef = fieldMap[fieldId];
-                    getFieldValidationStatus(submissionField, fieldDef, null, function(err, res) {
-                        if (err) return cb(err);
-                        var ret = {
-                            validation: {}
-                        };
-                        ret.validation[fieldId] = res;
-                        return cb(undefined, ret);
-                    });
-                });
-            });
-        }
-
-        /*
-         * validate only single field value (no rules, no repeat checking)
-         * cb(err, result)
-         * example of result:
-         * "validation":{
-         *         "fieldId":{
-         *             "fieldId":"",
-         *             "valid":true,
-         *             "errorMessages":[
-         *                 "length should be 3 to 5",
-         *                 "should not contain dammit"
-         *             ]
-         *         }
-         *     }
-         */
-        function validateFieldValue(fieldId, inputValue, valueIndex, cb) {
-            if ("function" === typeof valueIndex) {
-                cb = valueIndex;
-                valueIndex = 0;
-            }
-
-            init(function(err) {
-                if (err) return cb(err);
-                var fieldDefinition = fieldMap[fieldId];
-
-                var required = false;
-                if (fieldDefinition.repeating &&
-                    fieldDefinition.fieldOptions &&
-                    fieldDefinition.fieldOptions.definition &&
-                    fieldDefinition.fieldOptions.definition.minRepeat) {
-                    required = (valueIndex < fieldDefinition.fieldOptions.definition.minRepeat);
-                } else {
-                    required = fieldDefinition.required;
-                }
-
-                var validation = (fieldDefinition.fieldOptions && fieldDefinition.fieldOptions.validation) ? fieldDefinition.fieldOptions.validation : undefined;
-
-                if (validation && false === validation.validateImmediately) {
-                    var ret = {
-                        validation: {}
-                    };
-                    ret.validation[fieldId] = {
-                        "valid": true
-                    };
-                    return cb(undefined, ret);
-                }
-
-                if (fieldEmpty(inputValue)) {
-                    if (required) {
-                        return formatResponse("No value specified for required input", cb);
-                    } else {
-                        return formatResponse(undefined, cb); // optional field not supplied is valid
-                    }
-                }
-
-                // not empty need to validate
-                getClientValidatorFunction(fieldDefinition.type, function(err, validator) {
-                    if (err) return cb(err);
-
-                    validator(inputValue, fieldDefinition, undefined, function(err) {
-                        var message;
-                        if (err) {
-                            if (err.message) {
-                                message = err.message;
-                            } else {
-                                message = "Unknown error message";
-                            }
-                        }
-                        formatResponse(message, cb);
-                    });
-                });
-            });
-
-            function formatResponse(msg, cb) {
-                var messages = {
-                    errorMessages: []
-                };
-                if (msg) {
-                    messages.errorMessages.push(msg);
-                }
-                return createValidatorResponse(fieldId, messages, function(err, res) {
-                    if (err) return cb(err);
-                    var ret = {
-                        validation: {}
-                    };
-                    ret.validation[fieldId] = res;
-                    return cb(undefined, ret);
-                });
-            }
-        }
-
-        function createValidatorResponse(fieldId, messages, cb) {
-            // intentionally not checking err here, used further down to get validation errors
-            var res = {};
-            res.fieldId = fieldId;
-            res.errorMessages = messages.errorMessages || [];
-            res.fieldErrorMessage = messages.fieldErrorMessage || [];
-            async.some(res.errorMessages, function(item, cb) {
-                return cb(item !== null);
-            }, function(someErrors) {
-                res.valid = !someErrors && (res.fieldErrorMessage.length < 1);
-
-                return cb(undefined, res);
-            });
-        }
-
-        function getFieldValidationStatus(submittedField, fieldDef, previousFieldValues, cb) {
-            isFieldVisible(fieldDef._id, true, function(err, visible) {
-                if (err) {
-                    return cb(err);
-                }
-                validateFieldInternal(submittedField, fieldDef, previousFieldValues, visible, function(err, messages) {
-                    if (err) return cb(err);
-                    createValidatorResponse(submittedField.fieldId, messages, cb);
-                });
-            });
-        }
-
-        function getMapFunction(key, map, cb) {
-            var validator = map[key];
-            if (!validator) {
-                return cb(new Error("Invalid Field Type " + key));
-            }
-
-            return cb(undefined, validator);
-        }
-
-        function getValidatorFunction(fieldType, cb) {
-            return getMapFunction(fieldType, validatorsMap, cb);
-        }
-
-        function getClientValidatorFunction(fieldType, cb) {
-            return getMapFunction(fieldType, validatorsClientMap, cb);
-        }
-
-        function fieldEmpty(fieldValue) {
-            return ('undefined' === typeof fieldValue || null === fieldValue || "" === fieldValue); // empty string also regarded as not specified
-        }
-
-        function validateFieldInternal(submittedField, fieldDef, previousFieldValues, visible, cb) {
-            previousFieldValues = previousFieldValues || null;
-            countSubmittedValues(submittedField, function(err, numSubmittedValues) {
-                if (err) return cb(err);
-                async.series({
-                    valuesSubmitted: async.apply(checkValueSubmitted, submittedField, fieldDef, visible),
-                    repeats: async.apply(checkRepeat, numSubmittedValues, fieldDef, visible),
-                    values: async.apply(checkValues, submittedField, fieldDef, previousFieldValues)
-                }, function(err, results) {
-                    if (err) return cb(err);
-
-                    var fieldErrorMessages = [];
-                    if (results.valuesSubmitted) {
-                        fieldErrorMessages.push(results.valuesSubmitted);
-                    }
-                    if (results.repeats) {
-                        fieldErrorMessages.push(results.repeats);
-                    }
-                    return cb(undefined, {
-                        fieldErrorMessage: fieldErrorMessages,
-                        errorMessages: results.values
-                    });
-                });
-            });
-
-            return; // just functions below this
-
-            function checkValueSubmitted(submittedField, fieldDefinition, visible, cb) {
-                if (!fieldDefinition.required) return cb(undefined, null);
-
-                var valueSubmitted = submittedField && submittedField.fieldValues && (submittedField.fieldValues.length > 0);
-                //No value submitted is only an error if the field is visible.
-                if (!valueSubmitted && visible) {
-                    return cb(undefined, "No value submitted for field " + fieldDefinition.name);
-                }
-                return cb(undefined, null);
-
-            }
-
-            function countSubmittedValues(submittedField, cb) {
-                var numSubmittedValues = 0;
-                if (submittedField && submittedField.fieldValues && submittedField.fieldValues.length > 0) {
-                    for (var i = 0; i < submittedField.fieldValues.length; i += 1) {
-                        if (submittedField.fieldValues[i]) {
-                            numSubmittedValues += 1;
-                        }
-                    }
-                }
-                return cb(undefined, numSubmittedValues);
-            }
-
-            function checkRepeat(numSubmittedValues, fieldDefinition, visible, cb) {
-                //If the field is not visible, then checking the repeating values of the field is not required
-                if (!visible) {
-                    return cb(undefined, null);
-                }
-
-                if (fieldDefinition.repeating && fieldDefinition.fieldOptions && fieldDefinition.fieldOptions.definition) {
-                    if (fieldDefinition.fieldOptions.definition.minRepeat) {
-                        if (numSubmittedValues < fieldDefinition.fieldOptions.definition.minRepeat) {
-                            return cb(undefined, "Expected min of " + fieldDefinition.fieldOptions.definition.minRepeat + " values for field " + fieldDefinition.name + " but got " + numSubmittedValues);
-                        }
-                    }
-
-                    if (fieldDefinition.fieldOptions.definition.maxRepeat) {
-                        if (numSubmittedValues > fieldDefinition.fieldOptions.definition.maxRepeat) {
-                            return cb(undefined, "Expected max of " + fieldDefinition.fieldOptions.definition.maxRepeat + " values for field " + fieldDefinition.name + " but got " + numSubmittedValues);
-                        }
-                    }
-                } else {
-                    if (numSubmittedValues > 1) {
-                        return cb(undefined, "Should not have multiple values for non-repeating field");
-                    }
-                }
-
-                return cb(undefined, null);
-            }
-
-            function checkValues(submittedField, fieldDefinition, previousFieldValues, cb) {
-                getValidatorFunction(fieldDefinition.type, function(err, validator) {
-                    if (err) return cb(err);
-                    async.map(submittedField.fieldValues, function(fieldValue, cb) {
-                        if (fieldEmpty(fieldValue)) {
-                            return cb(undefined, null);
-                        } else {
-                            validator(fieldValue, fieldDefinition, previousFieldValues, function(validationError) {
-                                var errorMessage;
-                                if (validationError) {
-                                    errorMessage = validationError.message || "Error during validation of field";
-                                } else {
-                                    errorMessage = null;
-                                }
-
-                                if (submissionRequiredFieldsMap[fieldDefinition._id]) { // set to true if at least one value
-                                    submissionRequiredFieldsMap[fieldDefinition._id].submitted = true;
-                                }
-
-                                return cb(undefined, errorMessage);
-                            });
-                        }
-                    }, function(err, results) {
-                        if (err) return cb(err);
-
-                        return cb(undefined, results);
-                    });
-                });
-            }
-        }
-
-        function convertSimpleFormatToRegex(field_format_string) {
-            var regex = "^";
-            var C = "c".charCodeAt(0);
-            var N = "n".charCodeAt(0);
-
-            var i;
-            var ch;
-            var match;
-            var len = field_format_string.length;
-            for (i = 0; i < len; i += 1) {
-                ch = field_format_string.charCodeAt(i);
-                switch (ch) {
-                    case C:
-                        match = "[a-zA-Z0-9]";
-                        break;
-                    case N:
-                        match = "[0-9]";
-                        break;
-                    default:
-                        var num = ch.toString(16).toUpperCase();
-                        match = "\\u" + ("0000" + num).substr(-4);
-                        break;
-                }
-                regex += match;
-            }
-            return regex + "$";
-        }
-
-        function validFormatRegex(fieldValue, field_format_string) {
-            var pattern = new RegExp(field_format_string);
-            return pattern.test(fieldValue);
-        }
-
-        function validFormat(fieldValue, field_format_mode, field_format_string) {
-            var regex;
-            if ("simple" === field_format_mode) {
-                regex = convertSimpleFormatToRegex(field_format_string);
-            } else if ("regex" === field_format_mode) {
-                regex = field_format_string;
-            } else { // should never be anything else, but if it is then default to simple format
-                regex = convertSimpleFormatToRegex(field_format_string);
-            }
-
-            return validFormatRegex(fieldValue, regex);
-        }
-
-        function validatorString(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            if (typeof fieldValue !== "string") {
-                return cb(new Error("Expected string but got " + typeof(fieldValue)));
-            }
-
-            var validation = {};
-            if (fieldDefinition && fieldDefinition.fieldOptions && fieldDefinition.fieldOptions.validation) {
-                validation = fieldDefinition.fieldOptions.validation;
-            }
-
-            var field_format_mode = validation.field_format_mode || "";
-            field_format_mode = field_format_mode.trim();
-            var field_format_string = validation.field_format_string || "";
-            field_format_string = field_format_string.trim();
-
-            if (field_format_string && (field_format_string.length > 0) && field_format_mode && (field_format_mode.length > 0)) {
-                if (!validFormat(fieldValue, field_format_mode, field_format_string)) {
-                    return cb(new Error("field value in incorrect format, expected format: " + field_format_string + " but submission value is: " + fieldValue));
-                }
-            }
-
-            if (fieldDefinition.fieldOptions && fieldDefinition.fieldOptions.validation && fieldDefinition.fieldOptions.validation.min) {
-                if (fieldValue.length < fieldDefinition.fieldOptions.validation.min) {
-                    return cb(new Error("Expected minimum string length of " + fieldDefinition.fieldOptions.validation.min + " but submission is " + fieldValue.length + ". Submitted val: " + fieldValue));
-                }
-            }
-
-            if (fieldDefinition.fieldOptions && fieldDefinition.fieldOptions.validation && fieldDefinition.fieldOptions.validation.max) {
-                if (fieldValue.length > fieldDefinition.fieldOptions.validation.max) {
-                    return cb(new Error("Expected maximum string length of " + fieldDefinition.fieldOptions.validation.max + " but submission is " + fieldValue.length + ". Submitted val: " + fieldValue));
-                }
-            }
-
-            return cb();
-        }
-
-        function validatorNumericString(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            var testVal = (fieldValue - 0); // coerce to number (or NaN)
-            /*jshint eqeqeq:false */
-            var numeric = (testVal == fieldValue); // testVal co-erced to numeric above, so numeric comparison and NaN != NaN
-
-            if (!numeric) {
-                return cb(new Error("Expected numeric but got: " + fieldValue));
-            }
-
-            return validatorNumber(testVal, fieldDefinition, previousFieldValues, cb);
-        }
-
-        function validatorNumber(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            if (typeof fieldValue !== "number") {
-                return cb(new Error("Expected number but got " + typeof(fieldValue)));
-            }
-
-            if (fieldDefinition.fieldOptions && fieldDefinition.fieldOptions.validation && fieldDefinition.fieldOptions.validation.min) {
-                if (fieldValue < fieldDefinition.fieldOptions.validation.min) {
-                    return cb(new Error("Expected minimum Number " + fieldDefinition.fieldOptions.validation.min + " but submission is " + fieldValue + ". Submitted number: " + fieldValue));
-                }
-            }
-
-            if (fieldDefinition.fieldOptions.validation.max) {
-                if (fieldValue > fieldDefinition.fieldOptions.validation.max) {
-                    return cb(new Error("Expected maximum Number " + fieldDefinition.fieldOptions.validation.max + " but submission is " + fieldValue + ". Submitted number: " + fieldValue));
-                }
-            }
-
-            return cb();
-        }
-
-        function validatorEmail(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            if (typeof(fieldValue) !== "string") {
-                return cb(new Error("Expected string but got " + typeof(fieldValue)));
-            }
-
-            if (fieldValue.match(/[-0-9a-zA-Z.+_]+@[-0-9a-zA-Z.+_]+\.[a-zA-Z]{2,4}/g) === null) {
-                return cb(new Error("Invalid email address format: " + fieldValue));
-            } else {
-                return cb();
-            }
-        }
-
-        function validatorDropDown(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            if (typeof(fieldValue) !== "string") {
-                return cb(new Error("Expected submission to be string but got " + typeof(fieldValue)));
-            }
-
-            //Check value exists in the field definition
-            if (!fieldDefinition.fieldOptions.definition.options) {
-                return cb(new Error("No options exist for field " + fieldDefinition.name));
-            }
-
-            async.some(fieldDefinition.fieldOptions.definition.options, function(dropdownOption, cb) {
-                return cb(dropdownOption.label === fieldValue);
-            }, function(found) {
-                if (!found) {
-                    return cb(new Error("Invalid option specified: " + fieldValue));
-                } else {
-                    return cb();
-                }
-            });
-        }
-
-        function validatorCheckboxes(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            var minVal;
-            if (fieldDefinition && fieldDefinition.fieldOptions && fieldDefinition.fieldOptions.validation) {
-                minVal = fieldDefinition.fieldOptions.validation.min;
-            }
-            var maxVal;
-            if (fieldDefinition && fieldDefinition.fieldOptions && fieldDefinition.fieldOptions.validation) {
-                maxVal = fieldDefinition.fieldOptions.validation.max;
-            }
-
-            if (minVal) {
-                if (fieldValue.selections === null || fieldValue.selections === undefined || fieldValue.selections.length < minVal) {
-                    var len;
-                    if (fieldValue.selections) {
-                        len = fieldValue.selections.length;
-                    }
-                    return cb(new Error("Expected a minimum number of selections " + minVal + " but got " + len));
-                }
-            }
-
-            if (maxVal) {
-                if (fieldValue.selections) {
-                    if (fieldValue.selections.length > maxVal) {
-                        return cb(new Error("Expected a maximum number of selections " + maxVal + " but got " + fieldValue.selections.length));
-                    }
-                }
-            }
-
-            var optionsInCheckbox = [];
-
-            async.eachSeries(fieldDefinition.fieldOptions.definition.options, function(choice, cb) {
-                for (var choiceName in choice) {
-                    optionsInCheckbox.push(choice[choiceName]);
-                }
-                return cb();
-            }, function() {
-                async.eachSeries(fieldValue.selections, function(selection, cb) {
-                    if (typeof(selection) !== "string") {
-                        return cb(new Error("Expected checkbox submission to be string but got " + typeof(selection)));
-                    }
-
-                    if (optionsInCheckbox.indexOf(selection) === -1) {
-                        return cb(new Error("Checkbox Option " + selection + " does not exist in the field."));
-                    }
-
-                    return cb();
-                }, cb);
-            });
-        }
-
-        function validatorLocationMap(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            if (fieldValue.lat && fieldValue["long"]) {
-                if (isNaN(parseFloat(fieldValue.lat)) || isNaN(parseFloat(fieldValue["long"]))) {
-                    return cb(new Error("Invalid latitude and longitude values"));
-                } else {
-                    return cb();
-                }
-            } else {
-                return cb(new Error("Invalid object for locationMap submission"));
-            }
-        }
-
-
-        function validatorLocation(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            if (fieldDefinition.fieldOptions.definition.locationUnit === "latlong") {
-                if (fieldValue.lat && fieldValue["long"]) {
-                    if (isNaN(parseFloat(fieldValue.lat)) || isNaN(parseFloat(fieldValue["long"]))) {
-                        return cb(new Error("Invalid latitude and longitude values"));
-                    } else {
-                        return cb();
-                    }
-                } else {
-                    return cb(new Error("Invalid object for latitude longitude submission"));
-                }
-            } else {
-                if (fieldValue.zone && fieldValue.eastings && fieldValue.northings) {
-                    //Zone must be 3 characters, eastings 6 and northings 9
-                    return validateNorthingsEastings(fieldValue, cb);
-                } else {
-                    return cb(new Error("Invalid object for northings easting submission. Zone, Eastings and Northings elemets are required"));
-                }
-            }
-
-            function validateNorthingsEastings(fieldValue, cb) {
-                if (typeof(fieldValue.zone) !== "string" || fieldValue.zone.length === 0) {
-                    return cb(new Error("Invalid zone definition for northings and eastings location. " + fieldValue.zone));
-                }
-
-                var east = parseInt(fieldValue.eastings, 10);
-                if (isNaN(east)) {
-                    return cb(new Error("Invalid eastings definition for northings and eastings location. " + fieldValue.eastings));
-                }
-
-                var north = parseInt(fieldValue.northings, 10);
-                if (isNaN(north)) {
-                    return cb(new Error("Invalid northings definition for northings and eastings location. " + fieldValue.northings));
-                }
-
-                return cb();
-            }
-        }
-
-        function validatorAnyFile(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            // if any of the following validators return ok, then return ok.
-            validatorBase64(fieldValue, fieldDefinition, previousFieldValues, function(err) {
-                if (!err) {
-                    return cb();
-                }
-                validatorFile(fieldValue, fieldDefinition, previousFieldValues, function(err) {
-                    if (!err) {
-                        return cb();
-                    }
-                    validatorFileObj(fieldValue, fieldDefinition, previousFieldValues, function(err) {
-                        if (!err) {
-                            return cb();
-                        }
-                        return cb(err);
-                    });
-                });
-            });
-        }
-
-        function checkFileSize(fieldDefinition, fieldValue, sizeKey, cb) {
-            fieldDefinition = fieldDefinition || {};
-            var fieldOptions = fieldDefinition.fieldOptions || {};
-            var fieldOptionsDef = fieldOptions.definition || {};
-            var fileSizeMax = fieldOptionsDef.file_size || null; //FileSizeMax will be in KB. File size is in bytes
-
-            if (fileSizeMax !== null) {
-                var fieldValueSize = fieldValue[sizeKey];
-                var fieldValueSizeKB = 1;
-                if (fieldValueSize > 1000) {
-                    fieldValueSizeKB = fieldValueSize / 1000;
-                }
-                if (fieldValueSize > (fileSizeMax * 1000)) {
-                    return cb(new Error("File size is too large. File can be a maximum of " + fileSizeMax + "KB. Size of file selected: " + fieldValueSizeKB + "KB"));
-                } else {
-                    return cb();
-                }
-            } else {
-                return cb();
-            }
-        }
-
-        function validatorFile(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            if (typeof fieldValue !== "object") {
-                return cb(new Error("Expected object but got " + typeof(fieldValue)));
-            }
-
-            var keyTypes = [{
-                keyName: "fileName",
-                valueType: "string"
-            }, {
-                keyName: "fileSize",
-                valueType: "number"
-            }, {
-                keyName: "fileType",
-                valueType: "string"
-            }, {
-                keyName: "fileUpdateTime",
-                valueType: "number"
-            }, {
-                keyName: "hashName",
-                valueType: "string"
-            }];
-
-            async.each(keyTypes, function(keyType, cb) {
-                var actualType = typeof fieldValue[keyType.keyName];
-                if (actualType !== keyType.valueType) {
-                    return cb(new Error("Expected " + keyType.valueType + " but got " + actualType));
-                }
-                if (keyType.keyName === "fileName" && fieldValue[keyType.keyName].length <= 0) {
-                    return cb(new Error("Expected value for " + keyType.keyName));
-                }
-
-                return cb();
-            }, function(err) {
-                if (err) return cb(err);
-
-                checkFileSize(fieldDefinition, fieldValue, "fileSize", function(err) {
-                    if (err) {
-                        return cb(err);
-                    }
-
-                    if (fieldValue.hashName.indexOf("filePlaceHolder") > -1) { //TODO abstract out to config
-                        return cb();
-                    } else if (previousFieldValues && previousFieldValues.hashName && previousFieldValues.hashName.indexOf(fieldValue.hashName) > -1) {
-                        return cb();
-                    } else {
-                        return cb(new Error("Invalid file placeholder text" + fieldValue.hashName));
-                    }
-                });
-            });
-        }
-
-        function validatorFileObj(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            if ((typeof File !== "function")) {
-                return cb(new Error("Expected File object but got " + typeof(fieldValue)));
-            }
-
-            var keyTypes = [{
-                keyName: "name",
-                valueType: "string"
-            }, {
-                keyName: "size",
-                valueType: "number"
-            }];
-
-            async.each(keyTypes, function(keyType, cb) {
-                var actualType = typeof fieldValue[keyType.keyName];
-                if (actualType !== keyType.valueType) {
-                    return cb(new Error("Expected " + keyType.valueType + " but got " + actualType));
-                }
-                if (actualType === "string" && fieldValue[keyType.keyName].length <= 0) {
-                    return cb(new Error("Expected value for " + keyType.keyName));
-                }
-                if (actualType === "number" && fieldValue[keyType.keyName] <= 0) {
-                    return cb(new Error("Expected > 0 value for " + keyType.keyName));
-                }
-
-                return cb();
-            }, function(err) {
-                if (err) return cb(err);
-
-
-                checkFileSize(fieldDefinition, fieldValue, "size", function(err) {
-                    if (err) {
-                        return cb(err);
-                    }
-                    return cb();
-                });
-            });
-        }
-
-        function validatorBase64(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            if (typeof fieldValue !== "string") {
-                return cb(new Error("Expected base64 string but got " + typeof(fieldValue)));
-            }
-
-            if (fieldValue.length <= 0) {
-                return cb(new Error("Expected base64 string but was empty"));
-            }
-
-            return cb();
-        }
-
-        function validatorDateTime(fieldValue, fieldDefinition, previousFieldValues, cb) {
-            var testDate;
-            var valid = false;
-            var parts = [];
-
-            if (typeof(fieldValue) !== "string") {
-                return cb(new Error("Expected string but got " + typeof(fieldValue)));
-            }
-
-            switch (fieldDefinition.fieldOptions.definition.datetimeUnit) {
-                case FIELD_TYPE_DATETIME_DATETIMEUNIT_DATEONLY:
-
-                    parts = fieldValue.split("/");
-                    valid = parts.length === 3;
-
-                    if (valid) {
-                        valid = isNumberBetween(parts[2], 1, 31);
-                    }
-
-                    if (valid) {
-                        valid = isNumberBetween(parts[1], 1, 12);
-                    }
-
-                    if (valid) {
-                        valid = isNumberBetween(parts[0], 1000, 9999);
-                    }
-
-                    try {
-                        if (valid) {
-                            testDate = new Date(parts[3], parts[1], parts[0]);
-                        } else {
-                            testDate = new Date(fieldValue);
-                        }
-                        valid = (testDate.toString() !== "Invalid Date");
-                    } catch (e) {
-                        valid = false;
-                    }
-
-                    if (valid) {
-                        return cb();
-                    } else {
-                        return cb(new Error("Invalid date value " + fieldValue + ". Date format is YYYY/MM/DD"));
-                    }
-                    break;
-                case FIELD_TYPE_DATETIME_DATETIMEUNIT_TIMEONLY:
-                    parts = fieldValue.split(':');
-                    valid = (parts.length === 2) || (parts.length === 3);
-                    if (valid) {
-                        valid = isNumberBetween(parts[0], 0, 23);
-                    }
-                    if (valid) {
-                        valid = isNumberBetween(parts[1], 0, 59);
-                    }
-                    if (valid && (parts.length === 3)) {
-                        valid = isNumberBetween(parts[2], 0, 59);
-                    }
-                    if (valid) {
-                        return cb();
-                    } else {
-                        return cb(new Error("Invalid time value " + fieldValue + ". Time format is HH:MM:SS"));
-                    }
-                    break;
-                case FIELD_TYPE_DATETIME_DATETIMEUNIT_DATETIME:
-                    parts = fieldValue.split(/[- :]/);
-
-                    valid = (parts.length === 6) || (parts.length === 5);
-
-                    if (valid) {
-                        valid = isNumberBetween(parts[2], 1, 31);
-                    }
-
-                    if (valid) {
-                        valid = isNumberBetween(parts[1], 1, 12);
-                    }
-
-                    if (valid) {
-                        valid = isNumberBetween(parts[0], 1000, 9999);
-                    }
-
-                    if (valid) {
-                        valid = isNumberBetween(parts[3], 0, 23);
-                    }
-                    if (valid) {
-                        valid = isNumberBetween(parts[4], 0, 59);
-                    }
-                    if (valid && parts.length === 6) {
-                        valid = isNumberBetween(parts[5], 0, 59);
-                    } else {
-                        parts[5] = 0;
-                    }
-
-                    try {
-                        if (valid) {
-                            testDate = new Date(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
-                        } else {
-                            testDate = new Date(fieldValue);
-                        }
-
-                        valid = (testDate.toString() !== "Invalid Date");
-                    } catch (e) {
-                        valid = false;
-                    }
-
-                    if (valid) {
-                        return cb();
-                    } else {
-                        return cb(new Error("Invalid dateTime string " + fieldValue + ". dateTime format is YYYY/MM/DD HH:MM:SS"));
-                    }
-                    break;
-                default:
-                    return cb(new Error("Invalid dateTime fieldtype " + fieldDefinition.fieldOptions.definition.datetimeUnit));
-            }
-        }
-
-        function validatorSection(value, fieldDefinition, previousFieldValues, cb) {
-            return cb(new Error("Should not submit section field: " + fieldDefinition.name));
-        }
-
-        function rulesResult(rules, cb) {
-            var visible = true;
-
-            // Itterate over each rule that this field is a predicate of
-            async.each(rules, function(rule, cbRule) {
-                // For each rule, itterate over the predicate fields and evaluate the rule
-                var predicateMapQueries = [];
-                var predicateMapPassed = [];
-                async.each(rule.ruleConditionalStatements, function(ruleConditionalStatement, cbPredicates) {
-                    var field = fieldMap[ruleConditionalStatement.sourceField];
-                    var passed = false;
-                    var submissionValues = [];
-                    var condition;
-                    var testValue;
-                    if (submissionFieldsMap[ruleConditionalStatement.sourceField] && submissionFieldsMap[ruleConditionalStatement.sourceField].fieldValues) {
-                        submissionValues = submissionFieldsMap[ruleConditionalStatement.sourceField].fieldValues;
-                        condition = ruleConditionalStatement.restriction;
-                        testValue = ruleConditionalStatement.sourceValue;
-
-                        // Validate rule predictes on the first entry only.
-                        passed = isConditionActive(field, submissionValues[0], testValue, condition);
-                    }
-                    predicateMapQueries.push({
-                        "field": field,
-                        "submissionValues": submissionValues,
-                        "condition": condition,
-                        "testValue": testValue,
-                        "passed": passed
-                    });
-
-                    if (passed) {
-                        predicateMapPassed.push(field);
-                    }
-                    return cbPredicates();
-                }, function(err) {
-                    if (err) cbRule(err);
-
-                    function rulesPassed(condition, passed, queries) {
-                        return ((condition === "and") && ((passed.length === queries.length))) || // "and" condition - all rules must pass
-                        ((condition === "or") && ((passed.length > 0))); // "or" condition - only one rule must pass
-                    }
-
-                    /**
-                     * If any rule condition that targets the field/page hides that field/page, then the page is hidden.
-                     * Hiding the field/page takes precedence over any show. This will maintain consistency.
-                     * E.g. if x is y then show p1,p2 takes precendence over if x is z then hide p1, p2
-                     */
-                    if (rulesPassed(rule.ruleConditionalOperator, predicateMapPassed, predicateMapQueries)) {
-                        visible = (rule.type === "show") && visible;
-                    } else {
-                        visible = (rule.type !== "show") && visible;
-                    }
-
-                    return cbRule();
-                });
-            }, function(err) {
-                if (err) return cb(err);
-
-                return cb(undefined, visible);
-            });
-        }
-
-        function isPageVisible(pageId, cb) {
-            init(function(err) {
-                if (err) return cb(err);
-                if (isPageRuleSubject(pageId)) { // if the page is the target of a rule
-                    return rulesResult(pageRuleSubjectMap[pageId], cb); // execute page rules
-                } else {
-                    return cb(undefined, true); // if page is not subject of any rule then must be visible
-                }
-            });
-        }
-
-        function isFieldVisible(fieldId, checkContainingPage, cb) {
-            /*
-             * fieldId = Id of field to check for reule predeciate references
-             * checkContainingPage = if true check page containing field, and return false if the page is hidden
-             */
-            init(function(err) {
-                if (err) return cb(err);
-
-                // Fields are visable by default
-                var field = fieldMap[fieldId];
-
-                /**
-                 * If the field is an admin field, the rules engine returns an error, as admin fields cannot be the subject of rules engine actions.
-                 */
-                if (adminFieldMap[fieldId]) {
-                    return cb(new Error("Submission " + fieldId + " is an admin field. Admin fields cannot be passed to the rules engine."));
-                } else if (!field) {
-                    return cb(new Error("Field does not exist in form"));
-                }
-
-                async.waterfall([
-
-                    function testPage(cb) {
-                        if (checkContainingPage) {
-                            isPageVisible(field.pageId, cb);
-                        } else {
-                            return cb(undefined, true);
-                        }
-                    },
-                    function testField(pageVisible, cb) {
-                        if (!pageVisible) { // if page containing field is not visible then don't need to check field
-                            return cb(undefined, false);
-                        }
-
-                        if (isFieldRuleSubject(fieldId)) { // If the field is the subject of a rule it may have been hidden
-                            return rulesResult(fieldRuleSubjectMap[fieldId], cb); // execute field rules
-                        } else {
-                            return cb(undefined, true); // if not subject of field rules then can't be hidden
-                        }
-                    }
-                ], cb);
-            });
-        }
-
-        /*
-         * check all rules actions
-         *      res:
-         *      {
-         *          "actions": {
-         *              "pages": {
-         *                  "targetId": {
-         *                      "targetId": "",
-         *                      "action": "show|hide"
-         *                  }
-         *              },
-         *              "fields": {
-         *              }
-         *          }
-         *      }
-         */
-        function checkRules(submissionJSON, cb) {
-            init(function(err) {
-                if (err) return cb(err);
-
-                initSubmission(submissionJSON, function(err) {
-                    if (err) return cb(err);
-                    var actions = {};
-
-                    async.parallel([
-
-                        function(cb) {
-                            actions.fields = {};
-                            async.eachSeries(Object.keys(fieldRuleSubjectMap), function(fieldId, cb) {
-                                isFieldVisible(fieldId, false, function(err, fieldVisible) {
-                                    if (err) return cb(err);
-                                    actions.fields[fieldId] = {
-                                        targetId: fieldId,
-                                        action: (fieldVisible ? "show" : "hide")
-                                    };
-                                    return cb();
-                                });
-                            }, cb);
-                        },
-                        function(cb) {
-                            actions.pages = {};
-                            async.eachSeries(Object.keys(pageRuleSubjectMap), function(pageId, cb) {
-                                isPageVisible(pageId, function(err, pageVisible) {
-                                    if (err) return cb(err);
-                                    actions.pages[pageId] = {
-                                        targetId: pageId,
-                                        action: (pageVisible ? "show" : "hide")
-                                    };
-                                    return cb();
-                                });
-                            }, cb);
-                        }
-                    ], function(err) {
-                        if (err) return cb(err);
-
-                        return cb(undefined, {
-                            actions: actions
-                        });
-                    });
-                });
-            });
-        }
-
-        return {
-            validateForm: validateForm,
-            validateField: validateField,
-            validateFieldValue: validateFieldValue,
-            checkRules: checkRules,
-
-            // The following are used internally, but exposed for tests
-            validateFieldInternal: validateFieldInternal,
-            initSubmission: initSubmission,
-            isFieldVisible: isFieldVisible,
-            isConditionActive: isConditionActive
-        };
-    };
-
-    function isNumberBetween(num, min, max) {
-        var numVal = parseInt(num, 10);
-        return (!isNaN(numVal) && (numVal >= min) && (numVal <= max));
-    }
-
-    function cvtTimeToSeconds(fieldValue) {
-        var seconds = 0;
-        if (typeof fieldValue === "string") {
-            var parts = fieldValue.split(':');
-            valid = (parts.length === 2) || (parts.length === 3);
-            if (valid) {
-                valid = isNumberBetween(parts[0], 0, 23);
-                seconds += (parseInt(parts[0], 10) * 60 * 60);
-            }
-            if (valid) {
-                valid = isNumberBetween(parts[1], 0, 59);
-                seconds += (parseInt(parts[1], 10) * 60);
-            }
-            if (valid && (parts.length === 3)) {
-                valid = isNumberBetween(parts[2], 0, 59);
-                seconds += parseInt(parts[2], 10);
-            }
-        }
-        return seconds;
-    }
-
-    function isConditionActive(field, fieldValue, testValue, condition) {
-
-        var fieldType = field.type;
-        var fieldOptions = field.fieldOptions ? field.fieldOptions : {};
-
-        if (typeof(fieldValue) === 'undefined' || fieldValue === null) {
-            return false;
-        }
-
-        function numericalComparison(condition, fieldValue, testValue) {
-            var fieldValNum = parseInt(fieldValue, 10);
-            var testValNum = parseInt(testValue, 10);
-
-            if (isNaN(fieldValNum) || isNaN(testValNum)) {
-                return false;
-            }
-
-            if ("is equal to" === condition) {
-                return fieldValNum === testValNum;
-            } else if ("is less than" === condition) {
-                return fieldValNum < testValNum;
-            } else if ("is greater than" === condition) {
-                return fieldValNum > testValNum;
-            } else {
-                return false;
-            }
-        }
-
-        var valid = true;
-        if ("is equal to" === condition) {
-            valid = numericalComparison("is equal to", fieldValue, testValue);
-        } else if ("is greater than" === condition) {
-            valid = numericalComparison("is greater than", fieldValue, testValue);
-        } else if ("is less than" === condition) {
-            valid = numericalComparison("is less than", fieldValue, testValue);
-        } else if ("is at" === condition) {
-            valid = false;
-            if (fieldType === FIELD_TYPE_DATETIME) {
-                switch (fieldOptions.definition.datetimeUnit) {
-                    case FIELD_TYPE_DATETIME_DATETIMEUNIT_DATEONLY:
-                        try {
-                            valid = (new Date(new Date(fieldValue).toDateString()).getTime() === new Date(new Date(testValue).toDateString()).getTime());
-                        } catch (e) {
-                            valid = false;
-                        }
-                        break;
-                    case FIELD_TYPE_DATETIME_DATETIMEUNIT_TIMEONLY:
-                        valid = cvtTimeToSeconds(fieldValue) === cvtTimeToSeconds(testValue);
-                        break;
-                    case FIELD_TYPE_DATETIME_DATETIMEUNIT_DATETIME:
-                        try {
-                            valid = (new Date(fieldValue).getTime() === new Date(testValue).getTime());
-                        } catch (e) {
-                            valid = false;
-                        }
-                        break;
-                    default:
-                        valid = false; // TODO should raise error here?
-                        break;
-                }
-            }
-        } else if ("is before" === condition) {
-            valid = false;
-            if (fieldType === FIELD_TYPE_DATETIME) {
-                switch (fieldOptions.definition.datetimeUnit) {
-                    case FIELD_TYPE_DATETIME_DATETIMEUNIT_DATEONLY:
-                        try {
-                            valid = (new Date(new Date(fieldValue).toDateString()).getTime() < new Date(new Date(testValue).toDateString()).getTime());
-                        } catch (e) {
-                            valid = false;
-                        }
-                        break;
-                    case FIELD_TYPE_DATETIME_DATETIMEUNIT_TIMEONLY:
-                        valid = cvtTimeToSeconds(fieldValue) < cvtTimeToSeconds(testValue);
-                        break;
-                    case FIELD_TYPE_DATETIME_DATETIMEUNIT_DATETIME:
-                        try {
-                            valid = (new Date(fieldValue).getTime() < new Date(testValue).getTime());
-                        } catch (e) {
-                            valid = false;
-                        }
-                        break;
-                    default:
-                        valid = false; // TODO should raise error here?
-                        break;
-                }
-            }
-        } else if ("is after" === condition) {
-            valid = false;
-            if (fieldType === FIELD_TYPE_DATETIME) {
-                switch (fieldOptions.definition.datetimeUnit) {
-                    case FIELD_TYPE_DATETIME_DATETIMEUNIT_DATEONLY:
-                        try {
-                            valid = (new Date(new Date(fieldValue).toDateString()).getTime() > new Date(new Date(testValue).toDateString()).getTime());
-                        } catch (e) {
-                            valid = false;
-                        }
-                        break;
-                    case FIELD_TYPE_DATETIME_DATETIMEUNIT_TIMEONLY:
-                        valid = cvtTimeToSeconds(fieldValue) > cvtTimeToSeconds(testValue);
-                        break;
-                    case FIELD_TYPE_DATETIME_DATETIMEUNIT_DATETIME:
-                        try {
-                            valid = (new Date(fieldValue).getTime() > new Date(testValue).getTime());
-                        } catch (e) {
-                            valid = false;
-                        }
-                        break;
-                    default:
-                        valid = false; // TODO should raise error here?
-                        break;
-                }
-            }
-        } else if ("is" === condition) {
-            if (fieldType === FIELD_TYPE_CHECKBOX) {
-                valid = fieldValue && fieldValue.selections && fieldValue.selections.indexOf(testValue) !== -1;
-            } else {
-                valid = fieldValue === testValue;
-            }
-        } else if ("is not" === condition) {
-            if (fieldType === FIELD_TYPE_CHECKBOX) {
-                valid = fieldValue && fieldValue.selections && fieldValue.selections.indexOf(testValue) === -1;
-            } else {
-                valid = fieldValue !== testValue;
-            }
-        } else if ("contains" === condition) {
-            valid = fieldValue.indexOf(testValue) !== -1;
-        } else if ("does not contain" === condition) {
-            valid = fieldValue.indexOf(testValue) === -1;
-        } else if ("begins with" === condition) {
-            valid = fieldValue.substring(0, testValue.length) === testValue;
-        } else if ("ends with" === condition) {
-            valid = fieldValue.substring(Math.max(0, (fieldValue.length - testValue.length)), fieldValue.length) === testValue;
-        } else {
-            valid = false;
-        }
-
-        return valid;
-    }
-
-    return formsRulesEngine(formDef);
-}
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = rulesEngine;
-}
-},{"async":7,"underscore":47}],72:[function(require,module,exports){
+},{"./dataAgent":78,"./localStorage":80,"./utils":85,"eventemitter2":47,"underscore":76}],83:[function(require,module,exports){
 function Store(name) {
     this.name = name;
 }
@@ -15138,7 +27529,7 @@ Store.prototype.upsert = function(model, cb) {
 
 module.exports = Store;
 
-},{}],73:[function(require,module,exports){
+},{}],84:[function(require,module,exports){
 var log = require("./log");
 var utils = require("./utils");
 var Store = require("./store");
@@ -15302,2396 +27693,7 @@ function getMbaasStore(){
 
 module.exports = getMbaasStore();
 
-},{"./config":48,"./log":68,"./store":72,"./utils":78,"./web":79}],74:[function(require,module,exports){
-//implmenetation
-var _submissions = {};
-//cache in mem for single reference usage.
-var Model = require("./model");
-var submissions = require("./submissions");
-var log = require("./log");
-var utils = require("./utils");
-var config = require("./config");
-var uploadManager = require("./uploadManager");
-var submissions = require("./submissions");
-var localStorage = require("./localStorage");
-var Form = require("./form");
-var async = require("async");
-var _ = require("underscore");
-var rulesEngine = require('./rulesEngine.js');
-
-var statusMachine = {
-    'new': [
-        'draft',
-        'pending'
-    ],
-    'draft': [
-        'pending',
-        'draft'
-    ],
-    'pending': [
-        'inprogress',
-        'error',
-        'draft'
-    ],
-    'inprogress': [
-        'pending',
-        'error',
-        'inprogress',
-        'downloaded',
-        'queued'
-    ],
-    'submitted': [],
-    'error': [
-        'draft',
-        'pending',
-        'error'
-    ],
-    'downloaded': [],
-    'queued': ['error', 'submitted']
-};
-
-function Submission(form, params) {
-    params = params || {};
-    log.d("Submission: ", params);
-    Model.call(this, {
-        '_type': 'submission'
-    });
-    if (typeof form !== 'undefined' && form) {
-        this.set('formName', form.get('name'));
-        this.set('formId', form.get('_id'));
-        this.set('deviceFormTimestamp', form.getLastUpdate());
-        this.set('createDate', utils.getTime());
-        this.set('timezoneOffset', utils.getTime(true));
-        this.set('appId', config.get('appId'));
-        this.set('appEnvironment', config.get('env'));
-        this.set('appCloudName', '');
-        this.set('comments', []);
-        this.set('formFields', []);
-        this.set('saveDate', null);
-        this.set('submitDate', null);
-        this.set('uploadStartDate', null);
-        this.set('submittedDate', null);
-        this.set('userId', null);
-        this.set('filesInSubmission', []);
-        this.set('deviceId', config.get('deviceId'));
-        this.transactionMode = false;
-    } else {
-        this.set('appId', config.get('appId'));
-        if (params.submissionId) {
-            this.set('downloadSubmission', true);
-            this.setRemoteSubmissionId(params.submissionId);
-        } else {
-            this.set('status', 'new');
-        }
-    }
-    this.set('status', 'new');
-    this.getLocalId();
-    var localId = this.getLocalId();
-    _submissions[localId] = this;
-}
-
-utils.extend(Submission, Model);
-
-/**
- * save current submission as draft
- * @return {[type]} [description]
- */
-Submission.prototype.saveDraft = function(cb) {
-    log.d("Submission saveDraft: ");
-    var targetStatus = 'draft';
-    var that = this;
-    this.set('timezoneOffset', utils.getTime(true));
-    this.set('saveDate', utils.getTime());
-    this.changeStatus(targetStatus, function(err) {
-        if (err) {
-            return cb(err);
-        } else {
-            that.emit('savedraft');
-            cb(null, null);
-        }
-    });
-};
-Submission.prototype.validateField = function(fieldId, cb) {
-    log.d("Submission validateField: ", fieldId);
-    var that = this;
-    this.getForm(function(err, form) {
-        if (err) {
-            cb(err);
-        } else {
-            var submissionData = that.getProps();
-            var rE = form.getRuleEngine();
-            rE.validateField(fieldId, submissionData, cb);
-        }
-    });
-};
-Submission.prototype.checkRules = function(cb) {
-    log.d("Submission checkRules: ");
-    var self = this;
-    this.getForm(function(err, form) {
-        if (err) {
-            cb(err);
-        } else {
-            var submission = self.getProps();
-            var rE = form.getRuleEngine();
-            rE.checkRules(submission, cb);
-        }
-    });
-};
-
-Submission.prototype.performValidation = function(cb) {
-    var self = this;
-    self.getForm(function(err, form) {
-        if (err) {
-            log.e("Submission submit: Error getting form ", err);
-            return cb(err);
-        }
-        var rE = form.getRuleEngine();
-        var submission = self.getProps();
-        var formRuleEngine = rulesEngine(form.getProps());
-
-        formRuleEngine.validateForm(submission, cb);
-    });
-};
-
-/**
- * Validate the submission only.
- */
-Submission.prototype.validateSubmission = function(cb) {
-    var self = this;
-
-    self.performValidation(function(err, res) {
-        if (err) {
-            return cb(err);
-        }
-        var validation = res.validation;
-        if (validation.valid) {
-            return cb(null, validation.valid);
-        } else {
-            self.emit('validationerror', validation);
-            cb(null, validation.valid);
-        }
-    });
-};
-
-/**
- * submit current submission to remote
- * @param  {Function} cb [description]
- * @return {[type]}      [description]
- */
-Submission.prototype.submit = function(cb) {
-    var that = this;
-    log.d("Submission submit: ");
-    var targetStatus = 'pending';
-    var validateResult = true;
-
-    this.set('timezoneOffset', utils.getTime(true));
-    that.performValidation(function(err, res) {
-        if (err) {
-            log.e("Submission submit validateForm: Error validating form ", err);
-            cb(err);
-        } else {
-            log.d("Submission submit: validateForm. Completed result", res);
-            var validation = res.validation;
-            if (validation.valid) {
-                log.d("Submission submit: validateForm. Completed Form Valid", res);
-                that.set('submitDate', new Date());
-                that.changeStatus(targetStatus, function(error) {
-                    if (error) {
-                        cb(error);
-                    } else {
-                        that.emit('submit');
-                        cb(null, null);
-                    }
-                });
-            } else {
-                log.d("Submission submit: validateForm. Completed Validation error", res);
-                that.emit('validationerror', validation);
-                cb('Validation error');
-            }
-        }
-    });
-};
-Submission.prototype.getUploadTask = function(cb) {
-    var taskId = this.getUploadTaskId();
-    if (taskId) {
-        uploadManager.getTaskById(taskId, cb);
-    } else {
-        cb(null, null);
-    }
-};
-Submission.prototype.getFormId = function() {
-    return this.get("formId");
-};
-/**
- * If a submission is a download submission, the JSON definition of the form
- * that it was submitted against is contained in the submission.
- */
-Submission.prototype.getFormSubmittedAgainst = function() {
-    return this.get("formSubmittedAgainst");
-};
-Submission.prototype.getDownloadTask = function(cb) {
-    var self = this;
-    log.d("getDownloadTask");
-    if (self.isDownloadSubmission()) {
-        self.getUploadTask(cb);
-    } else {
-        if (cb && typeof(cb) === 'function') {
-            log.e("Submission is not a download submission");
-            return cb("Submission is not a download submission");
-        }
-    }
-};
-Submission.prototype.cancelUploadTask = function(cb) {
-    var targetStatus = 'submit';
-    var that = this;
-    uploadManager.cancelSubmission(this, function(err) {
-        if (err) {
-            log.e(err);
-        }
-        that.changeStatus(targetStatus, cb);
-    });
-};
-Submission.prototype.getUploadTaskId = function() {
-    return this.get('uploadTaskId');
-};
-Submission.prototype.setUploadTaskId = function(utId) {
-    this.set('uploadTaskId', utId);
-};
-Submission.prototype.isInProgress = function() {
-    return this.get("status") === "inprogress";
-};
-Submission.prototype.isDownloaded = function() {
-    return this.get("status") === "downloaded";
-};
-Submission.prototype.isSubmitted = function() {
-    return this.get("status") === "submitted";
-};
-Submission.prototype.submitted = function(cb) {
-    var self = this;
-    if (self.isDownloadSubmission()) {
-        var errMsg = "Downloaded submissions should not call submitted function.";
-        log.e(errMsg);
-        return cb(errMsg);
-    }
-    log.d("Submission submitted called");
-
-    var targetStatus = 'submitted';
-
-    self.set('submittedDate', utils.getTime());
-    self.changeStatus(targetStatus, function(err) {
-        if (err) {
-            log.e("Error setting submitted status " + err);
-            cb(err);
-        } else {
-            log.d("Submitted status set for submission " + self.get('submissionId') + " with localId " + self.getLocalId());
-            self.emit('submitted', self.get('submissionId'));
-            cb(null, null);
-        }
-    });
-};
-Submission.prototype.queued = function(cb) {
-    var self = this;
-    if (self.isDownloadSubmission()) {
-        var errMsg = "Downloaded submissions should not call queued function.";
-        log.e(errMsg);
-        return cb(errMsg);
-    }
-
-    var targetStatus = 'queued';
-    self.set('queuedDate', utils.getTime());
-    self.changeStatus(targetStatus, function(err) {
-        if (err) {
-            log.e("Error setting queued status " + err);
-            cb(err);
-        } else {
-            log.d("Queued status set for submission " + self.get('submissionId') + " with localId " + self.getLocalId());
-            self.emit('queued', self.get('submissionId'));
-            cb(null, self);
-        }
-    });
-};
-Submission.prototype.downloaded = function(cb) {
-    log.d("Submission Downloaded called");
-    var that = this;
-    var targetStatus = 'downloaded';
-
-    that.set('downloadedDate', utils.getTime());
-    that.changeStatus(targetStatus, function(err) {
-        if (err) {
-            log.e("Error setting downloaded status " + err);
-            cb(err);
-        } else {
-            log.d("Downloaded status set for submission " + that.get('submissionId') + " with localId " + that.getLocalId());
-            that.emit('downloaded', that.get('submissionId'));
-            cb(null, that);
-        }
-    });
-};
-
-/**
- * change status and save the submission locally and register to submissions list.
- * @param {[type]} status [description]
- */
-Submission.prototype.changeStatus = function(status, cb) {
-    if (this.isStatusValid(status)) {
-        var that = this;
-        this.set('status', status);
-        this.saveToList(function(err) {
-            if (err) {
-                log.e(err);
-            }
-        });
-        this.saveLocal(cb);
-    } else {
-        log.e('Target status is not valid: ' + status);
-        cb('Target status is not valid: ' + status);
-    }
-};
-Submission.prototype.upload = function(cb) {
-    var targetStatus = "inprogress";
-    var self = this;
-    if (this.isStatusValid(targetStatus)) {
-        this.set("status", targetStatus);
-        this.set("uploadStartDate", utils.getTime());
-        submissions.updateSubmissionWithoutSaving(this);
-        uploadManager.queueSubmission(self, function(err, ut) {
-            if (err) {
-                cb(err);
-            } else {
-                ut.set("error", null);
-                ut.saveLocal(function(err) {
-                    if (err) {
-                        log.e("Error saving upload task: " + err);
-                    }
-                    self.emit("inprogress", ut);
-                    ut.on("progress", function(progress) {
-                        log.d("Emitting upload progress for submission: " + self.getLocalId() + JSON.stringify(progress));
-                        self.emit("progress", progress);
-                    });
-                    cb(null, ut);
-                });
-            }
-        });
-    } else {
-        return cb("Invalid Status to upload a form submission.");
-    }
-};
-Submission.prototype.download = function(cb) {
-    var that = this;
-    log.d("Starting download for submission: " + that.getLocalId());
-    var targetStatus = "pending";
-    if (this.isStatusValid(targetStatus)) {
-        this.set("status", targetStatus);
-        targetStatus = "inprogress";
-        if (this.isStatusValid(targetStatus)) {
-            this.set("status", targetStatus);
-            //Status is valid, add the submission to the
-            uploadManager.queueSubmission(that, function(err, downloadTask) {
-                if (err) {
-                    return cb(err);
-                }
-                downloadTask.set("error", null);
-                downloadTask.saveLocal(function(err) {
-                    if (err) {
-                        log.e("Error saving download task: " + err);
-                    }
-                    that.emit("inprogress", downloadTask);
-                    downloadTask.on("progress", function(progress) {
-                        log.d("Emitting download progress for submission: " + that.getLocalId() + JSON.stringify(progress));
-                        that.emit("progress", progress);
-                    });
-                    return cb(null, downloadTask);
-                });
-                
-            });
-        } else {
-            return cb("Invalid Status to dowload a form submission");
-        }
-    } else {
-        return cb("Invalid Status to download a form submission.");
-    }
-};
-Submission.prototype.saveToList = function(cb) {
-    submissions.saveSubmission(this, cb);
-};
-Submission.prototype.error = function(errorMsg, cb) {
-    this.set('errorMessage', errorMsg);
-    var targetStatus = 'error';
-    this.changeStatus(targetStatus, cb);
-    this.emit('error', errorMsg);
-};
-Submission.prototype.getStatus = function() {
-    return this.get('status');
-};
-/**
- * check if a target status is valid
- * @param  {[type]}  targetStatus [description]
- * @return {Boolean}              [description]
- */
-Submission.prototype.isStatusValid = function(targetStatus) {
-    log.d("isStatusValid. Target Status: " + targetStatus + " Current Status: " + this.get('status').toLowerCase());
-    var status = this.get('status').toLowerCase();
-    var nextStatus = statusMachine[status];
-    if (nextStatus.indexOf(targetStatus) > -1) {
-        return true;
-    } else {
-        this.set('status', 'error');
-        return false;
-    }
-};
-Submission.prototype.addComment = function(msg, user) {
-    var now = utils.getTime();
-    var ts = now.getTime();
-    var newComment = {
-        'madeBy': typeof user === 'undefined' ? '' : user.toString(),
-        'madeOn': now,
-        'value': msg,
-        'timeStamp': ts
-    };
-    this.getComments().push(newComment);
-    return ts;
-};
-Submission.prototype.getComments = function() {
-    return this.get('comments');
-};
-Submission.prototype.removeComment = function(timeStamp) {
-    var comments = this.getComments();
-    for (var i = 0; i < comments.length; i++) {
-        var comment = comments[i];
-        if (comment.timeStamp === timeStamp) {
-            comments.splice(i, 1);
-            return;
-        }
-    }
-};
-
-Submission.prototype.populateFilesInSubmission = function() {
-    var self = this;
-    var tmpFileNames = [];
-
-    var submissionFiles = self.getSubmissionFiles();
-    for (var fieldValIndex = 0; fieldValIndex < submissionFiles.length; fieldValIndex++) {
-        if (submissionFiles[fieldValIndex].fileName) {
-            tmpFileNames.push(submissionFiles[fieldValIndex].fileName);
-        } else if (submissionFiles[fieldValIndex].hashName) {
-            tmpFileNames.push(submissionFiles[fieldValIndex].hashName);
-        }
-    }
-
-    self.set("filesInSubmission", submissionFiles);
-};
-
-Submission.prototype.getSubmissionFiles = function() {
-    var self = this;
-    log.d("In getSubmissionFiles: " + self.getLocalId());
-    var submissionFiles = [];
-
-    var formFields = self.getFormFields();
-
-    for (var formFieldIndex = 0; formFieldIndex < formFields.length; formFieldIndex++) {
-        var tmpFieldValues = formFields[formFieldIndex].fieldValues || [];
-        for (var fieldValIndex = 0; fieldValIndex < tmpFieldValues.length; fieldValIndex++) {
-            if (tmpFieldValues[fieldValIndex].fileName) {
-                submissionFiles.push(tmpFieldValues[fieldValIndex]);
-            } else if (tmpFieldValues[fieldValIndex].hashName) {
-                submissionFiles.push(tmpFieldValues[fieldValIndex]);
-            }
-        }
-
-    }
-
-    return submissionFiles;
-};
-
-// *
-//  * Add a value to submission.
-//  * This will not cause the field been validated.
-//  * Validation should happen:
-//  * 1. onblur (field value)
-//  * 2. onsubmit (whole submission json)
-//  *
-//  * @param {[type]} params   {"fieldId","value","index":optional}
-//  * @param {} cb(err,res) callback function when finished
-//  * @return true / error message
-
-Submission.prototype.addInputValue = function(params, cb) {
-    log.d("Adding input value: ", JSON.stringify(params || {}));
-    var that = this;
-    var fieldId = params.fieldId;
-    var inputValue = params.value;
-
-    if (inputValue !== null && typeof(inputValue) !== 'undefined') {
-        var index = params.index === undefined ? -1 : params.index;
-        this.getForm(function(err, form) {
-            var fieldModel = form.getFieldModelById(fieldId);
-            if (that.transactionMode) {
-                if (!that.tmpFields[fieldId]) {
-                    that.tmpFields[fieldId] = [];
-                }
-
-                params.isStore = false; //Don't store the files until the transaction is complete
-                fieldModel.processInput(params, function(err, result) {
-                    if (err) {
-                        return cb(err);
-                    } else {
-                        if (index > -1) {
-                            that.tmpFields[fieldId][index] = result;
-                        } else {
-                            that.tmpFields[fieldId].push(result);
-                        }
-
-                        return cb(null, result);
-                    }
-                });
-            } else {
-                var target = that.getInputValueObjectById(fieldId);
-
-                //File already exists for this input, overwrite rather than create a new file
-                if (target.fieldValues[index]) {
-                    if (typeof(target.fieldValues[index].hashName) === "string") {
-                        params.previousFile = target.fieldValues[index];
-                    }
-                }
-
-
-                fieldModel.processInput(params, function(err, result) {
-                    if (err) {
-                        return cb(err);
-                    } else {
-                        if (index > -1) {
-                            target.fieldValues[index] = result;
-                        } else {
-                            target.fieldValues.push(result);
-                        }
-
-                        if (typeof(result.hashName) === "string") {
-                            that.pushFile(result.hashName);
-                        }
-
-                        return cb(null, result);
-                    }
-                });
-            }
-        });
-    } else {
-        log.e("addInputValue: Input value was null. Params: " + fieldId);
-        return cb(null, {});
-    }
-};
-Submission.prototype.pushFile = function(hashName) {
-    var subFiles = this.get('filesInSubmission', []);
-    if (typeof(hashName) === "string") {
-        if (subFiles.indexOf(hashName) === -1) {
-            subFiles.push(hashName);
-            this.set('filesInSubmission', subFiles);
-        }
-    }
-};
-Submission.prototype.removeFileValue = function(hashName) {
-    var subFiles = this.get('filesInSubmission', []);
-    if (typeof(hashName) === "string" && subFiles.indexOf(hashName) > -1) {
-        subFiles.splice(subFiles.indexOf(hashName), 1);
-        this.set('filesInSubmission', subFiles);
-    }
-};
-Submission.prototype.getInputValueByFieldId = function(fieldId, cb) {
-    var self = this;
-    var values = this.getInputValueObjectById(fieldId).fieldValues;
-    this.getForm(function(err, form) {
-        var fieldModel = form.getFieldModelById(fieldId);
-        fieldModel.convertSubmission(values, cb);
-    });
-};
-/**
- * Reset submission
- * @return {[type]} [description]
- */
-Submission.prototype.reset = function() {
-    var self = this;
-    self.clearLocalSubmissionFiles(function(err) {
-        self.set('formFields', []);
-    });
-};
-Submission.prototype.isDownloadSubmission = function() {
-    return this.get("downloadSubmission") === true;
-};
-
-Submission.prototype.getSubmissionFile = function(fileName, cb) {
-    localStorage.readFile(fileName, cb);
-};
-Submission.prototype.clearLocalSubmissionFiles = function(cb) {
-    log.d("In clearLocalSubmissionFiles");
-    var self = this;
-    var filesInSubmission = self.get("filesInSubmission", []);
-    log.d("Files to clear ", filesInSubmission);
-    var localFileName = "";
-
-    //Should probably be emitting events..
-    async.eachSeries(filesInSubmission, function(fileMetaObject, cb) {
-        localStorage.removeEntry(filesInSubmission[fileMetaObject], function(err) {
-            if (err) {
-                log.e("Error removing files from " + err);
-            }
-
-            cb(err);
-        });
-    }, cb);
-};
-Submission.prototype.startInputTransaction = function() {
-    this.transactionMode = true;
-    this.tmpFields = {};
-};
-Submission.prototype.endInputTransaction = function(succeed) {
-    var self = this;
-    self.transactionMode = false;
-    var tmpFields = {};
-    var fieldId = "";
-    var valIndex = 0;
-    var valArr = [];
-    var val = "";
-    if (succeed) {
-        tmpFields = this.tmpFields;
-        for (fieldId in tmpFields) {
-            var target = this.getInputValueObjectById(fieldId);
-            valArr = tmpFields[fieldId];
-            for (valIndex = 0; valIndex < valArr.length; valIndex++) {
-                val = valArr[valIndex];
-                target.fieldValues.push(val);
-                if (typeof(val.hashName) === "string") {
-                    this.pushFile(val.hashName);
-                }
-            }
-        }
-        this.tmpFields = {};
-    } else {
-        //clear any files set as part of the transaction
-        tmpFields = this.tmpFields;
-        this.tmpFields = {};
-
-        var fileIds = _.map(tmpFields, function(valArr, fieldId) {
-            var fileObjects = _.filter(valArr, function(val) {
-                return typeof(val.hashName) === "string";
-            });
-
-            return _.map(fileObjects, function(fileObject) {
-                return fileObject.hashName;
-            });
-        });
-
-        //Flatten and remove junk
-        fileIds = _.flatten(fileIds);
-        fileIds = _.compact(fileIds);
-
-        async.eachSeries(fileIds, function(fileId, cb) {
-        	log.d("Removing File From Transaction" + fileId);
-            localStorage.removeEntry(fileId, cb);
-        }, function(err) {
-            if (err) {
-                log.e("Error removing file from transaction ", err);
-            } else {
-            	log.d("Finished Removing Transaction Inputs");
-            }
-        });
-    }
-};
-/**
- * remove an input value from submission
- * @param  {[type]} fieldId field id
- * @param  {[type]} index (optional) the position of the value will be removed if it is repeated field.
- * @return {[type]}         [description]
- */
-Submission.prototype.removeFieldValue = function(fieldId, index) {
-    var self = this;
-    var targetArr = [];
-    var valRemoved = {};
-    if (this.transactionMode) {
-        targetArr = this.tmpFields.fieldId;
-    } else {
-        targetArr = this.getInputValueObjectById(fieldId).fieldId;
-    }
-    if (typeof index === 'undefined') {
-        valRemoved = targetArr.splice(0, targetArr.length);
-    } else {
-        if (targetArr.length > index) {
-            valRemoved = targetArr.splice(index, 1);
-        }
-    }
-
-    if (typeof(valRemoved.hashName) === "string") {
-        localStorage.removeEntry(valRemoved.hashName, function(err) {
-            if (err) {
-                log.e("Error removing file: ", err);
-            } else {
-                self.removeFileValue(valRemoved.hashName);
-            }
-        });
-    }
-};
-Submission.prototype.getInputValueObjectById = function(fieldId) {
-    var formFields = this.getFormFields();
-    for (var i = 0; i < formFields.length; i++) {
-        var formField = formFields[i];
-
-        if (formField.fieldId._id) {
-            if (formField.fieldId._id === fieldId) {
-                return formField;
-            }
-        } else {
-            if (formField.fieldId === fieldId) {
-                return formField;
-            }
-        }
-    }
-    var newField = {
-        'fieldId': fieldId,
-        'fieldValues': []
-    };
-    formFields.push(newField);
-    return newField;
-};
-/**
- * get form model related to this submission.
- * @return {[type]} [description]
- */
-Submission.prototype.getForm = function(cb) {
-    var formId = this.get('formId');
-    var Form = require("./form");
-
-    if (formId) {
-        log.d("FormId found for getForm: " + formId);
-        new Form({
-            'formId': formId,
-            'rawMode': true
-        }, cb);
-    } else {
-        log.e("No form Id specified for getForm");
-        return cb("No form Id specified for getForm");
-    }
-};
-Submission.prototype.reloadForm = function(cb) {
-    log.d("Submission reload form");
-    var formId = this.get('formId');
-    var self = this;
-    new require("./form")({
-        formId: formId,
-        'rawMode': true
-    }, function(err, form) {
-        if (err) {
-            cb(err);
-        } else {
-            self.form = form;
-            if (!self.get('deviceFormTimestamp', null)) {
-                self.set('deviceFormTimestamp', form.getLastUpdate());
-            }
-            cb(null, form);
-        }
-    });
-};
-/**
- * Retrieve all file fields related value
- * If the submission has been downloaded, there is no gurantee that the form is  on-device.
- * @return {[type]} [description]
- */
-Submission.prototype.getFileInputValues = function(cb) {
-    var self = this;
-    self.getFileFieldsId(function(err, fileFieldIds) {
-        if (err) {
-            return cb(err);
-        }
-        return cb(null, self.getInputValueArray(fileFieldIds));
-    });
-};
-
-Submission.prototype.getFormFields = function() {
-    var formFields = this.get("formFields", []);
-
-    //Removing null values
-    for (var formFieldIndex = 0; formFieldIndex < formFields.length; formFieldIndex++) {
-        formFields[formFieldIndex].fieldValues = formFields[formFieldIndex].fieldValues || [];
-        formFields[formFieldIndex].fieldValues = formFields[formFieldIndex].fieldValues.filter(function(fieldValue) {
-            return fieldValue !== null && typeof(fieldValue) !== "undefined";
-        });
-    }
-
-    return formFields;
-};
-
-Submission.prototype.getFileFieldsId = function(cb) {
-    var self = this;
-    var formFieldIds = [];
-
-    if (self.isDownloadSubmission()) {
-        //For Submission downloads, there needs to be a scan through the formFields param
-        var formFields = self.getFormFields();
-
-        for (var formFieldIndex = 0; formFieldIndex < formFields.length; formFieldIndex++) {
-            var formFieldEntry = formFields[formFieldIndex].fieldId || {};
-            if (formFieldEntry.type === 'file' || formFieldEntry.type === 'photo' || formFieldEntry.type === 'signature') {
-                if (formFieldEntry._id) {
-                    formFieldIds.push(formFieldEntry._id);
-                }
-            }
-        }
-        return cb(null, formFieldIds);
-    } else {
-        self.getForm(function(err, form) {
-            if (err) {
-                log.e("Error getting form for getFileFieldsId" + err);
-                return cb(err);
-            }
-            return cb(err, form.getFileFieldsId());
-        });
-    }
-};
-
-Submission.prototype.updateFileLocalURI = function(fileDetails, newLocalFileURI, cb) {
-    log.d("updateFileLocalURI: " + newLocalFileURI);
-    var self = this;
-    fileDetails = fileDetails || {};
-
-    if (fileDetails.fileName && newLocalFileURI) {
-        //Search for the file placeholder name.
-        self.findFilePlaceholderFieldId(fileDetails.fileName, function(err, fieldDetails) {
-            if (err) {
-                return cb(err);
-            }
-            if (fieldDetails.fieldId) {
-                var tmpObj = self.getInputValueObjectById(fieldDetails.fieldId).fieldValues[fieldDetails.valueIndex];
-                tmpObj.localURI = newLocalFileURI;
-                self.getInputValueObjectById(fieldDetails.fieldId).fieldValues[fieldDetails.valueIndex] = tmpObj;
-                self.saveLocal(cb);
-            } else {
-                log.e("No file field matches the placeholder name " + fileDetails.fileName);
-                return cb("No file field matches the placeholder name " + fileDetails.fileName);
-            }
-        });
-    } else {
-        log.e("Submission: updateFileLocalURI : No fileName for submissionId : " + JSON.stringify(fileDetails));
-        return cb("Submission: updateFileLocalURI : No fileName for submissionId : " + JSON.stringify(fileDetails));
-    }
-};
-
-Submission.prototype.findFilePlaceholderFieldId = function(filePlaceholderName, cb) {
-    var self = this;
-    var fieldDetails = {};
-    self.getFileFieldsId(function(err, fieldIds) {
-        for (var i = 0; i < fieldIds.length; i++) {
-            var fieldId = fieldIds[i];
-            var inputValue = self.getInputValueObjectById(fieldId);
-            for (var j = 0; j < inputValue.fieldValues.length; j++) {
-                var tmpObj = inputValue.fieldValues[j];
-                if (tmpObj) {
-                    if (tmpObj.fileName !== null && tmpObj.fileName === filePlaceholderName) {
-                        fieldDetails.fieldId = fieldId;
-                        fieldDetails.valueIndex = j;
-                    }
-                }
-            }
-        }
-        return cb(null, fieldDetails);
-    });
-};
-
-Submission.prototype.getInputValueArray = function(fieldIds) {
-    var rtn = [];
-    for (var i = 0; i < fieldIds.length; i++) {
-        var fieldId = fieldIds[i];
-        var inputValue = this.getInputValueObjectById(fieldId);
-        for (var j = 0; j < inputValue.fieldValues.length; j++) {
-            var tmpObj = inputValue.fieldValues[j];
-            if (tmpObj) {
-                tmpObj.fieldId = fieldId;
-                rtn.push(tmpObj);
-            }
-        }
-    }
-    return rtn;
-};
-Submission.prototype.clearLocal = function(cb) {
-    var self = this;
-    //remove from uploading list
-    uploadManager.cancelSubmission(self, function(err, uploadTask) {
-        if (err) {
-            log.e(err);
-            return cb(err);
-        }
-        //remove from submission list
-        submissions.removeSubmission(self.getLocalId(), function(err) {
-            if (err) {
-                log.e(err);
-                return cb(err);
-            }
-            self.clearLocalSubmissionFiles(function() {
-                Model.prototype.clearLocal.call(self, function(err) {
-                    if (err) {
-                        log.e(err);
-                        return cb(err);
-                    }
-                    cb(null, null);
-                });
-            });
-        });
-    });
-};
-Submission.prototype.getRemoteSubmissionId = function() {
-    return this.get("submissionId", "");
-};
-Submission.prototype.setRemoteSubmissionId = function(submissionId) {
-    if (submissionId) {
-        this.set("submissionId", submissionId);
-    }
-};
-
-function newInstance(form, params) {
-    params = params ? params : {};
-    var sub = new Submission(form, params);
-
-    if (params.submissionId) {
-        submissions.updateSubmissionWithoutSaving(sub);
-    }
-    return sub;
-}
-
-function fromLocal(localId, cb) {
-    log.d("Submission fromLocal: ", localId);
-    if (_submissions[localId]) {
-        log.d("Submission fromLocal from cache: ", localId);
-        //already loaded
-        cb(null, _submissions[localId]);
-    } else {
-        //load from storage
-        log.d("Submission fromLocal not in cache. Loading from local storage.: ", localId);
-        var submissionObject = new Submission();
-        submissionObject.setLocalId(localId);
-        submissionObject.loadLocal(function(err, submission) {
-            if (err) {
-                log.e("Submission fromLocal. Error loading from local: ", localId, err);
-                cb(err);
-            } else {
-                log.d("Submission fromLocal. Load from local sucessfull: ", localId);
-                if (submission.isDownloadSubmission()) {
-                    return cb(null, submission);
-                } else {
-                    submission.reloadForm(function(err, res) {
-                        if (err) {
-                            log.e("Submission fromLocal. reloadForm. Error re-loading form: ", localId, err);
-                            cb(err);
-                        } else {
-                            log.d("Submission fromLocal. reloadForm. Re-loading form successfull: ", localId);
-                            _submissions[localId] = submission;
-                            cb(null, submission);
-                        }
-                    });
-                }
-
-            }
-        });
-    }
-}
-
-module.exports = {
-    newInstance: newInstance,
-    fromLocal: fromLocal
-};
-},{"./config":48,"./form":61,"./localStorage":67,"./log":68,"./model":69,"./rulesEngine.js":71,"./submissions":75,"./uploadManager":76,"./utils":78,"async":7,"underscore":47}],75:[function(require,module,exports){
-var Model = require("./model");
-var log = require("./log");
-var submission = require("./submission");
-var utils = require("./utils");
-var config = require("./config");
-var _ = require("underscore");
-var async = require("async");
-
-function Submissions() {
-    Model.call(this, {
-        '_type': 'submissions',
-        '_ludid': 'submissions_list',
-        'submissions': []
-    });
-}
-
-utils.extend(Submissions, Model);
-
-Submissions.prototype.setLocalId = function() {
-    log.e("Submissions setLocalId. Not Permitted for submissions.");
-};
-/**
- * save a submission to list and store it immediately
- * @param  {[type]}   submission [description]
- * @param  {Function} cb         [description]
- * @return {[type]}              [description]
- */
-Submissions.prototype.saveSubmission = function(submission, cb) {
-    log.d("Submissions saveSubmission");
-    var self = this;
-    this.updateSubmissionWithoutSaving(submission);
-    this.clearSentSubmission(function() {
-        self.saveLocal(cb);
-    });
-};
-Submissions.prototype.updateSubmissionWithoutSaving = function(submission) {
-    log.d("Submissions updateSubmissionWithoutSaving");
-    var pruneData = this.pruneSubmission(submission);
-    var localId = pruneData._ludid;
-    if (localId) {
-        var meta = this.findMetaByLocalId(localId);
-        var submissions = this.get('submissions');
-        if (meta) {
-            //existed, remove the old meta and save the new one.
-            submissions.splice(submissions.indexOf(meta), 1);
-            submissions.push(pruneData);
-        } else {
-            // not existed, insert to the tail.
-            submissions.push(pruneData);
-        }
-    } else {
-        // invalid local id.
-        log.e('Invalid submission for localId:', localId, JSON.stringify(submission));
-    }
-};
-Submissions.prototype.clearSentSubmission = function(cb) {
-    log.d("Submissions clearSentSubmission");
-    var self = this;
-    var maxSent = config.get("max_sent_saved") ? config.get("max_sent_saved") : config.get("sent_save_min");
-    var submissions = self.get("submissions");
-    var sentSubmissions = this.getSubmitted();
-    var toBeRemoved = [];
-
-    //Submissions are sorted by the date they were submitted
-    sentSubmissions = _.sortBy(sentSubmissions, function(submission) {
-        return Date(submission.submittedDate);
-    });
-
-    sentSubmissions = _.map(sentSubmissions, function(submission) {
-        return submission._ludid;
-    });
-
-    //toBeRemoved Submissions = all but the last maxSent submissions
-    toBeRemoved = _.without(sentSubmissions, _.last(sentSubmissions, maxSent));
-
-    //Need to map back to submission meta info
-    toBeRemoved = _.map(toBeRemoved, function(submissionLocalId) {
-        return self.findMetaByLocalId(submissionLocalId);
-    });
-
-    async.eachSeries(toBeRemoved, function(submissionMeta, cb) {
-        self.getSubmissionByMeta(submissionMeta, function(err, submission) {
-            submission.clearLocal(function(err) {
-                if (err) {
-                    log.e("Submissions clearSentSubmission submission clearLocal", err);
-                }
-                cb(err);
-            });
-        });
-    }, function(err) {
-        if (err) {
-            log.e("Error Deleting Submissions");
-        }
-
-        cb(err);
-    });
-};
-Submissions.prototype.findByFormId = function(formId) {
-    log.d("Submissions findByFormId", formId);
-    var rtn = [];
-    var submissions = this.get('submissions');
-    for (var i = 0; i < submissions.length; i++) {
-        var obj = submissions[i];
-        if (submissions[i].formId === formId) {
-            rtn.push(obj);
-        }
-    }
-    return rtn;
-};
-Submissions.prototype.getSubmissions = function() {
-    return this.get('submissions');
-};
-Submissions.prototype.getSubmissionMetaList = Submissions.prototype.getSubmissions;
-//function alias
-Submissions.prototype.findMetaByLocalId = function(localId) {
-    log.d("Submissions findMetaByLocalId", localId);
-    var submissions = this.get('submissions');
-    for (var i = 0; i < submissions.length; i++) {
-        var obj = submissions[i];
-        if (submissions[i]._ludid === localId) {
-            return obj;
-        }
-    }
-
-    //log.e("Submissions findMetaByLocalId: No submissions for localId: ", localId);
-    return null;
-};
-
-/**
- * Finding a submission object by it's remote Id
- * @param remoteId
- * @returns {*}
- */
-Submissions.prototype.findMetaByRemoteId = function(remoteId) {
-    remoteId = remoteId || "";
-
-    log.d("Submissions findMetaByRemoteId: " + remoteId);
-    var submissions = this.get('submissions');
-    for (var i = 0; i < submissions.length; i++) {
-        var obj = submissions[i];
-        if (submissions[i].submissionId) {
-            if (submissions[i].submissionId === remoteId) {
-                return obj;
-            }
-        }
-    }
-
-    return null;
-};
-Submissions.prototype.pruneSubmission = function(submission) {
-    log.d("Submissions pruneSubmission");
-    var fields = [
-        '_id',
-        '_ludid',
-        'status',
-        'formName',
-        'formId',
-        '_localLastUpdate',
-        'createDate',
-        'submitDate',
-        'deviceFormTimestamp',
-        'errorMessage',
-        'submissionStartedTimestamp',
-        'submittedDate',
-        'submissionId',
-        'saveDate',
-        'uploadStartDate'
-    ];
-    var data = submission.getProps();
-    var rtn = {};
-    for (var i = 0; i < fields.length; i++) {
-        var key = fields[i];
-        rtn[key] = data[key];
-    }
-    return rtn;
-};
-
-Submissions.prototype.clear = function(cb) {
-    log.d("Submissions clear");
-    var that = this;
-    this.clearLocal(function(err) {
-        if (err) {
-            log.e(err);
-            cb(err);
-        } else {
-            that.set("submissions", []);
-            cb(null, null);
-        }
-    });
-};
-Submissions.prototype.getDrafts = function(params) {
-    log.d("Submissions getDrafts: ", params);
-    if (!params) {
-        params = {};
-    }
-    params.status = "draft";
-    return this.findByStatus(params);
-};
-Submissions.prototype.getPending = function(params) {
-    log.d("Submissions getPending: ", params);
-    if (!params) {
-        params = {};
-    }
-    params.status = "pending";
-    return this.findByStatus(params);
-};
-Submissions.prototype.getSubmitted = function(params) {
-    log.d("Submissions getSubmitted: ", params);
-    if (!params) {
-        params = {};
-    }
-    params.status = "submitted";
-    return this.findByStatus(params);
-};
-Submissions.prototype.getError = function(params) {
-    log.d("Submissions getError: ", params);
-    if (!params) {
-        params = {};
-    }
-    params.status = "error";
-    return this.findByStatus(params);
-};
-Submissions.prototype.getInProgress = function(params) {
-    log.d("Submissions getInProgress: ", params);
-    if (!params) {
-        params = {};
-    }
-    params.status = "inprogress";
-    return this.findByStatus(params);
-};
-Submissions.prototype.getDownloaded = function(params) {
-    log.d("Submissions getDownloaded: ", params);
-    if (!params) {
-        params = {};
-    }
-    params.status = "downloaded";
-    return this.findByStatus(params);
-};
-Submissions.prototype.findByStatus = function(params) {
-    log.d("Submissions findByStatus: ", params);
-    if (!params) {
-        params = {};
-    }
-    if (typeof params === "string") {
-        params = {
-            status: params
-        };
-    }
-    if (params.status === null) {
-        return [];
-    }
-
-    var status = params.status;
-    var formId = params.formId;
-    var sortField = params.sortField || "createDate";
-
-    var submissions = this.get("submissions", []);
-    var rtn = _.filter(submissions, function(submission) {
-        if (status === submission.status) {
-            if (formId) {
-                return submission.formId === formId;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
-        }
-    });
-
-    rtn = _.sortBy(rtn, function(submission) {
-        return Date(submission.sortField);
-    });
-
-    return rtn;
-};
-/**
- * return a submission model object by the meta data passed in.
- * @param  {[type]}   meta [description]
- * @param  {Function} cb   [description]
- * @return {[type]}        [description]
- */
-Submissions.prototype.getSubmissionByMeta = function(meta, cb) {
-    log.d("Submissions getSubmissionByMeta: ", meta);
-    var localId = meta._ludid;
-    if (localId) {
-        require("./submission").fromLocal(localId, cb);
-    } else {
-        log.e("Submissions getSubmissionByMeta: local id not found for retrieving submission.", localId, meta);
-        cb("local id not found for retrieving submission");
-    }
-};
-Submissions.prototype.removeSubmission = function(localId, cb) {
-    log.d("Submissions removeSubmission: ", localId);
-    var index = this.indexOf(localId);
-    if (index > -1) {
-        this.get('submissions').splice(index, 1);
-    }
-    this.saveLocal(cb);
-};
-Submissions.prototype.indexOf = function(localId, cb) {
-    log.d("Submissions indexOf: ", localId);
-    var submissions = this.get('submissions');
-    for (var i = 0; i < submissions.length; i++) {
-        var obj = submissions[i];
-        if (submissions[i]._ludid === localId) {
-            return i;
-        }
-    }
-    return -1;
-};
-var submissionsModel;
-
-function getSubmissionsModel(){
-    if(!submissionsModel){
-        submissionsModel = new Submissions();
-    }
-
-    return submissionsModel;
-}
-
-module.exports = getSubmissionsModel();
-},{"./config":48,"./log":68,"./model":69,"./submission":74,"./utils":78,"async":7,"underscore":47}],76:[function(require,module,exports){
-/**
- * Manages submission uploading tasks
- */
-var Model = require("./model");
-var utils = require("./utils");
-var log = require("./log");
-var dataAgent = require("./dataAgent");
-var uploadTask = require("./uploadTask");
-var utils = require("./utils");
-
-function UploadManager() {
-    var self = this;
-    Model.call(self, {
-        '_type': 'uploadManager',
-        '_ludid': 'uploadManager_queue'
-    });
-
-    self.set('taskQueue', []);
-    self.sending = false;
-    self.timerInterval = 200;
-    self.sendingStart = utils.getTime();
-}
-
-utils.extend(UploadManager, Model);
-
-/**
- * Queue a submission to uploading tasks queue
- * @param  {[type]} submissionModel [description]
- * @param {Function} cb callback once finished
- * @return {[type]}                 [description]
- */
-UploadManager.prototype.queueSubmission = function(submissionModel, cb) {
-    log.d("Queueing Submission for uploadManager");
-    var utId;
-    var subUploadTask = null;
-    var self = this;
-
-    self.checkOnlineStatus(function() {
-        if (require('./config.js').isOnline()) {
-            if (submissionModel.getUploadTaskId()) {
-                utId = submissionModel.getUploadTaskId();
-            } else {
-                subUploadTask = uploadTask.newInstance(submissionModel);
-                utId = subUploadTask.getLocalId();
-            }
-            self.push(utId);
-            if (!self.timer) {
-                log.d("Starting timer for uploadManager");
-                self.start();
-            }
-            if (subUploadTask) {
-                subUploadTask.saveLocal(function(err) {
-                    if (err) {
-                        log.e(err);
-                    }
-                    self.saveLocal(function(err) {
-                        if (err) {
-                            log.e("Error saving upload manager: " + err);
-                        }
-                        cb(null, subUploadTask);
-                    });
-                });
-            } else {
-                self.saveLocal(function(err) {
-                    if (err) {
-                        log.e("Error saving upload manager: " + err);
-                    }
-                    self.getTaskById(utId, cb);
-                });
-            }
-        } else {
-            return cb("Working offline cannot submit form.");
-        }
-    });
-};
-
-/**
- * cancel a submission uploading
- * @param  {[type]}   submissionsModel [description]
- * @param  {Function} cb               [description]
- * @return {[type]}                    [description]
- */
-UploadManager.prototype.cancelSubmission = function(submissionsModel, cb) {
-    var uploadTId = submissionsModel.getUploadTaskId();
-    var queue = this.get('taskQueue');
-    if (uploadTId) {
-        var index = queue.indexOf(uploadTId);
-        if (index > -1) {
-            queue.splice(index, 1);
-        }
-        this.getTaskById(uploadTId, function(err, task) {
-            if (err) {
-                log.e(err);
-                cb(err, task);
-            } else {
-                if (task) {
-                    task.clearLocal(cb);
-                } else {
-                    cb(null, null);
-                }
-            }
-        });
-        this.saveLocal(function(err) {
-            if (err) {
-                log.e(err);
-            }
-        });
-    } else {
-        cb(null, null);
-    }
-};
-
-UploadManager.prototype.getTaskQueue = function() {
-    return this.get('taskQueue', []);
-};
-/**
- * start a timer
- * @param  {} interval ms
- * @return {[type]}      [description]
- */
-UploadManager.prototype.start = function() {
-    var that = this;
-    that.stop();
-    that.timer = setInterval(function() {
-        that.tick();
-    }, this.timerInterval);
-};
-/**
- * stop uploading
- * @return {[type]} [description]
- */
-UploadManager.prototype.stop = function() {
-    if (this.timer) {
-        clearInterval(this.timer);
-        this.timer = null;
-    }
-};
-UploadManager.prototype.push = function(uploadTaskId) {
-    this.get('taskQueue').push(uploadTaskId);
-    this.saveLocal(function(err) {
-        if (err) {
-            log.e("Error saving local Upload manager", err);
-        }
-    });
-};
-UploadManager.prototype.shift = function() {
-    var shiftedTask = this.get('taskQueue').shift();
-    this.saveLocal(function(err) {
-        if (err) {
-            log.e(err);
-        }
-    });
-    return shiftedTask;
-};
-UploadManager.prototype.rollTask = function() {
-    this.push(this.shift());
-};
-UploadManager.prototype.tick = function() {
-    var self = this;
-    if (self.sending) {
-        var now = utils.getTime();
-        var timePassed = now.getTime() - self.sendingStart.getTime();
-        if (timePassed > require('./config.js').get("timeout") * 1000) {
-            //time expired. roll current task to the end of queue
-            log.e('Uploading content timeout. it will try to reupload.');
-            self.sending = false;
-            self.rollTask();
-        }
-    } else {
-        if (self.hasTask()) {
-            self.sending = true;
-            self.sendingStart = utils.getTime();
-
-            self.getCurrentTask(function(err, task) {
-                if (err || !task) {
-                    log.e(err);
-                    self.sending = false;
-                } else {
-                    if (task.isCompleted() || task.isError()) {
-                        //current task uploaded or aborted by error. shift it from queue
-                        self.shift();
-                        self.sending = false;
-                        self.saveLocal(function(err) {
-                            if (err) {
-                                log.e("Error saving upload manager: ", err);
-                            }
-                        });
-                    } else {
-                        self.checkOnlineStatus(function() {
-                            if (require('./config.js').isOnline()) {
-                                task.uploadTick(function(err) {
-                                    if (err) {
-                                        log.e("Error on upload tick: ", err, task);
-                                    }
-
-                                    //callback when finished. ready for next upload command
-                                    self.sending = false;
-                                });
-                            } else {
-                                log.d("Upload Manager: Tick: Not online.");
-                            }
-                        });
-                    }
-                }
-            });
-        } else {
-            //no task . stop timer.
-            self.stop();
-        }
-    }
-};
-UploadManager.prototype.hasTask = function() {
-    return this.get('taskQueue').length > 0;
-};
-UploadManager.prototype.getCurrentTask = function(cb) {
-    var taskId = this.getTaskQueue()[0];
-    if (taskId) {
-        this.getTaskById(taskId, cb);
-    } else {
-        cb(null, null);
-    }
-};
-UploadManager.prototype.checkOnlineStatus = function(cb) {
-    return dataAgent.checkOnlineStatus(cb);
-};
-UploadManager.prototype.getTaskById = function(taskId, cb) {
-    return uploadTask.fromLocal(taskId, cb);
-};
-
-module.exports = new UploadManager();
-},{"./config.js":48,"./dataAgent":49,"./log":68,"./model":69,"./uploadTask":77,"./utils":78}],77:[function(require,module,exports){
-/**
- * Uploading task for each submission
- */
-
-var Model = require("./model");
-var log = require("./log");
-var config = require("./config");
-var dataAgent = require("./dataAgent");
-var FormSubmission = require("./formSubmission");
-var FormSubmissionDownload = require("./formSubmissionDownload");
-var FormSubmissionStatus = require("./formSubmissionStatus");
-var Base64FileSubmission = require("./fileSubmissionBase64");
-var FileSubmission = require("./fileSubmission");
-var FileSubmissionDownload = require("./fileSubmissionDownload");
-var FormSubmissionComplete = require("./formSubmissionComplete");
-var Form = require("./form");
-var submission = require("./submission");
-var utils = require("./utils");
-
-var _uploadTasks = {};
-
-function newInstance(submissionModel) {
-    if (submissionModel) {
-        var utObj = new UploadTask();
-        utObj.init(submissionModel);
-        _uploadTasks[utObj.getLocalId()] = utObj;
-        return utObj;
-    } else {
-        return {};
-    }
-}
-
-
-function fromLocal(localId, cb) {
-    if (_uploadTasks[localId]) {
-        return cb(null, _uploadTasks[localId]);
-    }
-    var utObj = new UploadTask();
-    utObj.setLocalId(localId);
-    _uploadTasks[localId] = utObj;
-    utObj.loadLocal(cb);
-}
-
-
-function UploadTask() {
-    Model.call(this, {
-        '_type': 'uploadTask'
-    });
-}
-
-utils.extend(UploadTask, Model);
-
-UploadTask.prototype.init = function(submissionModel) {
-    var self = this;
-    var submissionLocalId = submissionModel.getLocalId();
-    self.setLocalId(submissionLocalId + '_' + 'uploadTask');
-    self.set('submissionLocalId', submissionLocalId);
-    self.set('fileTasks', []);
-    self.set('currentTask', null);
-    self.set('completed', false);
-    self.set('retryAttempts', 0);
-    self.set('retryNeeded', false);
-    self.set('mbaasCompleted', false);
-    self.set('submissionTransferType', 'upload');
-    submissionModel.setUploadTaskId(self.getLocalId());
-
-    function initSubmissionUpload() {
-        var json = submissionModel.getProps();
-        self.set('jsonTask', json);
-        self.set('formId', submissionModel.get('formId'));
-
-    }
-
-    function initSubmissionDownload() {
-        self.set('submissionId', submissionModel.getRemoteSubmissionId());
-        self.set('jsonTask', {});
-        self.set('submissionTransferType', 'download');
-    }
-
-    if (submissionModel.isDownloadSubmission()) {
-        initSubmissionDownload();
-    } else {
-        initSubmissionUpload();
-    }
-};
-UploadTask.prototype.getTotalSize = function() {
-    var self = this;
-    var jsonSize = JSON.stringify(self.get('jsonTask')).length;
-    var fileTasks = self.get('fileTasks');
-    var fileSize = 0;
-    var fileTask;
-    for (var i = 0; i < fileTasks.length; i++) {
-        fileTask = fileTasks[i];
-        fileSize += fileTask.fileSize;
-    }
-    return jsonSize + fileSize;
-};
-UploadTask.prototype.getUploadedSize = function() {
-    var currentTask = this.getCurrentTask();
-    if (currentTask === null) {
-        return 0;
-    } else {
-        var jsonSize = JSON.stringify(this.get('jsonTask')).length;
-        var fileTasks = this.get('fileTasks');
-        var fileSize = 0;
-        for (var i = 0, fileTask;
-            (fileTask = fileTasks[i]) && i < currentTask; i++) {
-            fileSize += fileTask.fileSize;
-        }
-        return jsonSize + fileSize;
-    }
-};
-UploadTask.prototype.getRemoteStore = function() {
-    return dataAgent.remoteStore;
-};
-UploadTask.prototype.addFileTasks = function(submissionModel, cb) {
-    var self = this;
-    submissionModel.getFileInputValues(function(err, files) {
-        if (err) {
-            log.e("Error getting file Input values: " + err);
-            return cb(err);
-        }
-        for (var i = 0; i < files.length; i++) {
-            var file = files[i];
-            self.addFileTask(file);
-        }
-        cb();
-    });
-};
-UploadTask.prototype.addFileTask = function(fileDef) {
-    this.get('fileTasks').push(fileDef);
-};
-/**
- * get current uploading task
- * @return {[type]} [description]
- */
-UploadTask.prototype.getCurrentTask = function() {
-    return this.get('currentTask', null);
-};
-UploadTask.prototype.getRetryAttempts = function() {
-    return this.get('retryAttempts');
-};
-UploadTask.prototype.increRetryAttempts = function() {
-    this.set('retryAttempts', this.get('retryAttempts') + 1);
-};
-UploadTask.prototype.resetRetryAttempts = function() {
-    this.set('retryAttempts', 0);
-};
-UploadTask.prototype.isStarted = function() {
-    return this.getCurrentTask() === null ? false : true;
-};
-
-
-UploadTask.prototype.setSubmissionQueued = function(cb) {
-    var self = this;
-    self.submissionModel(function(err, submission) {
-        if (err) {
-            return cb(err);
-        }
-
-        if (self.get("submissionId")) {
-            submission.setRemoteSubmissionId(self.get("submissionId"));
-        }
-
-        submission.queued(cb);
-    });
-};
-/**
- * upload/download form submission
- * @param  {Function} cb [description]
- * @return {[type]}      [description]
- */
-UploadTask.prototype.uploadForm = function(cb) {
-    var self = this;
-
-    function processUploadDataResult(res) {
-        log.d("In processUploadDataResult");
-        var formSub = self.get("jsonTask");
-        if (res.error) {
-            log.e("Error submitting form " + res.error);
-            return cb("Error submitting form " + res.error);
-        } else {
-            var submissionId = res.submissionId;
-            // form data submitted successfully.
-            formSub.lastUpdate = utils.getTime();
-            self.set('submissionId', submissionId);
-
-            self.setSubmissionQueued(function(err) {
-                self.increProgress();
-                self.saveLocal(function(err) {
-                    if (err) {
-                        log.e("Error saving uploadTask to local storage" + err);
-                    }
-                });
-                self.emit('progress', self.getProgress());
-                return cb(null);
-            });
-        }
-    }
-
-    function processDownloadDataResult(err, res) {
-        log.d("In processDownloadDataResult");
-        if (err) {
-            log.e("Error downloading submission data" + err);
-            return cb(err);
-        }
-
-        //Have the definition of the submission
-        self.submissionModel(function(err, submissionModel) {
-            log.d("Got SubmissionModel", err, submissionModel);
-            if (err) {
-                return cb(err);
-            }
-            var JSONRes = {};
-
-            //Instantiate the model from the json definition
-            if (typeof(res) === "string") {
-                try {
-                    JSONRes = JSON.parse(res);
-                } catch (e) {
-                    log.e("processDownloadDataResult Invalid JSON Object Returned", res);
-                    return cb("Invalid JSON Object Returned");
-                }
-            } else {
-                JSONRes = res;
-            }
-
-            if (JSONRes.status) {
-                delete JSONRes.status;
-            }
-
-            submissionModel.fromJSON(JSONRes);
-            self.set('jsonTask', res);
-            submissionModel.saveLocal(function(err) {
-                log.d("Saved SubmissionModel", err, submissionModel);
-                if (err) {
-                    log.e("Error saving updated submission from download submission: " + err);
-                }
-
-                //Submission Model is now populated with all the fields in the submission
-                self.addFileTasks(submissionModel, function(err) {
-                    log.d("addFileTasks called", err, submissionModel);
-                    if (err) {
-                        return cb(err);
-                    }
-                    self.increProgress();
-                    self.saveLocal(function(err) {
-                        if (err) {
-                            log.e("Error saving downloadTask to local storage" + err);
-                        }
-
-                        self.emit('progress', self.getProgress());
-                        return cb();
-                    });
-                });
-            });
-        });
-    }
-
-    function uploadSubmissionJSON() {
-        log.d("In uploadSubmissionJSON");
-        var formSub = self.get('jsonTask');
-        self.submissionModel(function(err, submissionModel) {
-            if (err) {
-                return cb(err);
-            }
-            self.addFileTasks(submissionModel, function(err) {
-                if (err) {
-                    log.e("Error adding file tasks for submission upload");
-                    return cb(err);
-                }
-
-                var formSubmissionModel = new FormSubmission(formSub);
-                self.getRemoteStore().create(formSubmissionModel, function(err, res) {
-                    if (err) {
-                        return cb(err);
-                    } else {
-                        var updatedFormDefinition = res.updatedFormDefinition;
-                        if (updatedFormDefinition) {
-                            // remote form definition is updated
-                            self.refreshForm(updatedFormDefinition, function(err) {
-                                //refresh form def in parallel. maybe not needed.
-                                log.d("Form Updated, refreshed");
-                                if (err) {
-                                    log.e(err);
-                                }
-                                processUploadDataResult(res);
-                            });
-                        } else {
-                            processUploadDataResult(res);
-                        }
-                    }
-                });
-            });
-        });
-
-    }
-
-    function downloadSubmissionJSON() {
-        var formSubmissionDownload = new FormSubmissionDownload(self);
-        self.getRemoteStore().read(formSubmissionDownload, processDownloadDataResult);
-    }
-
-    if (self.isDownloadTask()) {
-        downloadSubmissionJSON();
-    } else {
-        uploadSubmissionJSON();
-    }
-};
-
-/**
- * Handles the case where a call to completeSubmission returns a status other than "completed".
- * Will only ever get to this function when a call is made to the completeSubmission server.
- *
- *
- * @param err (String) Error message associated with the error returned
- * @param res {"status" : <pending/error>, "pendingFiles" : [<any pending files not yet uploaded>]}
- * @param cb Function callback
- */
-UploadTask.prototype.handleCompletionError = function(err, res, cb) {
-    log.d("handleCompletionError Called");
-    var errorMessage = err;
-    if (res.status === 'pending') {
-        //The submission is not yet complete, there are files waiting to upload. This is an unexpected state as all of the files should have been uploaded.
-        errorMessage = 'Submission Still Pending.';
-    } else if (res.status === 'error') {
-        //There was an error completing the submission.
-        errorMessage = 'Error completing submission';
-    } else {
-        errorMessage = 'Invalid return type from complete submission';
-    }
-    cb(errorMessage);
-};
-
-/**
- * Handles the case where the current submission status is required from the server.
- * Based on the files waiting to be uploaded, the upload task is re-built with pendingFiles from the server.
- *
- * @param cb
- */
-UploadTask.prototype.handleIncompleteSubmission = function(cb) {
-    var self = this;
-
-    function processUploadIncompleteSubmission() {
-
-        var remoteStore = self.getRemoteStore();
-        var submissionStatus = new FormSubmissionStatus(self);
-
-        remoteStore.submissionStatus(submissionStatus, function(err, res) {
-            var errMessage = "";
-            if (err) {
-                cb(err);
-            } else if (res.status === 'error') {
-                //The server had an error submitting the form, finish with an error
-                errMessage = 'Error submitting form.';
-                cb(errMessage);
-            } else if (res.status === 'complete') {
-                //Submission is complete, make uploading progress further
-                self.increProgress();
-                cb();
-            } else if (res.status === 'pending') {
-                //Submission is still pending, check for files not uploaded yet.
-                var pendingFiles = res.pendingFiles || [];
-                if (pendingFiles.length > 0) {
-                    self.resetUploadTask(pendingFiles, function() {
-                        cb();
-                    });
-                } else {
-                    //No files pending on the server, make the progress further
-                    self.increProgress();
-                    cb();
-                }
-            } else {
-                //Should not get to this point. Only valid status responses are error, pending and complete.
-                errMessage = 'Invalid submission status response.';
-                cb(errMessage);
-            }
-        });
-    }
-
-    function processDownloadIncompleteSubmission() {
-        //No need to go the the server to get submission details -- The current progress status is valid locally
-        cb();
-    }
-
-    if (self.isDownloadTask()) {
-        processDownloadIncompleteSubmission();
-    } else {
-        processUploadIncompleteSubmission();
-    }
-};
-
-/**
- * Resetting the upload task based on the response from getSubmissionStatus
- * @param pendingFiles -- Array of files still waiting to upload
- * @param cb
- */
-UploadTask.prototype.resetUploadTask = function(pendingFiles, cb) {
-    var filesToUpload = this.get('fileTasks');
-    var resetFilesToUpload = [];
-    var fileIndex;
-    //Adding the already completed files to the reset array.
-    for (fileIndex = 0; fileIndex < filesToUpload.length; fileIndex++) {
-        if (pendingFiles.indexOf(filesToUpload[fileIndex].hashName) < 0) {
-            resetFilesToUpload.push(filesToUpload[fileIndex]);
-        }
-    }
-    //Adding the pending files to the end of the array.
-    for (fileIndex = 0; fileIndex < filesToUpload.length; fileIndex++) {
-        if (pendingFiles.indexOf(filesToUpload[fileIndex].hashName) > -1) {
-            resetFilesToUpload.push(filesToUpload[fileIndex]);
-        }
-    }
-    var resetFileIndex = filesToUpload.length - pendingFiles.length - 1;
-    var resetCurrentTask = 0;
-    if (resetFileIndex > 0) {
-        resetCurrentTask = resetFileIndex;
-    }
-    //Reset current task
-    this.set('currentTask', resetCurrentTask);
-    this.set('fileTasks', resetFilesToUpload);
-    this.saveLocal(cb); //Saving the reset files list to local
-};
-UploadTask.prototype.uploadFile = function(cb) {
-    var self = this;
-    var progress = self.getCurrentTask();
-
-    if (progress === null) {
-        progress = 0;
-        self.set('currentTask', progress);
-    }
-    var fileTask = self.get('fileTasks', [])[progress];
-    var submissionId = self.get('submissionId');
-    var fileSubmissionModel;
-    if (!fileTask) {
-        log.e("No file task found when trying to transfer a file.");
-        return cb('cannot find file task');
-    }
-
-    if (!submissionId) {
-        log.e("No submission id found when trying to transfer a file.");
-        return cb("No submission Id found");
-    }
-
-    function processUploadFile() {
-        log.d("processUploadFile for submissionId: ");
-        if (fileTask.contentType === 'base64') {
-            fileSubmissionModel = new Base64FileSubmission(fileTask);
-        } else {
-            fileSubmissionModel = new FileSubmission(fileTask);
-        }
-        fileSubmissionModel.setSubmissionId(submissionId);
-        fileSubmissionModel.loadFile(function(err) {
-            if (err) {
-                log.e("Error loading file for upload: " + err);
-                return cb(err);
-            } else {
-                self.getRemoteStore().create(fileSubmissionModel, function(err, res) {
-                    if (err) {
-                        cb(err);
-                    } else {
-                        if (res.status === 'ok' || res.status === 200 || res.status === '200') {
-                            fileTask.updateDate = utils.getTime();
-                            self.increProgress();
-                            self.saveLocal(function(err) {
-                                //save current status.
-                                if (err) {
-                                    log.e("Error saving upload task" + err);
-                                }
-                            });
-                            self.emit('progress', self.getProgress());
-                            cb(null);
-                        } else {
-                            var errorMessage = 'File upload failed for file: ' + fileTask.fileName;
-                            cb(errorMessage);
-                        }
-                    }
-                });
-            }
-        });
-    }
-
-    function processDownloadFile() {
-        log.d("processDownloadFile called");
-        fileSubmissionModel = new FileSubmissionDownload(fileTask);
-        fileSubmissionModel.setSubmissionId(submissionId);
-        self.getRemoteStore().read(fileSubmissionModel, function(err, localFilePath) {
-            if (err) {
-                log.e("Error downloading a file from remote: " + err);
-                return cb(err);
-            }
-
-            log.d("processDownloadFile called. Local File Path: " + localFilePath);
-
-            //Update the submission model to add local file uri to a file submission object
-            self.submissionModel(function(err, submissionModel) {
-                if (err) {
-                    log.e("Error Loading submission model for processDownloadFile " + err);
-                    return cb(err);
-                }
-
-                submissionModel.updateFileLocalURI(fileTask, localFilePath, function(err) {
-                    if (err) {
-                        log.e("Error updating file local url for fileTask " + JSON.stringify(fileTask));
-                        return cb(err);
-                    }
-
-                    self.increProgress();
-                    self.saveLocal(function(err) {
-                        //save current status.
-                        if (err) {
-                            log.e("Error saving download task");
-                        }
-                    });
-                    self.emit('progress', self.getProgress());
-                    return cb();
-                });
-            });
-        });
-    }
-
-    if (self.isDownloadTask()) {
-        processDownloadFile();
-    } else {
-        processUploadFile();
-    }
-};
-UploadTask.prototype.isDownloadTask = function() {
-    return this.get("submissionTransferType") === "download";
-};
-//The upload task needs to be retried
-UploadTask.prototype.setRetryNeeded = function(retryNeeded) {
-    //If there is a submissionId, then a retry is needed. If not, then the current task should be set to null to retry the submission.
-    if (this.get('submissionId', null) !== null) {
-        this.set('retryNeeded', retryNeeded);
-    } else {
-        this.set('retryNeeded', false);
-        this.set('currentTask', null);
-    }
-};
-UploadTask.prototype.retryNeeded = function() {
-    return this.get('retryNeeded');
-};
-UploadTask.prototype.uploadTick = function(cb) {
-    var self = this;
-
-    function _handler(err) {
-        if (err) {
-            log.d('Err, retrying transfer: ' + self.getLocalId());
-            //If the upload has encountered an error -- flag the submission as needing a retry on the next tick -- User should be insulated from an error until the retries are finished.
-            self.increRetryAttempts();
-            if (self.getRetryAttempts() <= config.get('max_retries')) {
-                self.setRetryNeeded(true);
-                self.saveLocal(function(err) {
-                    if (err) {
-                        log.e("Error saving upload taskL " + err);
-                    }
-
-                    cb();
-                });
-            } else {
-                //The number of retry attempts exceeds the maximum number of retry attempts allowed, flag the upload as an error.
-                self.setRetryNeeded(true);
-                self.resetRetryAttempts();
-                self.error(err, function() {
-                    cb(err);
-                });
-            }
-        } else {
-            //no error.
-            self.setRetryNeeded(false);
-            self.saveLocal(function(_err) {
-                if (_err) {
-                    log.e("Error saving upload task to local memory" + _err);
-                }
-            });
-            self.submissionModel(function(err, submission) {
-                if (err) {
-                    cb(err);
-                } else {
-                    var status = submission.get('status');
-                    if (status !== 'inprogress' && status !== 'submitted' && status !== 'downloaded' && status !== 'queued') {
-                        log.e('Submission status is incorrect. Upload task should be started by submission object\'s upload method.' + status);
-                        cb('Submission status is incorrect. Upload task should be started by submission object\'s upload method.');
-                    } else {
-                        cb();
-                    }
-                }
-            });
-        }
-    }
-    if (!this.isFormCompleted()) {
-        // No current task, send the form json
-        this.uploadForm(_handler);
-    } else if (this.retryNeeded()) {
-        //If a retry is needed, this tick gets the current status of the submission from the server and resets the submission.
-        this.handleIncompleteSubmission(_handler);
-    } else if (!this.isFileCompleted()) {
-        //files to be uploaded
-        this.uploadFile(_handler);
-    } else if (!this.isMBaaSCompleted()) {
-        //call mbaas to complete upload
-        this.uploadComplete(_handler);
-    } else if (!this.isCompleted()) {
-        //complete the upload task
-        this.success(_handler);
-    } else {
-        //task is already completed.
-        _handler(null, null);
-    }
-};
-UploadTask.prototype.increProgress = function() {
-    var curTask = this.getCurrentTask();
-    if (curTask === null) {
-        curTask = 0;
-    } else {
-        curTask++;
-    }
-    this.set('currentTask', curTask);
-};
-UploadTask.prototype.uploadComplete = function(cb) {
-    log.d("UploadComplete Called");
-    var self = this;
-    var submissionId = self.get('submissionId', null);
-
-    if (submissionId === null) {
-        return cb('Failed to complete submission. Submission Id not found.');
-    }
-
-    function processDownloadComplete() {
-        log.d("processDownloadComplete Called");
-        self.increProgress();
-        cb(null);
-    }
-
-    function processUploadComplete() {
-        log.d("processUploadComplete Called");
-        var remoteStore = self.getRemoteStore();
-        var completeSubmission = new FormSubmissionComplete(self);
-        remoteStore.create(completeSubmission, function(err, res) {
-            //if status is not "completed", then handle the completion err
-            res = res || {};
-            if (res.status !== 'complete') {
-                return self.handleCompletionError(err, res, cb);
-            }
-            //Completion is now completed sucessfully.. we can make the progress further.
-            self.increProgress();
-            cb(null);
-        });
-    }
-
-    if (self.isDownloadTask()) {
-        processDownloadComplete();
-    } else {
-        processUploadComplete();
-    }
-};
-/**
- * the upload task is successfully completed. This will be called when all uploading process finished successfully.
- * @return {[type]} [description]
- */
-UploadTask.prototype.success = function(cb) {
-    log.d("Transfer Sucessful. Success Called.");
-    var self = this;
-    var submissionId = self.get('submissionId', null);
-    self.set('completed', true);
-
-
-    function processUploadSuccess(cb) {
-        log.d("processUploadSuccess Called");
-        self.submissionModel(function(_err, model) {
-            if (_err) {
-                return cb(_err);
-            }
-            model.set('submissionId', submissionId);
-            model.submitted(cb);
-        });
-    }
-
-    function processDownloadSuccess(cb) {
-        log.d("processDownloadSuccess Called");
-        self.submissionModel(function(_err, model) {
-            if (_err) {
-                return cb(_err);
-            } else {
-                model.populateFilesInSubmission();
-                model.downloaded(cb);
-            }
-        });
-    }
-
-    self.saveLocal(function(err) {
-        if (err) {
-            log.e("Error Clearing Upload Task");
-        }
-
-        if (self.isDownloadTask()) {
-            processDownloadSuccess(function(err) {
-                self.clearLocal(cb);
-            });
-        } else {
-            processUploadSuccess(function(err) {
-                self.clearLocal(cb);
-            });
-        }
-    });
-};
-/**
- * the upload task is failed. It will not complete the task but will set error with error returned.
- * @param  {[type]}   err [description]
- * @param  {Function} cb  [description]
- * @return {[type]}       [description]
- */
-UploadTask.prototype.error = function(uploadErrorMessage, cb) {
-    var self = this;
-    log.e("Error uploading submission: ", uploadErrorMessage);
-    self.set('error', uploadErrorMessage);
-    self.saveLocal(function(err) {
-        if (err) {
-            log.e('Upload task save failed: ' + err);
-        }
-
-        self.submissionModel(function(_err, model) {
-            if (_err) {
-                cb(_err);
-            } else {
-                model.setUploadTaskId(null);
-                model.error(uploadErrorMessage, function(err) {
-                    if (err) {
-                        log.e("Error updating submission model to error status ", err);
-                    }
-                    self.clearLocal(function(err) {
-                        if (err) {
-                            log.e("Error clearing upload task local storage: ", err);
-                        }
-                        cb(err);
-                    });
-                });
-            }
-        });
-    });
-};
-UploadTask.prototype.isFormCompleted = function() {
-    var curTask = this.getCurrentTask();
-    if (curTask === null) {
-        return false;
-    } else {
-        return true;
-    }
-};
-UploadTask.prototype.isFileCompleted = function() {
-    var curTask = this.getCurrentTask();
-    if (curTask === null) {
-        return false;
-    } else if (curTask < this.get('fileTasks', []).length) {
-        return false;
-    } else {
-        return true;
-    }
-};
-UploadTask.prototype.isError = function() {
-    var error = this.get('error', null);
-    if (error) {
-        return true;
-    } else {
-        return false;
-    }
-};
-UploadTask.prototype.isCompleted = function() {
-    return this.get('completed', false);
-};
-UploadTask.prototype.isMBaaSCompleted = function() {
-    var self = this;
-    if (!self.isFileCompleted()) {
-        return false;
-    } else {
-        var curTask = self.getCurrentTask();
-        if (curTask > self.get('fileTasks', []).length) {
-            //change offset if completion bit is changed
-            self.set("mbaasCompleted", true);
-            self.saveLocal(function(err) {
-                if (err) {
-                    log.e("Error saving upload task: ", err);
-                }
-            });
-            return true;
-        } else {
-            return false;
-        }
-    }
-};
-UploadTask.prototype.getProgress = function() {
-    var self = this;
-    var rtn = {
-        'formJSON': false,
-        'currentFileIndex': 0,
-        'totalFiles': self.get('fileTasks').length,
-        'totalSize': self.getTotalSize(),
-        'uploaded': self.getUploadedSize(),
-        'retryAttempts': self.getRetryAttempts(),
-        'submissionTransferType': self.get('submissionTransferType')
-    };
-    var progress = self.getCurrentTask();
-    if (progress === null) {
-        return rtn;
-    } else {
-        rtn.formJSON = true;
-        rtn.currentFileIndex = progress;
-    }
-    return rtn;
-};
-/**
- * Refresh related form definition.
- * @param  {Function} cb [description]
- * @return {[type]}      [description]
- */
-UploadTask.prototype.refreshForm = function(updatedForm, cb) {
-    var formId = this.get('formId');
-    new Form({
-        'formId': formId,
-        'rawMode': true,
-        'rawData': updatedForm
-    }, function(err, form) {
-        if (err) {
-            log.e(err);
-        }
-
-        log.l('successfully updated form the form with id ' + updatedForm._id);
-        cb();
-    });
-};
-UploadTask.prototype.submissionModel = function(cb) {
-    require("./submission").fromLocal(this.get('submissionLocalId'), function(err, submission) {
-        if (err) {
-            log.e("Error getting submission model from local memory " + err);
-        }
-        cb(err, submission);
-    });
-};
-
-module.exports = {
-    'newInstance': newInstance,
-    'fromLocal': fromLocal
-};
-},{"./config":48,"./dataAgent":49,"./fileSubmission":57,"./fileSubmissionBase64":58,"./fileSubmissionDownload":59,"./form":61,"./formSubmission":62,"./formSubmissionComplete":63,"./formSubmissionDownload":64,"./formSubmissionStatus":65,"./log":68,"./model":69,"./submission":74,"./utils":78}],78:[function(require,module,exports){
+},{"./config":77,"./log":81,"./store":83,"./utils":85,"./web":86}],85:[function(require,module,exports){
 var md5Node = require("md5-node");
 var _ = require('underscore');
 
@@ -17759,7 +27761,7 @@ module.exports = {
     isPhoneGap: isPhoneGap
 };
 
-},{"md5-node":45,"underscore":47}],79:[function(require,module,exports){
+},{"md5-node":49,"underscore":76}],86:[function(require,module,exports){
 var log = require("./log");
 var utils = require("./utils");
 var _ajax = require("../libs/ajax");
@@ -17773,10 +27775,12 @@ function get(url, cb) {
         dataType: 'json',
         timeout: require("./config").get("timeout"),
         success: function(data, text) {
+            debugger;
             log.d("Ajax get", url, "Success");
             cb(null, data);
         },
         error: function(xhr, status, err) {
+            debugger;
             log.e("Ajax get", url, "Fail", xhr, status, err);
             cb(err);
         }
@@ -17911,7 +27915,7 @@ module.exports = {
     downloadFile: downloadFile
 };
 
-},{"../libs/ajax":1,"./config":48,"./fileSystem":60,"./log":68,"./utils":78}],80:[function(require,module,exports){
+},{"../libs/ajax":1,"./config":77,"./fileSystem":79,"./log":81,"./utils":85}],87:[function(require,module,exports){
 module.exports={
   "sent_save_min": 5,
   "sent_save_max": 1000,
@@ -17928,7 +27932,7 @@ module.exports={
   "log_email": "test@feedhenry.com",
   "config_admin_user": true
 }
-},{}],81:[function(require,module,exports){
+},{}],88:[function(require,module,exports){
 module.exports={
     "_id": "54d4cd220a9b02c67e9c3f0c",
     "createdBy": "test@example.com",
@@ -18263,7 +28267,7 @@ module.exports={
         }
     }
 }
-},{}],82:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 module.exports={
   "forms": [{
     "_id": "54d4cd220a9b02c67e9c3f0c",
@@ -18274,7 +28278,7 @@ module.exports={
   }
   ]
 }
-},{}],83:[function(require,module,exports){
+},{}],90:[function(require,module,exports){
 module.exports={
   "_id":"52e12c7d2e311daf1b000003",
   "name":"appFormsPhase2",
@@ -18440,7 +28444,7 @@ module.exports={
   "css":".fh_appform_button_navigation{background-color:#29c5e7;font-size:11pt;font-family:times;color:#f7f3f3;font-weight:bold;font-style:normal;border-radius:5px;}.fh_appform_button_navigation:active{background-color:#249ec1;font-size:11pt;font-family:times;color:#040404;font-weight:bold;font-style:normal;border-radius:5px;}.fh_appform_button_action{background-color:#14f4ea;font-size:11pt;font-family:times;color:#f7f3f3;font-weight:bold;font-style:normal;border-radius:5px;}.fh_appform_button_action.special_button{width:100%;margin-top:10px;line-height:28px;}.fh_appform_button_action.special_button.fh_appform_removeInputBtn{width:50%;margin-top:10px;line-height:28px;}.fh_appform_button_action.special_button.fh_appform_addInputBtn{width:50%;margin-top:10px;line-height:28px;}.fh_appform_button_action:active{background-color:#1eecec;font-size:11pt;font-family:times;color:#f7f3f3;font-weight:bold;font-style:normal;border-radius:5px;}.fh_appform_button_cancel{background-color:#49abce;font-size:11pt;font-family:times;color:#f7f3f3;font-weight:bold;font-style:normal;border-radius:5px;}.fh_appform_button_cancel:active{background-color:#2190b8;font-size:11pt;font-family:times;color:#f7f3f3;font-weight:bold;font-style:normal;border-radius:5px;}.fh_appform_navigation{background-color:#6b739f;}.fh_appform_header{background-color:#42beea;}.fh_appform_body{background-color:#ece6ea;}.fh_appform_form{background-color:#ffffff;border:none;padding:5px;}.fh_appform_field_title{font-size:18pt;font-family:times;color:#090909;font-weight:bold;font-style:normal;display:block;}.fh_appform_field_title.fh_appform_field_numbering{display:inline-block;}.fh_appform_field_area{background-color:#fbf9f6;border-width:thin;border-style:dotted;border-color:#000000;padding:5px;border-bottom:none;border-radius:5px;}.fh_appform_field_area:last-child{border-width:thin;border-style:dotted;border-color:#000000;}.fh_appform_field_area.fh_appform_field_section_break{border:none;background:transparent;}.fh_appform_field_input{background-color:#f6eff3;font-size:18pt;font-family:times;color:#060506;font-weight:normal;font-style:normal;border-width:thin;border-style:solid;border-color:#000000;width:100%;border-radius:5px;line-height:1.4em;padding:5px 0px 5px 5px;}.fh_appform_field_instructions{background-color:#f6f7f6;font-size:14pt;font-family:times;color:#060606;font-weight:normal;font-style:normal;border:none;margin-bottom:10px;border-radius:5px;}.fh_appform_title{font-size:18pt;font-family:times;color:#000000;font-weight:bold;font-style:normal;text-align:center;}.fh_appform_description{font-size:14pt;font-family:times;color:#000000;font-weight:normal;font-style:normal;text-align:center;}.fh_appform_error{font-size:14pt;font-family:times;color:#fb0000;font-weight:normal;font-style:normal;background-color:#f7f4f4;border-width:medium;border-style:solid;border-color:#f00a0a;}.fh_appform_field_section_break_title{font-size:11pt;font-family:times;color:#050605;font-weight:bold;font-style:normal;text-align:center;}.fh_appform_field_section_break_description{font-size:11pt;font-family:times;color:#070707;font-weight:bold;font-style:normal;text-align:center;}.fh_appform_page_title{font-size:12pt;font-family:times;color:#0b0b0b;font-weight:bold;font-style:normal;text-align:center;}.fh_appform_page_description{font-size:11pt;font-family:times;color:#070707;font-style:italic;font-weight:normal;text-align:center;}.fh_appform_progress_wrapper{padding-top:20px;padding-bottom:10px;}.fh_appform_progress_steps{background-color:#ffffff;border:none;width:100%;}.fh_appform_progress_steps td{text-align:center;}.fh_appform_progress_steps td.active .fh_appform_page_title{text-align:center;display:inline;}.fh_appform_progress_steps .fh_appform_page_title{padding-left:10px;display:none;}.fh_appform_progress_steps .number{padding-top:4px;}.fh_appform_progress_steps .number_container{background-color:#f7f7f7;border-width:thin;border-style:dotted;border-color:#0b0b0b;font-size:11pt;font-family:times;color:#070707;font-weight:bold;font-style:normal;display:inline-block;border-radius:13px;padding-left:10px;padding-right:10px;margin-top:5px;margin-bottom:5px;}.fh_appform_progress_steps td.active .number_container{background-color:#000000;border-width:thin;border-style:dotted;border-color:#0e0e0f;font-size:11pt;font-family:times;color:#f9f1f5;font-weight:bold;font-style:normal;}.fh_appform_field_required:first-child:after{color: #f40021;content:' *';display:inline;}.fh_appform_action_bar{padding:18px 20px 18px 20px;}.fh_appform_action_bar button.fh_appform_two_button{width:50%;}.fh_appform_action_bar button.fh_appform_three_button{width:33.3%;}.fh_appform_section_area{background-color:#f2f3f6;padding:5px;border-radius:5px;margin-top:5px;}.fh_appform_hidden{display:none;}.fh_appform_logo{background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPcAAAAjCAYAAABII5xqAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyFpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDE0IDc5LjE1MTQ4MSwgMjAxMy8wMy8xMy0xMjowOToxNSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIChXaW5kb3dzKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDoxQjdBOTE5RjA3RTQxMUUzQTkzNENDQ0NCMzY5MjIxNyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDoxQjdBOTFBMDA3RTQxMUUzQTkzNENDQ0NCMzY5MjIxNyI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjFCN0E5MTlEMDdFNDExRTNBOTM0Q0NDQ0IzNjkyMjE3IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjFCN0E5MTlFMDdFNDExRTNBOTM0Q0NDQ0IzNjkyMjE3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+EXbGxwAADd1JREFUeNrsHQl0VNX1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\");height: 37px;width:237px;background-position:center;background-repeat:no-repeat;width:100%;}",
   "lastUpdated":"2014-01-23T14:51:43.975Z"
 }
-},{}],84:[function(require,module,exports){
+},{}],91:[function(require,module,exports){
 module.exports={
   "_id": "submissionData",
   "appClientId": "iKfLUbYOx_PEkTRzrwE4z_5o",
@@ -18477,7 +28481,7 @@ module.exports={
   "submissionCompletedTimestamp": "2014-04-09T17:11:24.688Z"
 }
 
-},{}],85:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 module.exports={
   "_id": "submissionFile",
   "appClientId": "iKfLUbYOx_PEkTRzrwE4z_5o",
@@ -18544,1195 +28548,116 @@ module.exports={
   "submissionCompletedTimestamp": "2014-04-09T17:11:24.688Z"
 }
 
-},{}],86:[function(require,module,exports){
+},{}],93:[function(require,module,exports){
 /*jshint expr: true*/
 
 var chai = require('chai');
+var sinon = require('sinon');
 var expect = chai.expect;
 var assert = chai.assert;
 var _ = require('underscore');
 var config = require('../../src/config.js');
+var requests = [];
 
 describe("Config module", function() {
 
-    beforeEach(function(){
-        this.config = config;
-    });
+  beforeEach(function(done) {
+    this.request = sinon.useFakeXMLHttpRequest();
+    var requests = this.requests = [];
 
-    it("config should be init before usage. config should get data from mbaas.", function(done) {
-        this.config.init({}, function(err, returnedConfig) {
-            assert(!err, "Unexpected Error When Returning Config Data.");
-            assert.equal(config.get("log_email"), "test@feedhenry.com");
-            done();
-        });
-    });
-
-    it("how to get config properties", function() {
-        assert(this.config.getAppId(), "Expected appId To Be set");
-        assert(this.config.get("mbaasBaseUrl"), "Expected mbaasBaseUrl To Be set");
-        assert(this.config.get("formUrls"), "Expected formUrls To Be set");
-        assert(this.config.get("env"), "Expected env To Be set");
-        assert(this.config.get("userConfigValues"), "Expected userConfigValues To Be set");
-        assert.ok(this.config.get("sent_save_min") === 5, "Expected defaultConfigValues To Be set");
-    });
-
-    it("Should Only Be One Config Module", function() {
-        var sameConfig = require('../../src/config.js');
-
-        assert.ok(sameConfig.get("sent_save_min") === config.get("sent_save_min"));
-    });
-});
-
-},{"../../src/config.js":48,"chai":12,"underscore":47}],87:[function(require,module,exports){
-var chai = require('chai');
-var expect = chai.expect;
-var assert = chai.assert;
-var _ = require('underscore');
-var Field = require('../../src/field.js');
-
-//TODO, need to do all field typess.
-
-var testField = {
-    "fieldOptions": {
-        "definition": {
-            "defaultValue": "def"
-        }
-    },
-    "required": true,
-    "type": "text",
-    "name": "Text Field",
-    "helpText": "Text",
-    "adminOnly": false,
-    "_id": "52dfd93ee02b762d3f000001",
-    "repeating": false
-};
-
-
-describe("Field Module", function() {
-	it("Creating A New Field Model", function() {
-		var field = new Field(testField);
-
-		assert.equal(field.isRequired(), true, "Expected the field to not be required.");
-		assert.equal(field.getType(), 'text');
-		assert.equal(field.getDefaultValue(), 'def');
-		assert.equal(field.isAdminField(), false);
-		assert.equal(field.getFieldId(), "52dfd93ee02b762d3f000001");
-		assert.equal(field.getName(), "Text Field");
-	});
-});
-},{"../../src/field.js":50,"chai":12,"underscore":47}],88:[function(require,module,exports){
-var chai = require('chai');
-var expect = chai.expect;
-var assert = chai.assert;
-var _ = require('underscore');
-var Form = require('../../src/form.js');
-
-var testForm = {
-    "_id": "52dfd909a926eb2e3f123456",
-    "description": "Small Form",
-    "name": "Small Form",
-    "updatedBy": "testingform@example.com",
-    "lastUpdatedTimestamp": 1390409513725,
-    "pageRules": [
-
-    ],
-    "fieldRules": [
-
-    ],
-    "pages": [{
-        "_id": "52dfd909a926eb2e3f000001",
-        "name": "A Page",
-        "fields": [{
-            "fieldOptions": {
-                "definition": {
-                    "defaultValue": ""
-                }
-            },
-            "required": false,
-            "type": "text",
-            "name": "Text",
-            "helpText": "Text",
-            "_id": "52dfd93ee02b762d3f000001",
-            "repeating": false
-        }, {
-            "required": false,
-            "type": "file",
-            "name": "File",
-            "helpText": "File",
-            "_id": "52dfd93ee02b762d3f000002",
-            "repeating": false
-        }]
-    }, {
-        "name": "Page 2",
-        "_id": "52dff729e02b762d3f000004",
-        "fields": [{
-            "required": false,
-            "type": "text",
-            "name": "Page 2 Text",
-            "helpText": "Page 2 Text",
-            "_id": "52dff729e02b762d3f000003",
-            "repeating": false
-        }]
-    }],
-    "lastUpdated": "2014-01-22T16:51:53.725Z",
-    "dateCreated": "2014-01-22T14:43:21.806Z"
-};
-
-describe("Form model", function() {
-    it("how to initialise a form with a JSON object representing a form", function(done) {
-        //load from local then from remote.
-        new Form({
-            rawMode: true,
-            rawData: testForm,
-            formId: "52dfd909a926eb2e3f123456"
-        }, function(err, form) {
-            assert(!err, "Expected no error when creating a form from JSON. " + err);
-            assert(form, "Expected a form object");
-            assert(form.getType() === "form");
-            assert.equal(Date(form.getLastUpdate()), Date(1390409513725));
-
-            var fieldRef = form.getFieldRef();
-            var pageRef = form.getPageRef();
-
-            assert.equal(pageRef["52dfd909a926eb2e3f000001"], 0);
-            assert.equal(pageRef["52dff729e02b762d3f000004"], 1);
-
-            assert.equal(fieldRef["52dfd93ee02b762d3f000002"].page, 0);
-            assert.equal(fieldRef["52dfd93ee02b762d3f000002"].field, 1);
-
-            assert.equal(fieldRef["52dff729e02b762d3f000003"].page, 1);
-            assert.equal(fieldRef["52dff729e02b762d3f000003"].field, 0);
-
-            done();
-        });
-    });
-    it("Form Should Provide Fields And Page Models", function(done) {
-        //load from local then from remote.
-        new Form({
-            rawMode: true,
-            rawData: testForm,
-            formId: "52dfd909a926eb2e3f123456"
-        }, function(err, form) {
-            assert(!err, "Expected no error when creating a form from JSON." + err);
-
-            var pages = form.getPageModelList();
-
-            assert.equal(pages.length, 2);
-
-            //Should be able to load Field Models from the Page Models
-            var page = pages[0];
-            var fields = page.getFieldModelList();
-
-            assert.equal(fields.length, 2);
-
-            assert.equal(page.getFieldModelById("52dfd93ee02b762d3f000002"), fields[1]);
-
-            done();
-        });
-    });
-    it("form initialisation is singleton for a single formid. only 1 instance of form model will be returned for same form id", function(done) {
-        new Form({
-            rawMode: true,
-            rawData: testForm,
-            formId: "52dfd909a926eb2e3f123456"
-        }, function(err, form1) {
-            new Form({
-                rawMode: true,
-                rawData: testForm,
-                formId: "52dfd909a926eb2e3f123456"
-            }, function(err, form2) {
-                assert(!err);
-                assert(form1 === form2);
-                done();
-            });
-        });
-    });
-    it("if form id is not found when trying to pop data, it will return error ", function(done) {
-        var form = new Form({
-            formId: "somerandomformid"
-        }, function(err, form) {
-            assert(err, "Expected an error when getting a bad form.");
-            assert(form, "Expected a form when getting a bad form.");
-
-            done();
-        });
-    });
-
-    it("Loading A Form From A Remote Server", function(done) {
-        var form = new Form({
-            formId: "54d4cd220a9b02c67e9c3f0c"
-        }, function(err, form) {
-            assert(!err, "Expected no error when getting a bad form. " + err);
-            assert(form);
-
-            done();
-        });
-    });
-});
-},{"../../src/form.js":61,"chai":12,"underscore":47}],89:[function(require,module,exports){
-var chai = require('chai');
-var expect = chai.expect;
-var assert = chai.assert;
-var _ = require('underscore');
-var forms = require('../../src/forms.js');
-var Form = require('../../src/form.js');
-
-var testData = {
-    formId: "54d4cd220a9b02c67e9c3f0c"
-};
-
-describe("forms model",function(){
-    it ("How to load form list from local storage-> mBaaS / can load forms and refresh the model ",function(done){
-        var timeStamp1=forms.getLocalUpdateTimeStamp();
-        forms.refresh(function(err,model){
-            assert(!err);
-            var timeStamp2=model.getLocalUpdateTimeStamp();
-            assert(timeStamp1!=timeStamp2);
-            done();
-        });
-    });
-    it ("how to forcely load form list from mBaaS and store it locally / can load forms and refresh the model forcely from remote",function(done){
-        var timeStamp1=forms.getLocalUpdateTimeStamp();
-        forms.refresh(true, function(err,model){
-            assert(!err);
-            var timeStamp2=model.getLocalUpdateTimeStamp();
-            assert(timeStamp1!=timeStamp2);
-            done();
-        });
-    });
-
-    it (" how to find a form's meta info from form list / can load a formMeta data by its form id",function(){
-        var form=forms.getFormMetaById(testData.formId);
-        assert(form);
-        assert(form._id==testData.formId);
-        assert(form.lastUpdated);
-    });
-
-    it ("how to test if a form model object is up to date / should check if a form is up to date",function(done){
-        new Form({formId:testData.formId,fromRemote:true},function(err, form){
-            assert(!err);
-
-            assert (!forms.isFormUpdated(form));
-            done();
-        });
-    });
-    it ("how to return the full list of forms",function(done){
-        var formMetaList=forms.getFormsList();
-        assert(formMetaList);
-        assert(formMetaList.length>0);
+    this.config = config;
+    config.init({}, function(err, returnedConfig) {
+      assert(!err, "Expected no error clearing local storage");
+      config.clearLocal(function(err) {
+        assert(!err, "Expected no error clearing local storage");
         done();
+      });
     });
-});
-},{"../../src/form.js":61,"../../src/forms.js":66,"chai":12,"underscore":47}],90:[function(require,module,exports){
-var chai = require('chai');
-var expect = chai.expect;
-var assert = chai.assert;
-var _ = require('underscore');
-var Page = require('../../src/page.js');
+  });
 
-var testPage = {
-    "_id": "52dfd909a926eb2e3f000001",
-    "name": "A Page",
-    "description": "This Is A Page",
-    "fields": [{
-        "fieldOptions": {
-            "definition": {
-                "defaultValue": "first thing"
-            }
+  afterEach(function() {
+    this.request.restore();
+  });
+
+  // it("config should be initialised before usage. config should get data from local storage.", function(done) {
+  //   assert.equal(config.get("log_email"), "test@example.com");
+  //   done();
+  // });
+
+  // it("config should be able to be saved to local storage ", function(done) {
+  //   this.config.init({}, function(err, returnedConfig) {
+  //     assert(!err, "Unexpected Error When Returning Config Data.");
+  //     assert.equal(config.get("log_email"), "test@example.com");
+
+  //     config.set('log_email', 'someOtherValue@example.com');
+
+  //     config.saveLocal(function(err) {
+  //       assert(!err, "Expected No Error When Saving Config");
+
+  //       assert.equal(config.get("log_email"), "someOtherValue@example.com");
+
+  //       config.refresh(false, function(err) {
+  //         assert(!err, "Expected No Error When Loading From Local");
+  //         assert.equal(config.get("log_email"), "someOtherValue@example.com");
+  //         done();
+  //       });
+  //     });
+
+  //   });
+  // });
+
+  // it("config should be able to be loaded from local storage ", function(done) {
+  //   this.config.init({}, function(err, returnedConfig) {
+  //     assert(!err, "Unexpected Error When Returning Config Data.");
+  //     assert.equal(config.get("log_email"), "test@example.com");
+
+  //     config.set('log_email', 'someOtherValue@example.com');
+
+  //     assert.equal(config.get("log_email"), "someOtherValue@example.com");
+
+  //     config.refresh(false, function(err) {
+  //       assert(!err, "Expected No Error When Loading From Local");
+  //       assert.equal(config.get("log_email"), "someOtherValue@example.com");
+  //       done();
+  //     });
+  //   });
+  // });
+
+
+
+  // it("how to get config properties", function() {
+  //   assert(this.config.getAppId(), "Expected appId To Be set");
+  //   assert(this.config.get("mbaasBaseUrl"), "Expected mbaasBaseUrl To Be set");
+  //   assert(this.config.get("formUrls"), "Expected formUrls To Be set");
+  //   assert(this.config.get("env"), "Expected env To Be set");
+  //   assert(this.config.get("userConfigValues"), "Expected userConfigValues To Be set");
+  //   assert.ok(this.config.get("sent_save_min") === 10, "Expected sent_save_min To Be set");
+  // });
+
+  // it("Should Only Be One Config Module", function() {
+  //   var sameConfig = require('../../src/config.js');
+
+  //   assert.ok(sameConfig.get("sent_save_min") === config.get("sent_save_min"));
+  // });
+
+  it("how to get config properties From Remote", function(done) {
+
+    var callback = sinon.spy();
+    this.request.onCreate = function(request) {
+      debugger;
+      request.respond(200, {
+          "Content-Type": "application/json"
         },
-        "required": false,
-        "type": "text",
-        "name": "Text",
-        "helpText": "Text",
-        "_id": "52dfd93ee02b762d3f000001",
-        "repeating": false
-    }, {
-        "required": false,
-        "type": "file",
-        "name": "File",
-        "helpText": "File",
-        "_id": "52dfd93ee02b762d3f000002",
-        "repeating": false
-    }]
-};
+        '{"randomRemoteConfig": 12}'
+      );
+
+      assert(callback.called, "Expected The Callback To Be Called Once");
+      done();
+    };
+
+    config.refresh(true, callback);
+  });
 
 
-describe("Page Module", function() {
-    it("Creating A New Page Model", function() {
-        var page = new Page(testPage, {});
-
-        assert.equal(page.getName(), "A Page");
-        assert.equal(page.getDescription(), "This Is A Page");
-        assert.equal(page.getPageId(), "52dfd909a926eb2e3f000001");
-        assert.ok(page.getFieldIds().indexOf("52dfd93ee02b762d3f000001") === 0, "Expected pages to be in order.");
-        assert.ok(page.getFieldIds().indexOf("52dfd93ee02b762d3f000002") === 1, "Expected pages to be in order.");
-    });
 });
-},{"../../src/page.js":70,"chai":12,"underscore":47}],91:[function(require,module,exports){
-var chai = require('chai');
-var expect = chai.expect;
-var assert = chai.assert;
-var _ = require('underscore');
-var forms = require('../../src/forms.js');
-var Form = require('../../src/form.js');
-var submission = require('../../src/submission.js');
-var submissions = require('../../src/submissions.js');
-var config = require('../../src/config.js');
-var uploadManager = require('../../src/uploadManager.js');
-var testData = {
-    formId: "54d4cd220a9b02c67e9c3f0c",
-    fieldId: "54d4cd220a9b02c67e9c3efa"
-};
-
-describe("Submission model", function() {
-    beforeEach(function(done) {
-        config.init({}, function(err) {
-            assert(!err);
-            done();
-        });
-    });
-    it("how to create new submission from a form", function(done) {
-        var form = new Form({
-            formId: testData.formId
-        }, function(err, form) {
-            assert(!err);
-            var newSub = submission.newInstance(form);
-            var localId = newSub.getLocalId();
-            assert(newSub.getStatus() == "new");
-            assert(newSub);
-            assert(localId);
-            done();
-        });
-    });
-
-    it("how to load a submission from local storage without a form", function(done) {
-        //load form
-        var form = new Form({
-            formId: testData.formId
-        }, function(err, form) {
-            assert(!err);
-            var newSub = submission.newInstance(form);
-            var localId = newSub.getLocalId();
-            newSub.saveDraft(function(err) {
-                assert(!err);
-                submission.fromLocal(localId, function(err, submission1) {
-                    assert(!err);
-                    assert(submission1.get("formId") == newSub.get("formId"));
-                    assert(submission1.getStatus() == "draft");
-                    done();
-                });
-            });
-        });
-    });
-
-    it("will throw error if status is in wrong order", function(done) {
-        var error = false;
-        //load form
-        var form = new Form({
-            formId: testData.formId
-        }, function(err, form) {
-            assert(!err);
-            var newSub = submission.newInstance(form);
-            var localId = newSub.getLocalId();
-            newSub.saveDraft(function(err) {
-                assert(!err);
-
-                newSub.submitted(function(err) {
-                    assert(err);
-                    done();
-                });
-            });
-        });
-    });
-
-    it("how to store a draft,and find it from submissions list", function(done) {
-        var form = new Form({
-            formId: testData.formId
-        }, function(err, form) {
-            assert(!err);
-            var newSub = submission.newInstance(form);
-            var localId = newSub.getLocalId();
-
-            newSub.saveDraft(function(err) {
-                assert(!err);
-                var localId = newSub.getLocalId();
-                var meta = submissions.findMetaByLocalId(localId);
-                assert(meta._ludid == localId);
-                assert(meta.formId == newSub.get("formId"));
-                submissions.getSubmissionByMeta(meta, function(err, sub1) {
-                    assert(newSub === sub1);
-                    done();
-                });
-            });
-
-        });
-    });
-    it("submission model loaded from local should have only 1 reference", function(done) {
-        var meta = submissions.findByFormId(testData.formId)[0];
-        var localId = meta._ludid;
-        submission.fromLocal(localId, function(err, submission1) {
-            submission.fromLocal(localId, function(err, submission2) {
-                assert(submission1 === submission2);
-                done();
-            });
-        });
-    });
-    describe("comment", function() {
-        beforeEach(function(done) {
-            config.init({}, function(err) {
-                assert(!err);
-                done();
-            });
-        });
-        it("how to add a comment to a submission with or without a user", function(done) {
-            var meta = submissions.findByFormId(testData.formId)[0];
-            var localId = meta._ludid;
-            submission.fromLocal(localId, function(err, submission) {
-                assert(!err);
-                var ts1 = submission.addComment("hello world");
-                var ts2 = submission.addComment("test", "testerName");
-                var comments = submission.getComments();
-                assert(comments.length > 0);
-                var str = JSON.stringify(comments);
-                assert(str.indexOf("hello world") > -1);
-                assert(str.indexOf("testerName") > -1);
-                done();
-            });
-        });
-
-        it("how to remove a comment from submission", function(done) {
-            var meta = submissions.findByFormId(testData.formId)[0];
-            var localId = meta._ludid;
-            submission.fromLocal(localId, function(err, submission) {
-                assert(!err, "unexpected error: " + err);
-                var ts1 = submission.addComment("hello world2");
-                submission.removeComment(ts1);
-                var comments = submission.getComments();
-
-                var str = JSON.stringify(comments);
-                assert(str.indexOf(ts1.toString()) == -1, "comment still in submission: " + str);
-                done();
-            });
-        });
-
-    });
-
-    describe("User input", function() {
-        var newSub = null;
-        beforeEach(function(done) {
-            config.init({}, function(err) {
-                assert(!err);
-                var form = new Form({
-                    formId: testData.formId
-                }, function(err, form) {
-                    assert(!err);
-                    newSub = submission.newInstance(form);
-                    var localId = newSub.getLocalId();
-                    assert(newSub.getStatus() == "new");
-                    assert(newSub);
-                    assert(localId);
-                    done();
-                });
-            });
-
-        });
-        it("how to add user input value to submission model", function() {
-            newSub.addInputValue({
-                fieldId: testData.fieldId,
-                value: 40
-            }, function(err) {
-                assert(!err);
-            });
-            newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
-                assert(res[0] == 40);
-            });
-        });
-        it("how to reset a submission to clear all user input", function() {
-            newSub.addInputValue({
-                fieldId: testData.fieldId,
-                value: 40
-            }, function(err) {
-                assert(!err);
-            });
-            newSub.reset();
-            newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
-                assert(!err);
-                assert(res.length === 0);
-            });
-        });
-
-        it("how to handle a null user input", function() {
-            newSub.reset();
-            newSub.addInputValue({
-                fieldId: testData.fieldId,
-                value: null
-            }, function(err) {
-                assert(!err);
-            });
-            newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
-                assert(!err);
-                assert(res.length === 0);
-            });
-        });
-
-        it("how to use transaction to input a series of user values to submission model", function() {
-            newSub.reset();
-            newSub.addInputValue({
-                fieldId: testData.fieldId,
-                value: 40
-            }, function(err) {
-                assert(!err);
-            });
-            newSub.startInputTransaction();
-            newSub.addInputValue({
-                fieldId: testData.fieldId,
-                value: 50
-            }, function(err) {
-                assert(!err);
-            });
-            newSub.addInputValue({
-                fieldId: testData.fieldId,
-                value: 60
-            }, function(err) {
-                assert(!err);
-            });
-            newSub.addInputValue({
-                fieldId: testData.fieldId,
-                value: 35
-            }, function(err) {
-                assert(!err);
-            });
-            newSub.endInputTransaction(true);
-            newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
-                assert(res[0] == 40);
-            });
-            newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
-                assert(res[1] == 50);
-            });
-            newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
-                assert(res[2] == 60);
-            });
-            newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
-                assert(res[3] == 35);
-            });
-        });
-        it("how to use transaction for user input and roll back", function() {
-            newSub.reset();
-            newSub.addInputValue({
-                fieldId: testData.fieldId,
-                value: 40
-            }, function(err) {
-                assert(!err);
-            });
-            newSub.startInputTransaction();
-            newSub.addInputValue({
-                fieldId: testData.fieldId,
-                value: 50
-            }, function(err) {
-                assert(!err);
-            });
-            newSub.addInputValue({
-                fieldId: testData.fieldId,
-                value: 60
-            }, function(err) {
-                assert(!err);
-            });
-            newSub.addInputValue({
-                fieldId: testData.fieldId,
-                value: 35
-            }, function(err) {
-                assert(!err);
-            });
-            newSub.endInputTransaction(false);
-            newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
-                assert(res[0] === 40);
-            });
-            newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
-                assert(res[1] === undefined);
-            });
-            newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
-                assert(res[2] === undefined);
-            });
-            newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
-                assert(res[3] === undefined);
-            });
-        });
-    });
-
-    describe("upload submission with upload manager", function() {
-        var form = null;
-        beforeEach(function(done) {
-            new Form({
-                formId: testData.formId,
-                fromRemote: true
-            }, function(err, _form) {
-                form = _form;
-                done();
-            });
-        });
-        it("how to queue a submission", function(done) {
-            var newSub1 = form.newSubmission();
-            newSub1.on("submit", function(err) {
-                assert(!err);
-
-                newSub1.upload(function(err, uploadTask) {
-                    assert(!err);
-                    assert(uploadTask);
-                    assert(uploadManager.timer);
-                    assert(uploadManager.hasTask());
-
-                    newSub1.getUploadTask(function(err, task) {
-                        assert(!err);
-                        assert(task);
-                        done();
-                    });
-                });
-            });
-
-            newSub1.submit(function(err) {
-                if (err) console.log(err);
-                assert(!err);
-            });
-        });
-        it("how to monitor if a submission is submitted", function(done) {
-            var newSub1 = form.newSubmission();
-
-            newSub1.on("submit", function() {
-                newSub1.upload(function(err, uploadTask) {
-                    assert(!err);
-                    assert(uploadTask);
-                });
-            });
-            newSub1.on("progress", function(progress) {
-                console.log("PROGRESS: ", progress);
-            });
-            newSub1.on("error", function(err, progress) {
-                assert.ok(!err);
-                console.log("ERROR: ", err, progress);
-            });
-            newSub1.on("submitted", function(submissionId) {
-                assert.ok(submissionId);
-                assert.ok(newSub1.getLocalId());
-                assert.ok(newSub1.getRemoteSubmissionId());
-                done();
-            });
-            newSub1.submit(function(err) {
-                assert(!err);
-            });
-        });
-    });
-
-    describe("download a submission using a submission Id", function() {
-        beforeEach(function(done) {
-            config.init({}, function(err) {
-                assert(!err);
-                done();
-            });
-        });
-        it("how to queue a submission for download", function(done) {
-            var submissionToDownload = null;
-            submissionToDownload = submission.newInstance(null, {
-                "submissionId": "testSubmissionId"
-            });
-
-            submissionToDownload.on("progress", function(progress) {
-                
-                console.log("DOWNLOAD PROGRESS: ", progress);
-                assert.ok(progress);
-            });
-
-            submissionToDownload.on("downloaded", function() {
-                
-                console.log("downloaded event called");
-                done();
-            });
-
-            submissionToDownload.on("error", function(err, progress) {
-                
-                console.error("error event called");
-                assert.ok(!err);
-                assert.ok(progress);
-                done();
-            });
-
-            submissionToDownload.download(function(err, downloadTask) {
-                
-                console.log(err, downloadTask);
-                assert.ok(!err);
-                assert.ok(downloadTask);
-
-                submissionToDownload.getDownloadTask(function(err, downloadTask) {
-                    
-                    console.log(err, downloadTask);
-                    assert.ok(!err);
-                    assert.ok(downloadTask);
-                });
-            });
-        });
-    });
-});
-},{"../../src/config.js":48,"../../src/form.js":61,"../../src/forms.js":66,"../../src/submission.js":74,"../../src/submissions.js":75,"../../src/uploadManager.js":76,"chai":12,"underscore":47}],92:[function(require,module,exports){
-var chai = require('chai');
-var expect = chai.expect;
-var assert = chai.assert;
-var _ = require('underscore');
-var forms = require('../../src/forms.js');
-var Form = require('../../src/form.js');
-var submission = require('../../src/submission.js');
-var submissions = require('../../src/submissions.js');
-var config = require('../../src/config.js');
-var uploadManager = require('../../src/uploadManager.js');
-var uploadTask = require('../../src/uploadTask.js');
-var fileSystem = require('../../src/fileSystem.js');
-var testData = {
-    formId: "54d4cd220a9b02c67e9c3f0c",
-    fieldId: "54d4cd220a9b02c67e9c3efa",
-    fieldIdFile: "54d4cd220a9b02c67e9c1245",
-    fieldIdPhoto: "54d4cd220a9b02c67e9c3f07"
-};
-
-describe("UploadTask model", function() {
-    var form;
-    beforeEach(function(done) {
-        config.init({}, function(err) {
-            assert(!err);
-            new Form({
-                formId: testData.formId,
-                fromRemote: true
-            }, function(err, _form) {
-                form = _form;
-                done();
-            });
-        });
-    });
-
-    it("how to upload submission form", function(done) {
-        var sub = form.newSubmission();
-        var ut = uploadTask.newInstance(sub);
-        ut.uploadForm(function(err) {
-            assert(!err);
-            var progress = ut.getProgress();
-            assert(progress.formJSON);
-            done();
-        });
-    });
-
-    it("how to deal with out of date submission", function(done) {
-      var sub = form.newSubmission();
-      sub.set("outOfDate", true);
-      sub.changeStatus("pending", function(err) {
-        assert(!err);
-
-        sub.changeStatus("inprogress", function(err) {
-          assert(!err);
-          var ut = uploadTask.newInstance(sub);
-          ut.uploadForm(function(err) {
-            assert(!err);
-            var progress = ut.getProgress();
-            assert(progress.formJSON);
-            assert(!ut.isCompleted());
-            done();
-          });
-        });
-      });
-    });
-
-    it("how to upload a file ", function(done) {
-      var sub = form.newSubmission();
-      sub.changeStatus("pending", function(err) {
-        assert(!err);
-
-        sub.changeStatus("inprogress", function(err) {
-          assert(!err);
-
-          fileSystem.save("testfile.txt", "content of the file", function(err) {
-            assert(!err);
-            fileSystem.readAsFile("testfile.txt", function(err, file) {
-              sub.addInputValue({
-                fieldId: testData.fieldIdFile,
-                value: file
-              }, function(err) {
-                assert(!err);
-                var ut = uploadTask.newInstance(sub);
-                ut.uploadForm(function(err) {
-                  assert(!err);
-
-                  ut.uploadFile(function(err) {
-                    assert(!err);
-                    assert(ut.get("currentTask") == 1);
-                    done();
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-
-    // it("how to upload by tick", function(done) {
-    //   var sub = form.newSubmission();
-    //   sub.changeStatus("pending", function(err) {
-    //     assert(!err);
-
-    //     sub.changeStatus("inprogress", function(err) {
-    //       assert(!err);
-
-    //       fileSystem.save("testfile.txt", "content of the file", function(err) {
-    //         assert(!err);
-    //         fileSystem.readAsFile("testfile.txt", function(err, file) {
-    //           sub.addInputValue({
-    //             fieldId: testData.fieldIdFile,
-    //             value: file
-    //           }, function(err) {
-    //             assert(!err);
-    //             var ut = uploadTask.newInstance(sub);
-    //             var sending = false;
-    //             var timer = setInterval(function() {
-    //               if (ut.isCompleted()) {
-    //                 clearInterval(timer);
-    //                 assert(ut.isFormCompleted());
-    //                 assert(ut.isFileCompleted());
-    //                 assert(ut.isMBaaSCompleted());
-    //                 assert(!ut.isError());
-    //                 done();
-    //               }
-
-    //               if (!sending) {
-    //                 sending = true;
-    //                 ut.uploadTick(function(err) {
-    //                   if (err) {
-    //                     console.error(err);
-    //                     clearInterval(timer);
-    //                   }
-    //                   sending = false;
-    //                   assert(!err);
-    //                 });
-    //               }
-    //             }, 500);
-    //           });
-    //         });
-    //       });
-    //     });
-    //   });
-    // });
-    // it("how to check for failed file upload", function(done) {
-    //   config.set("max_retries", 2);
-    //   var sub = form.newSubmission();
-    //   sub.changeStatus("pending", function(err) {
-    //     assert(!err);
-
-    //     sub.changeStatus("inprogress", function(err) {
-    //       assert(!err);
-
-    //       fileSystem.save("testfile.txt", "content of the file", function(err) {
-    //         assert(!err);
-    //         fileSystem.readAsFile("testfile.txt", function(err, file) {
-    //           sub.addInputValue({
-    //             fieldId: testData.fieldIdFile,
-    //             value: file
-    //           }, function(err) {
-    //             assert(!err);
-    //             sub.set("testText", "failedFileUpload");
-    //             var ut = uploadTask.newInstance(sub);
-    //             ut.uploadTick(function(err) { //form upload
-    //               assert(!err);
-
-    //               ut.uploadTick(function(err) { //First upload fails -- upload task should be set to try again.
-    //                 assert(!err);
-    //                 assert(ut.getCurrentTask() === 0);
-    //                 assert(sub.getStatus() === "queued");
-    //                 assert.ok(sub.getRemoteSubmissionId());
-    //                 assert(ut.get("retryNeeded") === true);
-    //                 assert(ut.get("retryAttempts") === 1);
-
-    //                 ut.uploadTick(function(err){// Next upload tick should reset the uploadTask
-    //                   assert(!err);
-    //                   assert(sub.getStatus() === "queued");
-    //                   assert(ut.get("retryNeeded") === false);
-    //                   assert(ut.get("retryAttempts") === 1);
-
-    //                   ut.uploadTick(function(err){ //Next upload fails again
-    //                     assert(!err);
-    //                     assert(ut.getCurrentTask() === 0);
-    //                     assert(sub.getStatus() === "queued");
-    //                     assert(ut.get("retryNeeded") === true);
-    //                     assert(ut.get("retryAttempts") === 2);
-
-    //                     ut.uploadTick(function(err){// Next upload tick should reset the uploadTask again
-    //                       assert(!err);
-    //                       assert(ut.getCurrentTask() === 0);
-    //                       assert(sub.getStatus() === "queued");
-    //                       assert(ut.get("retryNeeded") === false);
-    //                       assert(ut.get("retryAttempts") === 2);
-
-    //                       ut.uploadTick(function(err){// Upload fails again. Exceeded max number of retry attempts. Upload task is now in error state
-    //                         assert(err);
-    //                         assert(sub.getStatus() === "error");
-    //                         assert(ut.isError() === true);
-
-    //                         done();
-    //                       });
-    //                     });
-    //                   });
-    //                 });
-    //               });
-    //             });
-    //           });
-    //         });
-    //       });
-    //     });
-    //   });
-    // });
-
-    // it("how to check for failed submissionCompletion", function(done) {
-    //   var sub = form.newSubmission();
-    //   sub.changeStatus("pending", function(err) {
-    //     assert(!err);
-
-    //     sub.changeStatus("inprogress", function(err) {
-    //       assert(!err);
-
-    //       fileSystem.save("testfile.txt", "content of the file", function(err) {
-    //         assert(!err);
-    //         fileSystem.readAsFile("testfile.txt", function(err, file) {
-    //           sub.addInputValue({
-    //             fieldId: testData.fieldIdFile,
-    //             value: file
-    //           }, function(err) {
-    //             assert(!err);
-    //             sub.set("testText", "submissionError");
-    //             var ut = uploadTask.newInstance(sub);
-
-    //             ut.uploadTick(function(err) {
-    //               assert(!err);
-
-    //               ut.uploadTick(function(err) {
-    //                 assert(!err);
-    //                 assert(ut.getCurrentTask() === 0);
-    //                 assert(ut.get("retryNeeded") === true);
-    //                 assert(ut.get("retryAttempts") === 1);
-    //                 assert(sub.getStatus() === "queued");
-    //                 done();
-    //               });
-    //             });
-    //           });
-    //         });
-    //       });
-    //     });
-    //   });
-    // });
-
-
-    // it("how to check for file status", function(done) {
-    //   config.set("max_retries", 2);
-    //   var sub = form.newSubmission();
-    //   sub.changeStatus("pending", function(err) {
-    //     assert(!err);
-
-    //     sub.changeStatus("inprogress", function(err) {
-    //       assert(!err);
-
-    //       fileSystem.save("testfile.txt", "content of the file", function(err) {
-    //         assert(!err);
-    //         fileSystem.readAsFile("testfile.txt", function(err, file) {
-    //           sub.addInputValue({
-    //             fieldId: testData.fieldIdFile,
-    //             value: file
-    //           }, function(err) {
-    //             assert(!err);
-    //             sub.set("testText", "submissionStatus");
-    //             var ut = uploadTask.newInstance(sub);
-
-    //             ut.uploadTick(function(err) { //upload form successfully
-    //               assert(!err);
-
-    //               ut.uploadTick(function(err) { // upload file failed 1st time
-    //                 assert(!err);
-    //                 assert(ut.getCurrentTask() === 0);
-    //                 assert(ut.get("retryNeeded") === true);
-    //                 assert(ut.get("retryAttempts") === 1);
-    //                 assert(sub.getStatus() === "queued");
-
-    //                 ut.uploadTick(function(err) { //rebuilds the upload task
-    //                   assert(!err);
-    //                   assert(ut.get("retryNeeded") === false);
-    //                   assert(ut.get("retryAttempts") === 1);
-    //                   assert(sub.getStatus() === "queued");
-
-    //                   ut.uploadTick(function(err) { //Next file uploaded sucessfully to mbaas.
-    //                     assert(!err);
-    //                     assert(sub.getStatus() === "queued");
-    //                     ut.uploadTick(function(err) { //call completeSubmission
-    //                       assert(!err);
-    //                       assert(sub.getStatus() === "queued");
-
-    //                       ut.uploadTick(function(err) { //Submission is now complete
-    //                         assert(!err);
-    //                         assert(sub.getStatus() === "submitted");
-    //                         assert(ut.isCompleted() === true);
-
-    //                         done();
-    //                       });
-    //                     });
-    //                   });
-    //                 });
-    //               });
-    //             });
-    //           });
-    //         });
-    //       });
-    //     });
-    //   });
-    // });
-
-    // it("how to get total upload size", function() {
-    //   var sub = form.newSubmission();
-    //   sub.changeStatus("pending", function(err) {
-    //     assert(!err);
-
-    //     sub.changeStatus("inprogress", function(err) {
-    //       assert(!err);
-
-    //       var ut = uploadTask.newInstance(sub);
-    //       assert(ut.getTotalSize());
-    //     });
-    //   });
-    // });
-
-    // it("how to get uploaded size", function(done) {
-    //   var sub = form.newSubmission();
-    //   sub.changeStatus("pending", function(err) {
-    //     assert(!err);
-
-    //     sub.changeStatus("inprogress", function(err) {
-    //       assert(!err);
-
-    //       var ut = uploadTask.newInstance(sub);
-    //       assert(ut.getTotalSize());
-    //       assert(ut.getUploadedSize() == 0);
-    //       ut.uploadTick(function() {
-    //         assert(ut.getTotalSize() == ut.getUploadedSize());
-    //         done();
-    //       });
-    //     });
-    //   });
-    // });
-
-    // it("how to upload photo/signature", function(done) {
-    //   var sub = form.newSubmission();
-    //   sub.changeStatus("pending", function(err) {
-    //     assert(!err);
-
-    //     sub.changeStatus("inprogress", function(err) {
-    //       assert(!err);
-
-    //       sub.addInputValue({
-    //         fieldId: testData.fieldIdPhoto,
-    //         value: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAADICAYAAABS39xVAAAgAElEQVR4XmS9B5ikV3km+lVXdQ7T3ZPzjEYoW0i2QMKABZbImGyEYFn7sXft9e69z927117bYAHGLAZMBptsgzEOOLDBJtgGkYRQAJEURmFGk0PP9HROle4bvlPV2q1Rq7uq/nDOF94vnvNX/uGf/lf704/eEa+97oZ41Q3Pj0r0xtnV5bhjsCd2tSpxTfTF3bEWH4j5mOm5EL2HDsfEiam4eKE3Lm4OxcaJiaj19EalUok2jl+ePRdbxgej3W5Fb60nentrUan24JjQ9+3AHz34fzv0avdUIiotnc9/0a5FC99VKm2868Hx+I7n4HcPPmvhX7R5nRqugXc4t4V3lTaPafMvfN2D975+hd+2m/g/xoEL90QD53gs/M37RItjwn34Gc/nvTw43bdSqeIaPA/35scYY0RTR7Y52HZv3pvfNnlRX6WJ8ffguLyXrrXu73bbc9Q1NS8SqSEa6TveN+o5Dk4Gc21VcU4jmji8R/MURXAcx8VzMCbMt13hfPk9zsf1+HmrBZrxGhxyBeMkxfU3/8TfuHZUeP/yqula5I2Z4jGIJyQeeKe/xXuMi/cmXTAPj4MX7xGlyG9dR/zAvTD2Nu5FJjRwzSaGs7y6FmdnZ+Phg4/EY48ciuXpJVx3OZo4vorzNm0YjwP79sau3XtiYtu26Bsbit6+flwY49YUcBzowXtq/pxcjrfNMXIcnCeO6ZHUkPakuXkgCdL3pGMF425i3JRBDK6HvyW6+L4R73jHH8byUjMGhvvi1te/IrZv2h4DPX2Qd9BBMk0+4Z/+Tgbpz6Sj7shxkw/mo0eQL9xP5BYzSDPKOEaCzzXXPJ684zE9kF/OoyURxTGSVfIFd6nid55vuovsHoFu6zfNVhMj8vdiFa/A43Wu30tW9KLu9UgHPW7ITRtz1v09Z3AVYmNdl4zgb8lE5wr4HF9WoCctXIfX1uzy5jy3o8f4rIXJVT7zhX9oP9I4H7c89YZoD47GJZt2x6Pzs/H+kUb0rbTiF4a2xCeXT8ThgUpctXImtjw4FZsfno7WhdloLS9rYBs3b4qtO7ZFFcDVrq/F+ACJ3RRY9dagJFVMhD85WQmB8cXUJnNJdAmV1MjE0d8UHuoLKCEl8HwIGgSfNj7roQLgX120oFiaaFQMayRAEArKc0lgfS41F5z5jiAcmS0l57G8roCDgpAs0pip1PgeHOdxLSqyBK8MjLc0c/gVQRZH673uLYGwUpAhVhh+inMAbgIsAIuh16O0xONcopQoAkWqgNYEJgoBv8e5nJeAo6chQJEx4MhwnO+TY9d4SAvTXqCUtOL8WxR+niFhBY0wJgqu5qj/uvSzscF1m5xLVxkJ5BJozcDAL4XSvAm87Wjg99LyYmzZtCX+7BN/HYdOHY8+yEuzsQJFakdfz0BceumBuOqq/TG5YXMMjm2I6OvFdaFWGo+oJnrmhPwZzhVFi8YLSM0XGwjLAuckSSUtCpmT3jqVYIfvaMQ4dhoK8roHfP+jd/xRzC4uRe9QT/zS614XO7dtjP5aL8ChF9+Df6B9lQPgqZLFFt4Xo8rxYIScBymE+xDeSBsZWzGNMsjTCZSmu+RUYGPQFbDyPL4nr4xWmmcP7m/5Mh7p2pgDx9DCPPQZ/uZ9KZ8CeX3Oa3MEBm1SxrQyeHQBK0GPn+EAmlbZJ1IX1kdAzZdEzwBKvtCYtdPwN3CIKFBkAmdLkwgOSTciLv8Bcz2O933+c+0j/asxNd4XAaF4+5Nvju8deSz+296Nmsg2oO7lF2Zix5HTsfvUhajMLsfCzHzMrSzFUn0+FhfWYmVtTbowAIY99dprYwzXqvVUo6+PFodMxJd4zxn3cPCysJopPqNyiuwiomnMY6kIBhES0cpg78AMKLAkDuEDgBKJRhQWo608whMx2gBhXliRDEaijEynFD4BwaentdExOF5eIlnM6xQhknSJN/K2UmDaBEA6W/zNa1HxdZyFg1Za51CIBTp84QiMnwyzDlLQeQ3fgwJlsE16CIRsfeV1Sugwf1lbipotOAWE9LLC2iuyynhcXeGkFTMv6HHSYnpu9Ego2AV8rDC25PbUkqIepyZjesrOcjiY18paK2YWluL4yZNx4viJeOyxQ7GytALPhN9XYmhgMLZu2xT7L9oPL2p3jI2NRG8/vPW+qowhKU9ZkAjrmrwH/4C6yNM2kIt36bWbrn4V/LLocG6pRAJt0k3ktFWXWFhp7XXz3vwMvjo+e8873hUXFhZjeLA3XvvaW2PHji0YYzVqMNI9+F3FwT7exksAm+5CXt7AJEAwN3gv0lGGWfJpynJmBDeNkZTV/5J/Op7ztRwTxPSP/McA+N6Th49a5FP3StnWybpcztIsXw9MFEaNlfSWU8Fx0DhaosvcJIekVxr5hKzUKwKsuSCeWUD1sqEFWCWgO8IyLwgXxRcWbrz5C59rf3n5UEzv2RLDe3bHG3c/P7524UexPDIcl59ZgTd1MjbXG3HDddfDyo1Je2Zn5+Pz//Df4wSAbW5hTgMYHOiP8UGcc9WlMTw6FlVYyoH+3ugHaPUgJOSdiboOFzBAeimilFgkQGkLzAg4aR2tUtYZorLCqVR6TRWhmRhiL6MFqyQvTVhiRaSikeFSQlp4hn4JIAIYMYDjyXtJ16mElFyGfvhWoSKFzkpoq1ZAoXhBVqBi7MXKRBu6skK7ztgN0XaRu+GTfLECGGKehZThqLy21DiHfnhPh4zypvnydpK6zqsNV5veQHH/5b5TuXmf4n3BvVA4waBLHhutMK8GQyJaQlno9VHA88rGIxsBh7UWOoXmSe86Pl9rtGMBYd6Z4+figfsPxskjR2JxZQH0hPcNmlSRJ9i2dWvsv+RJsXvP3tgwPh6DQ4MYij2BNr7vgSEieFZ7atE/0AeZ6oMFb8Uqrru2Vo9mfTV66gxPMAiAhQlCmtqTpryQLDXRCX8sr2LusOu9/coECI6kO/wLBNWFPFeOk2PR3HkuMI6S1otD3gsP6/ziQgz2D8TrXvuq2LljR/RVEYb2EWIAXLiHwY5yIwG3LIPeFQxGOktQFV8LLakfVBVrssMkfofzZMisJ5JZsdoGgb/kl1F2cLNm6hCvIePKIyUj5hclgN5VkR3SWufovpT3VLnUjaJNJIoTEH7Zv/V1NSbQyx6hBMT/z1QCwVJiRZoTmOk5dRAtacNjdBbnwSnb+XDKx8BY+a2//2z7a/Wj0bNtPEY3bY59k/viwPl6bD98Pnb3DcU111wRk5u3mNh4rawuxLe+8i/xg/vuxUWRP4DlW2tAaOCzbUdouG37lugdHIoeuO6D8K76IWAErIp8Olqf9CaY/1ASiRbLIVAhhiwDLYtCGTLMYYsIkBZDLmrOmN5MiY/tGlsInKwxUGraeQ2Oo1i0dhveIceSTJaXgryPQBT5vEJUudsSOo+jjIXZFY+pXIMelWnFcciTy3kq7SMX1/k0egUCBTGVuSIqVSpHejMdkOA9yND03CQ6DMXkWfkofmeLbcAteTDnzbqCJhHr0IJjtNX0K132Jr3iohD5XaG3uaJ7y9vRnAiDTXjc9Th+9kI8cvhoHD/8eFyYmsKcYEhAvz7wZuPEhtize2/s2b8vNsErGRwehQgx34Qf3p1KvoY/gApyyvkeX9QwV3ovfTCMvG99bQU/AJ9VZE9WpsHDoahB5tqUFYY9DLMUuhv0q/JyKrE4NR0j46PRqvZZ2egJcdqSFU1Mv3j+3IkTkOftsYaBSOmh0K0qAAsHvOed8LDmERIO9Matr/vF2LtjM6KJfowR3hWvUOuXQVF0IHGwR+rQyiGyxcTgxNDIPEqai4+ms/OE6/kvrXf+h0ZYCl1yrUVi8lKWDINaery202kA895KYcCDl64Aybs5VMovL0HjbxCWwZMLR+BJWU8wFPTkEJrrDKhTBApk1umwOG5HgxiRgCX/S2QoYSkvaj2q/H9/8+n2ocp07EMeYXwZAnF2IS4b3xTPvelGCNMI7YOm/OCDP4wHv/dATJ95PLaPj8Xw8GDMNxtx/sJizK7NYyoDsW/39ugdHZJ31QeGDQ0O4G8AFiwldYv5EQ7EuapkWpXCjHBUwmMrwti/60gxFPOxRRkdW/N6VlD6agSJtIsWAhHNxLV3gxAslZYg0wCRKCQOc8qrQL6B0iBk0Ctg1RG2NE8GI0o5ZwQbTX7L2hnYKL4Ka3OMTShRTyb5y52d1HRxgZ5Bk9aUdOI46QEhM8pQTXkOOZo+08lrgzVfBllaWI4pj1FewyE278v7a5b0pmQMGJ6mlUwy0NOQ55fvHZLTOSAA8CaebwPXXsUHJwBKDzz4aBx++Eiszs9FA14MLTZHs2PDaFwEgNp+YHds3Io81MgEEuWUCYKUZYvC6oIMCgSruObp6RjetSnqNXoqoCo8qgo8LCmdfjCP5hpoA+gHIC2cPhGjyKEqFyMa2vLTm64hUeLQtiF+L52fiZGJ8SAea4JgWKsGGpNxRU54Lq5QRbg6CBBcwFxqSO4T3Bo4phc0fN+73x3nEV1UBgbi9a96RRzYuw0yPhg1zIsFJkzQ4FTGQ2+aH0uU6D44ReGog58RMAywwhf+2KW2sqZRlLiSt0RzYUbhEnnKpDtpZbm3J5NRiQwjw9SUF+qDvHtfR15WGrlObqaAC86pChgxbgC2PbAuMPIvBdgJsJZNh4t8ObVWkvQ81iBsFXLCXbN4guPAD5BTk0Mg9NK1Kh/5py+2l1ZmYuXc+agia92Ct9Sab8Tzbr4prrz6qvjOHd+Oh3/yg6ghkbZ783hsntyg3NRqoxnnZudienYBNcRK9Pf2xaZtW1EwY9IXCVO874c1rFE4lUhEJbEkcymEVFoOQIrF0IXApE+kDK5OCGtz2pYvhjkuO2AyVMDMRZBxzeIOSVDs8UiF5ZX4+rydchWQWAtJXRbZ6k4OlYQsLX7CmZTJQQO9ItlkDmtdmCaY4nGSyryfwKDru3R8cN2H+Tnn7QyMHqtnW6wY72OhlgrRwlAAi5styBERNR6LQU6SQqC8HifMsI4Cw+M8RhUDJFSCwe51dB8Knz2Soie8fhOh4doygALjPggP6u77fhSnjp+MfihZA/IA1iMFUI0dqOBddcUlMQ7PfAPSCDXkoeB+iM5Vhf1dMCRvRFsqNPkAz6mnjt/DVAEIq9JwpFeGRpozx+7qaxV6t3zuVAxsnQQZ+gQ0DPmQuYd3NxP9OHVs46b0uCIWz8PDmkB+likKpehMW3vm6Z2Kx4C3BjxtHCdwwzV1baYwQLsPve89cQ7FqRpyWLe+6tWxd+cO5WtryNcyfyUg4jiSPS5qFFHuesUCa1Vis/iRci8cSjp1wSH/kpBQD2gYDdLifAe8SK+U/QRvh48ECCc87L51AZ5iwkhFxksqmU6CDLZlMoVMeiEuEACZ7slXAVUOSdVaAZBv5dSGAbMYPOpSj1IUGpDG35RXRRlJD5T43eBcxaao/K8v/vf2+elzsbC0GstrTZSY23H2yEmAG/MmzdgGC3kpXPftWzbGMPILHEwDIRNL0LMrazG/uBIrGNEG5LwGR0fFWDKL1cH+QbrISJYibJQL2yGold9lcNXihCKagADL7up6RolcVN70I3g9TU5HcZL8PisjPthXpkUuV0rimfgWSsxY15TcCumdJBeFmFCW0NiDK4lNh4X2WtxmUZiWiXbeL8dg/DVLZO2KH8CwVEpKJaD3Z3nwfS2IcvWFWRw4ARatFQTldMPFQdJKp/oeBkX+sS7BJUWz0BnIM8xIQfd5vgqPkW3E+zrGgPRlzCzOx7ETJ+PRg4/F0aPHY3FmBiGajczo0HBMTk7Gnr17Yz9+RiAvA0ND0UQuh+DWAtj0Dg6qxWUeSeoR5HzYiqCgn6GbbmnlYfW4vnQ++vrHMV1Wdm2lK/QaaODwpr68AixaRcVwDKmIpgxlZWUF4ONqcWsNB63UY+bwkRgEi8YQ0lU2TcQSQkySpQkDy+v0jiEsFKmKoaKCuGooSuB/s2dOxdYt22JVqVJ+brnsg+F933vfB2M9Gz0D1bj1ll+M/bt2wUijQggF7oF3VfJWatdJg9JV+Az79Z3ZZr6ZZ6WVQDIsb8mcS6iRzviU9M5wAHN1suNsvxDilBd5yVnx+pTPzGnpvrbeuoPk1OeUkK5IlYZPUdP3TI7zTEc2/FviovOsxzpPHmUZuT1WaaLyUhyN81Mys2aEad8ZhO/l05JIHO493/16uw73ug6AWgTjjx47FQ8/dBgVv3aMoWqzA8zetWk8RoaRlwIjGFCgCwhJzwYqhcuxBOFoQli2TE4gbmc/FsGJBhU5LLjLvf1kHt35FA2N0haWBOa5tF0s7IphCTyySBioLH16AG4JSAEmuXmsKnGEJLq2zqekWorCrUzkO0RiEt0nMvwgupfY09d2SGo6J5eEGIVZ6ZYKZHB89m550Oaold2MKBLgEI7lW8ulqihy/TkOVgvLOeXm+C5d/27rA8cHXxbnsL/LquZzW6oOdgXew6f1olCVnFt6tKXSsy7csEkFGHA0+H4eyfKpU+fiJz9+IA4deiyWZqbhzVplBjD3icmxuOjiA7Fz70WxYeNk9I+MIJHcp2T9GmSIP/1jw7E2cz4qAKiDKM6M9yEURD5z7+5dloeECiX7yX15CxFLS3O4F7rsqPxIKagqu7YUrVlUo+dn1Cs0DE+/Z2QM94S8kbLK7cHTeuRIDMwjHEWaoYbvhyCTywAUeneUW9XgwKPpo0dj4+4dCAVpNEhC5+tceOH1XEFsL83Da6xFYwigiH8MtXlMFbT94Hs+EBdQPScqvvqWV8VFe3YCPOlhMU/LH14S3gPHpvxtqYKnd86BO+4zD3HPHra18E5psIUF+NqV9RLKMQLoem6SISqy+JyG09bb1yds0EMlMOXXneKQdCGNK//WvQyCBMDiYKibhnol8mSkQa2kisoT8n1UhZZ8+2KCGV5LeJjCz1tSNjV3fs/72auyY2CQyy9FbwM+3Ava8rvv+nqbVRf1FuHzhaWF+M43EQJW6rKG28ZHYhKJ0kG49eylauDQer0OI7YWi3jTqEOAhqoxitxEk+WTjIuZfByAZSUTSSglFdONVcVO2ksiWkicj+HkiLK0UlT9UlA28pYkOBW10yOiMMwNag7tklhCeIkC/seeJQo1LRjBM4FHHhoRz0TiGVT+DqVLDClAyFwYL8+QgaAlwfbL4Z0ToKWdwWGcZ16iVYG0ruUKpMIBWcWCinadS/JdIahoylwEjAOHmyGsLakriAY/8nWdYPGz7NUyYHoctmK0dpwvjA/yN2dmluKRRx6NRx58KM6dnIIBq0e/c/oxOYwm4u3bYu/Fl8Sm7VtjaGQ8qijI9CDH1EbP1+racqzN1QFmlVho1ZGIHpenvbR4PupIG2zeuQnGCz1UMkoWTkFsgiZzTZ2mYniRzGFSVlbn5qK52Ir+cYbnVQDhMrz2wajCq2KxhzLrXjlXvk7/8MHYd9G+WKXXtbisCKGF1og6jGoNoEOjyDTCPHJeE1uQI1OyX2olfpT+IIaUzI82kaPqg7fYAgiJV/L4KIURH3j/e2Ma4WUdgHgLPKxL9u1D3hYN0ujDqup4zEDhEn5SNiyZBDLLfKc1JwFGifUsRjlqsOm1f5LjTI/eyfH0YSiyMsJPBB97OQYExSaSM4C5wDfHINCx8Rf4W5TS1vo4AX3JfXEOmUBXMoHHS7jTY0od5kQNUjbGYjWRS7m3ooNsHO4Co85QOodVYrEXobvH6YHhv7sAWMhe4m+Xrun+/+B7D8UQDhyGhdswMhjD8LTIBKIum8LqEPy1Zj1QVRZRN8D76h8ew8UF9RgTmIbS7QBArg9CTULR6hhRUz6EbSRmHdcoFsNK5BQeD3duxVU8WxD3b7HKR6Wn4VinlOm280yrbzJCVbIuY+y+sITt+JmegaskoozzRGJA10VVclBei8cvhc8zZBc1rgQDnK8UpphphrgrWF1RTorjN629DYp7sjSvUg1V0pTfk4nwNuQ9epxuaSDzeT8DlMME3TDBPbvkNbbuPFhsWAUPl5bW4uAjj8eDP3k4zpw6Havoq2uBpwTdif6h2LNnT+xDonwbAGpgBHlL5CObbAJmHkqcMeghS45rLSDM2xDLCBUXL5yNAYDTIBLbAS+9Ae9oaGxCnrdljoPm/J0UdljjUEvzgAypKAFlnzt5OsYgQ63xAcuEcoKUXStvp+qEa9VgdJfOz8UImktbuNfy6ZOxYWIsFlZWY7R3JFZHGP7bSlfRrLo6txi1zRtxMcpSJupJ2yKfBEEcK1uuTL8YpLFDpOPDH/hwnDp7Bkn33nj1q14eF+3bE0NI0FdRKZR0CKvcEC155JDTUOoTGUF7NJRHhvpqsuV7fed0QVWEsd4LvARoetPRJQsPdZ+fZ9WzzENj9uEdeSSgEsx5iZSn7PbSdag7tuGmc9FZj6N4PJZlJ/Y52W4YaizMlAaNbQGsMlDdt1ttLxlNx0Ye7HqZ5fekE/Wmctd3v4EG6uWsEkTMzS3FkUMnIABwy+FaD8EyEWxqCs/cgCgvC0lNKuEAmDQ2wjYGWr2algHQVa+C232l050eAcEpw6sW1wNwmYisEP6EhXeeTVSyQGqSRplOF7YISIWkq91tc7D+G51lUUSQAim+Hj0JAxHT9JnroqDgWmzJ6LQmyFqY2yKahINjB9BInvidS7TkkWuTQiqdZeuUIKXyiI9PPMPfFpb8VOfJAmr+5qiaMnEd5Zp10Uz5lzBR1+OYiwRkrq1DQ5lcfE8gZJ6ogdC9EbPg7Q/vvz/uuue+WJxH2AaiM1jqhXZt2jgRV//UVbEFyePxyXF4MkMYKsK1BFrnVUwTzoe3phxUmgtgZTXOnJmLiTEWWpBgxxz7wP+z55Dr6kWea2xSHnZyRsBjFbJCcMWARDWBy7MywMsG4rAGPDllyZMmzsmQPgQ4dpUz9HGiVjYa560gKd6PquMgVnCsjrAAYf410ezMZuaeYVT+eKtMUK/TaoOGPGmrE5VJCo8ftjV85I//OI6eOoswtxKvfNXL4uID+9XprqS7KqDO0Tk/a7mWlyS5tjFUb1Jev9BVk6LnJODiDa3GJhT/x4jBUQDPL0Ubf+/CD/+xD66EXfbefb5gUV6Tc0xKt2h8joDEJfIhW4VUeKG6aigcr69jUUwplmzYuBYvMRkhWZG80CGQOmdhg+eL+Oaj2KA/DH5sf/IXBDy+V70VgHX37e0mMquUIWLuMpLvJ4+djubqipvfwABWf9jdK8bhOrTSNII1ANQgmkUH4WExTmcFiGECPSYyQgl3Nv/hZlq2o/ySmvjFMCfd7QLaHSeTHMuKyHK0IACSQnwKAHUFi2u8UgB4rHTIXhGv4X9WKueKsi+JtJGimzTpv+lo41IigK5d/IiSG8gx8Q5uJrFQ+y6+v6U/3d9URgmEGh7EoMxS6Lj1a6V0DU6TLQ0UOsm2w8PSg8ILGAx5uq/p01IRxEF4EjiG3u/Z6fNxBL1Q9z/wYJw6dlKGgb1Jg8grbhpnP9Tu2Ldvf4xv2hRDaGGpsI9JSd6SiraGMuldlum4mudlNYtsnIRRUq0RngXDyCaKMQyPRwB4bX0HBccaO4ujiOxsAGleZDVNsGAM33M1o3iYCVylEHKenXyIPkilJqiJpzRaTA/YSFHQ+5BrXcUysr6J0ajTaAJU6igU0ZscGEXbjtbsUSZS7syZbAfgGDhqF4Mo4xwJZ/XRj3w0jsAz7QNgvfglL4krnwTA6kMbD7wXgWFJFJs7Ha/QRRYbG6U9nlAxtRylFCWgdIhU9FpGVOpM+rDww9YXjpOGrQMeFkvxT5bN6Yoi+5Kp1BQ5j8VJSDq6emsx14hSx0iNbkSRetYx8m6jsONgvRDXU98cFeT3qd7FCHaOEQ/Jv3Rq+VuOC/+DTn73rq+2G401vHFifGV5KU6dOR9rS4u2cAAaRuQkLsFLVQuiHRhdQ45rEBa1LL/ROigSqJeoyHieawkNXhQkNQeSsFI6eDpcLpBusoGLL/bdsDrCRKjMkWNshnVSfhKByu+ktdsGSHIi+BM7bQ18tpBe7Ms/eCzDwSQmiFsqj8oJST5oedBRjXyMIhhpSTmOc8RI4F5wUbeBLnMwoj7vWe5j9+CJVRt/Vyo+zG8w5HCvikbq3wIq5+Y07CIUtMwEfl3X5WXWORv4fgn9T8fRZvC9H/wgjj5+BDxcwpq8BjypNozKWBy4+KLYu/+i2Ix+qBE1bDK/aIWV5S2ALSJ0vUJ7OR1RhXe9Bk98NibGN0r5pk+dQNg3HrVhFFnA86IIGnuW7H0HX4fzcwc6AdTWWp6rLDRcf3kg1EUrmV9WTr7Ux6MiRwIq5UOeqqSbLrt8hTXkoJpnET30LEdrYhiFALY+sIpNgipA7Hi1xevjek6V38ucBQT2lGnEqAc13PtjH/94HDqJdgoY5Be96Bfiqsv2oUkaPYg02qknmquElzkgXILXhDKpSML0QvHeHW9KFzKg86zTE5KkFnAm7aiXGk/SIY2/biGwtmPh3wnkvpz1UxDsqqKhmMYTmxVA193HRRYZ5Jz7Jbm8jrKTYC8hBg9lbkz0okWmQTN/cxI+hx4f+at7mxgWafcX5nRFZ3cMOKrIcpILGeznvPPOf8WY7GZycHUsdTiHTmUuuUEBz+Vr5KPo5jJ0IJC0WRECKBGo+pFjIIixWQ72DCBld5VjZFhYFj170WUqn8I8gpJzNvYoDDpSlOzgNtEIBqkw6XLK/eTyCtpidTLzPU8vSXqLtQA9wUENmSQBk5MUwExmF3WwUnSZZNzwt+6R4djcbOcwi+Pk2j6PzYBDvtAtZwK3eEMEVXo+pK8Ci2S6ZdnLKArDEqwEtPZABUkULFQG3SXNlD3DU3jDmODUubm4H7sbHDz4UJyfOodeOgAUpHVosBZbtm2Oi5CE3ollL8MTm+BBgW/koxCCQuExl7YMJtBLIcFWufxkwh5TX4JAI0kAACAASURBVF6C8mMEw0NoYZEAOtRWc28CNz2yFXhbTsrW1bfFdYLo1hM/pQG6d5kv31hp5fdmQcbXU7OUhVi0YAe7fLWUJvKUlQh7K6Rbrzxk5Okgw0MAEaZPVYvW7hdmq5uXnUeT0ooHDkfMRytVkUsqD/vYqIgErD/95Efj0JEzaBTtiRe+5LlxNfrOBqsDMAI05sjX0Zuz62L51ZRVi1aYXdpkejB253J1Bx2hs9jLp7MN8NJ/NtCyb4ueNPhThdEuRRR7WFmgyTxXOk3JX3s96xPsvKfzUA4NrYemrXTY1toyrj9NE1XHpRMke1eDlE/O94ZJ60M33KS+FNmmzOAo6qP0w3hQ5M6BsD1lYgsbjWvAncqd3/lauwH01NYtvBjWZV1A8nQOFRpOmDsusHuXq9DJHCE0XHwup2BVpA8uNkM3l0MpkERk/vA4Whj2elO2XcpsEykFvrltiQDAQiSDTOHpZLYdXnFs9iiI1P7eC6NNOFUy6IEpkVc8IRKG3wM8BFLqGjFB5A5TgvKmllChrB2awoQyNndPOdmbiqWeKCuccwQySziqgJqPJTMcvNEPwnIQMYxMN/MtKLy1c0T8yeA4rSO/RCMJWg3Y2LiArX9+8ODD8cCPDsKwTMfKwrwY2os57cKyqIsvf1Jsxfq8kY0bpawM1Zi0LxUw09phnRLeEkremBLqm1OMC5rZCFqpT0+dik1sHMaSLK2vIztoKXP+a3WkEfAJ5YWAqKocLr+4yjAUeaM2wk5xO2+X1t3AWRQ1Q7qkqw2OPV/erSTI9TeVlmpOgGLSmsCF6rVCW02Hks7zvE2Mm/5d8dK8qKBl6pApJnWV+FaBhbLuFgIabYVT5BiOw9Xj05/4eDxy6Dh6zFrx4he8KK668hI0VPdLXwhYTnmU2aZE0VBSzCgXKdfensXtNmnzMudqGXRzM6dhPhWAYhpYQCcZ5DxLEJb0TYPnbntdyV6X8l/Fuqr0YUOY3p5kT2CFY1kNpC52ZNP01p2kLpZ9777izzu5ZRkYG2NuW9RZGpa6T9oz71jSvMYIDTMdmwRXBVIwQpRlGu3v3Pkv0Kli5RFaoPFuEdtmzC/OSIlKWNfD2JxejdwuMpPhHjwqemC8qCCZyEVBodQTtNjZ7AWp0s8MDT2yVHaez4nJPWeJ3634iqGFHgQ5J93Uq5KoTxWSyjM8o/VUYE3ll1ilBS0gwmtxyxUyNoWI4Ma1jbi/2gzkTaVdEFGVmTHKYz62RD6CL9lio1snRNMiZ3GSwkU32dd0qZYKIo3BD+9dANJztD0yswiEPLfOznJ4KlPo97nvRw/GHd+/D71Ni+iPG0FSG02ToNXFF+2Nyy+/BP1QG2MAFbIqlFXbm2CwCQEaQ/EdKFbyi9ISasFr8aZI95yDw3ZWhj3u0wg1d+2axMi9ckFKhO8WkSOaXUTrAnqzGOLz6lz0vLq8EOfOnYn5C6gqQ6aue9qTBNgp65bMDGVcoaUEZDuAFMY08sJjipDDDslXCTc4RpXJ7Xn1cKXGKiKDgVF5W+QXHTQFWpkwdnGDX6RnQYOXg1K/kzw152KYYmCqhKRyAYjDpnK34vN//udx8NFDCPEa8eIXviAuv/IyLYRmW4PUALRbH1WIuclh73OWGEzeEBwJ/LqBUwrWJ3uCpTpsmiV4UVL+tyhB8y181b0SAehBJeCTocod0jbllHTf9VW7jmvGeYPoxSN35r1bKU+PWgBAKlvcHSISjLjQmzPL47SonkBbgDxdT7cEZcqBtJY88DdograpOnvxZAOZw/rOv1rrkmms/Kyuousd+RBevSTeGerZariqRu+ppkZRW2n+33GnharAdFV34uckii2UvREm+pnrSg9FFs3upwGLVtPVI4UvPhkjQhuEbpHgIwUjwlux3MPEsXRFxFW4JCiB0S6NgJRULj1gFhaTwyGgr+VjqTzwqtKTkv2QUvM79rAVgOrYSQNUCpyO0/jKOTxfJJFcMYnN5UoNMOACtmA5rGT5A3Hi8WOxhkR2H8g4hgLHlq2b4sABbGK3c3eMbtigPCK7wi3LpqVpxkmYCCVvoG+Y56PHKY4XIonoZhuEbA25Oxsbm4XTp07GDrQ3NGlctH2LfUDmPRpYqdxb6UerxDJkBR4kzquvLMYKm0dBr77+UQDXudiJTnBtcZIwarxSkJeyY8WAVGHsCt41fhkObatgngpwzQ7LHn+LjjC2yLvW4GFV0X2fi1d9Px5vCVeao4mwlqFVtR+tGtJpAxR5WnRcQZLIaK/OHoR51Qss/avP/ilC8Ue1QcRNz3tO/PQ1P4WKOZPuXunBaqHzP8UUOeVS9nzzaHhz/7ZB97zWCy/vzryYPHMdL5OGvxwqW06Tl2X4Un4hg3Ulry1DSq8pVaNQn5cwVFrU7TF7XIqSii5kpCI+iR8GV633y3nQcHQBydeQ58VxKPVEXeRaUM6GA3YOzTpnD1RAxXHSUahjA0e0XfWgNUVO0He/+1UfTRGBp0VHpY48CBPxLSRstckYPSrFfURCelr2quB7G1V5IUGIFUJwWPBABOPBJok2GxMxc6lq9mCV8MIBZAExeyzq7PUBuAxyIrR7RRkzvBOK06qK0EIvCRwBU8Ahrrm6qMSuwITzpkhzMbQTvSo1ax7J1XRn7aGkiddvX88ibW67t8R1QCUoNUYqXBcgy9o+rm1swcNjxXV5tR4nz5yL+x98BMtfHo6V2QtaI0fA2ISu7v3sKkefz+TmbVqfWRK7Xc/etLFXmqFx8YKkbh4SqzRl5017kP6CQraEloeFhWm0M/Qi/4U2gFX2T42jmxvJdfRUVQFUMiipwqQSxAPVyOUYwKLfpcXpmJ/BuNG3N4D+vaEhNIoSBOTANbQjR7pHCTCkiUMjq1WhrenuMCNFk99pVTnuqu1eON30oMg/JtlJfzB89vTpmNyEYoA01d6jvHbmNPGvBoGdxvKizTt3omrIooNl17KZ6V+2UAikUpbyCF6UBrcHocnffu7P4j4AVh8Q8Oafvymuu/Zq9J/1ywtw6iR3NhAmOYFs25dyTMpLFwwQEjf8j15eS+FC8Y87XLLU8RjJbzGuT6SbrlOGLT3qRk/e1E8DkkyWkDUdR+lLiRoKYHFMnWvSgGD+pBL1xXzywDU3htgC9tSPVAzXrhlB2aHwDhklpWP6ULKEDJwXIz7wqg4BayDN0AJgVfuwsoHe7d13fwPRh+wTTmQSHKAFK99E2ZfKpPIwchZagU7PCheUhyXrCMDSNgzYD0QuuMMdhhJGMs7F3R18p14Zso7JQgqz8ig8FPeTt1XeO8GcdgNjsRVWolxIUvZ4ApjiMEMfQdBMLpbtCZaByiw6MpfEXmVadHI/sxPJSIOlQU1gk6DTyXVQWARK/LqgmkTAkrLOtStJTLm88AxL/qEO4Dh06nzc+6MH4tGHHo3V2RkoAUoWGNb46DA2g9uFat5+7A81GpNbtmgBOfNQndxeLs2wIlDxbXMt/B2k9RgpVPycgpDCx1wNl7isoorInyEsWB6Gt+bkM605NtpbuoBtW7AMB59zqxRykPLAtXxt8J8rH1oIB2kIlpBXqyL32au+JizfAogxR9mL82pob/AOoA59JBLFlFNBxFfnK5RbSR7mqD16erZot+F+U/TyKuizcV6N82f3Or1GK3CdDaFo5mQCt45dRJZQlNi2bQe631117oESrMwvYHtlhLeZZ1V+S7LlPi+6YWpS7Fgt+XtSRM6jBsD6wuc/G9/78cOw/M14zrOfFdde+2QVFuhhab9KduIX+peVDAnK3euuM4AJZt5RwWGg1xGSNvZBvNcVvU/GuaCJOdvhcskNEx7sTftcAYKio8wLlXvxHqk/zjXlcbpQV7ZLor5biHCRicDl7B5lkGMSmtqwJ4ClooiWstukNfXXkuBQnkBFDJKx5fUwN+hDA55+HdEeHada34j226jcexf6sAyPEhbVIJCE57Ym+pihoCxlcUONoiwGqqlQW+rC51Eyz4pjm0kCeeD8zi4kwzJaOt7L6630UiLdwlB24HQ1xdbZwsvlEkiocsJcr8VqGa5hkKNXZwJkkJx/E0xzT/SiDPpNQOWSFis4fxRfp4VRSEmWp+DI+0wSG4Yd2pV9tewycH7uvqcZ1EcZ85fQk4l3VgWnz87Hez7yZ7G6uBajyEX99FVXxEWXYH8oLNTtQz/UEvJWy7MrWEHQDyDBpolpbWmZpEjyAu1FWtPTopHGeU+vFzOgG1fRN7Vcj3PoAOfOsBuwRVAfEZLKhOsuIFfQQLf7BLrSObdTJ8/H9u1joE01VpnIZhsLq8XkOfOSvCLaG1YhWLNocRhE7mYYa0dVzaFHY1egk+idR5hY7etB3xaqhSR1Ao7TGgbJemMZCX18UEOCVVU9gCDBFd3qFXihXJLDTf0qqMQ1RGNODO/VxkADBNnFAn7tFIA5TmGp0R7sGMFdPJYho4OTG+FVgS7oMVxdghKgWdabFXo8CvtSmbmagzk5t81Ypr3WFIC1Vo0v/MNn474fPgBwasWNNz47nvLUAlhsmu4CVoGUYgB9r+5yre62SM7lOuGfqQ2ORSEl/6VPzPyXFvel6hjvrUZU+pRZGV2boNSKcqBHZA+weGnd85VjV0jZhUK7IV2wE57JWJLPqQvM0CRgUf4d2toZMWbyA2IJ39OLtPOxPgUjo8/jCFbqHlhD9LGi82pYClahvt9791cxfyq2S6LcvL8NRHO1S2wyFrAFATfQMhtRBwKFXAOx/IndTySRcw5l6xiipvIhOUneq7ieFgVulOfEILcwKeVNh9KC0MSjzLNkm4EQWSBDUDODPFqulkrkF92cH7PVSGKKJcmctEKeLeHUxykEyRyEEup0SdPz8poN1ot4PQBVSQLkdd1SYUPAebTYApHbpJw6cTY++LFPoOoR8R//w6/FBizSbULKl7EAvY5lM48fPhRXYGFxFfkpGQyFswwteX+CdHmQBt9b2X1bhizmufKK6qkRghookbCfQCoA5RIIQjvm0HNHi70Mj2hhuY31cDu1SV4De/U38X4VMrBxBAlsxqcE+TQwXrHgHINEQeBuuRBg4g+G3DR682gtmMBOojXM7cLMXGzArh/pPIMdJfPRREg8i/WoffAwsRMo9lZTCEW6Yc5VePwEjwZ2f6hh3arXftNQ2sB6qzO0McwhpMXWNIPYMaKO7ZgP3f/DuGwzFltv2xD1IeareDSVBkNkkysX5mtpDq27hAH/I1DacJLOqp4x8hCYkZcARzzr4Itf/B9x1733qNXnmTc+M556/XX2sAjqqSu8nhIcVqCOh2tepUbzr5LHoX7w4NJG05FP0pc/pEd6W6J8AQL+ZW/NKZrUNQ495c97v5WxeDwGLt6vO5yypbKAJENqS5ANZJlLMZJ6L1BPmTNrMvmfSKqBci82zKETylJuGY35uqKGb4QID9EIAauJhfTI33Lfs96BYbABu3zcc8/XwB3tn2GiMn53WcTKmOhOV9fboFhw7YVQacUNzdiKQg+sEMSf662Q37GrQIXeGISalUfd2pAkIc6rSBG9dKGbb9F36ckoj6Jzu24xh+P2h+JuU9AokHlMDtektKditCfhkg26BkedfVbaYI7HkuUMm3M/dmX6E0xEcltCeQ2pjJyc/DWBL3ftacQh7CX1Z5/5i7jp2TfG9Tc8XVXXFW73iwO4tKlWRe9QJqhsycgahrScuxlsWE1aigQGU1VneLiQy9aNE2OIfwaLdbehabSCEPvxY9ixAE+h4UMfBqDMyt+QRzi+sTKPCiQqemyJ0KxSEdIgdKIFMdwCL56yson7NOGR8TUABSakyOTQg4IA9sJ74q6gbGo9c+xxGcGLLr9c1dCF+Quqsm0Ymcy8jttr2Tfm3FsBRyukjCLli2KIey+ePR1DtQH0X6GSiu2OgB7Rh2VjK/DImlqIrIFaJknHdPE7UimxJA3saYmmxXBxDhzNGnY1Qa7urrvvjDvuupfPboqnP/Pn4meednWMYL4sTlW5flZelPQ0Xyn5GnNaleSffSBLpIJPgmPR3pTTVI/UFR6+DgwKl8yCrlzwb16L+dIETYeNNMTF9yNZ6LXnNTMM9f7/Ppa0KGkd72zqeKOAfAmVZbTK9XMUchpN+azGlowhp5CRAaMkHU+go6fMliFIONcrYy1qAzn1Gvr++nrhZd11z+2QcVZ/GGM6Z+XSOyPRZBh+kwlKFAuNOJkszxd/tAwrQUughs9IQIKSh+3rqmxJIaN7TotBD0LxNV1MDduET/B364HF1V6LidvUHlEEg0y4d9x7+n30Cqzgbjfgy+dWuC2yxsLrpF9GpgmEuwxX26Y+yNK5uOrkoVsonPiFuZZkescBW0IyUbl+EcLekZaYY4O6gwcPxWf/7LNx25vfFG3sUy5hwByUMwRQuEGUwucYPx1DDZegRp+gAdDhU0ekqNjlcx6L1rci/KlyWxbhtQGMSraGcCrm5+FFtWLz7s2y0uJtAk1ZNrSKLX+XsNcU81Zqy+VyK4X9xZwYn0USAQjnZGCsw3XHs0iwVIvLsapRp3cBmnDdnRtgKbkXQJBJjHVBIefEBHbzAGAuYkuZsbGNMYbqnvrqGBCmR2zv0cIgOujPtDrKSdlwcpM3drb3skI3BC+ROSQl23k8vRsrIIfBdWpSFXzmkNmZGG9zwts5pOfWGNzamflVeVaSPcgcaPTPX/5HtZnUIINP/9lnxnXPvDZGBVisnrsdRhLnfZ7lcXiv9pQw8Zg/WbSxdKaa8xjuWFASEQWoRWqLrY4lsBWvh0hh+c0eBl3f+SFpnWTUpOuGlG7utR6Ixhlf8MNiAOWJSXFMLzk2eZy90+RNDqwAVAHhToWTQ9D5+l86Er6WfB9/LA+L9GZ/6Oraot4jVwJ2ArCYdJey8dFQsgr2hKw0CVp0vTP84rEsDRcr2423SRUCn5NqZS2SG+8NNm4aJQiUBHtJnHrC3smQ9yVwZbCJcXg7oSSgxsGlNbKtOUs3+HmHUB6XH5MCnJsuXooKFByTTL1ZBK4klGXM3pCZUl5kcCbgM/9lC2wwKhvrMca2aCRD5FbZxNrDAngg/Do3NRcf+fBH4i1vfWssSpGzZ4qWJj2zUiUjoDe0rEmapa7xOvIvC+h94sMXhvBsvipAYg0rFNi46GQvy8Hcs8yJ6ir3QYfVmr0AYGD4iY6VpdVZhQvYLhaRbQ1LdQZQ7eO5pJdt5hJaEyRLzMngmz6U7bmezj6CE8Bz09N41BV39BhRqXoWPWPjQ70xD/QawXrFfoXNqDzTe2xPIewd1t5rM9h2Zgzj2rhhk5LfDpkSiDAu5aHSmCk3k8wQb6nI4qnznFSiHuZcBTj4TrvK4SUDQxnzmGXANBOG8JDjbDPRoUoWUzAsm1omQUOThpcfZZYpetFn9uUvfiG+CcDivZ/5tOvjhmfegN1NsEyN+VUqdj6XSiNhdGJ40XgSNQwISqJ7vCWfoxDFyOlDNfcEQIGfAcfy7787foNnnjQibSyNJSfbuce646RbTH2k/BVarW82zsPFpwJ4JVHfLSIUQEr660jrjRP2XI4ntsLLZ+iN97l/PKfXVDM25gP60rtqEbBQ0FH0AZpcmF2Myvfuxn5YUHYmD4vQyHnVRC28phrvsq5pLL8rYYSIpJwPla47YDu5dvm8XhE9PgQkPYmFauGQzxXGAmAZ72uiuL8cnETyZEByBdei8MHn4LPQxBheg54KKUC3f50giNh8mcnawYE5IlUhE8SI9+WNKNs9nr6NrU153Ba/M8hQKgy0Xk4jUM8EuCCMDGPVA0DCpU8f/ZOPxZve8pZYknB1xcGLeLsb7xUPVB3EGPYyrDu3qybdz+Oxa/1Y1LuCfYAH+VQZeFcL07Mxhv32a3wqDLu6EzA55kUAGGEduW8oVD+8EFLfoYqqwcQIAr82kiuksrhTkOitcXuhpXz4gpb54GcVe/IfPn40huewc8PQQGwcnozxCbRfDCMsU16UV2gi5DsHi1mBB4fEPoSyhuokCVx22GzJE6cSwgPGSb259KTsj6/jSH8cQjyR/7SuMqwRC/xIqgIvnkdRKvbRlUX35C2rs22EedgfR+DTWTmhdjDOnfdkTjfbbXh/0OCbt38lvvrtO3G7Rlz/lGfGz934VOSw3IfVS63MwoSuqYZUktGAVUC2s7OBKrgl7E55lWI7WNWCZuc+DESUchniXC3SYdb/+ZnqMtRAhnoKW7rtDAW8SlHMYaP5bZGm/BezzZwoz08jj6M628sIlhh5KLuRBr8IdSblMQojjF/rk+6OrFj1ZCRiQKa8c2fZBvZAW8T2RXNIISwvQ1buvefrqFKTCPTJ2Nhn5fX6N5TSKRBcELpeqSjiUkYLjPc55zxpirMPSU8dTvljuJcDdiKed/NyCScC7VFpMnRxPZq0Rw7dvL9UcakdGrq6VFL+JrQvkQ65Luhwq/syOCrETCFY96WY1PEIi2WToPnewm8tkKX1y4eZ+q7Ja1LCIFAqKBoZQJFVDwIWk+6f+sQn4WEZsCTGyodxXZlD3DoUmkBGi+3LG1CWVmbV8zRAgEf/Ex+CUEVCsoGQrB+NkF5m0bXGHmehQZd+JpU91PJgV1MwK6IMUeUxM2+p5gEDD4RJI8J1VyFQVeQVWujZ6sFGdw2E2vTw6LmINzh/Bs+wnEB7Bm917PDxOLB/p0soClnT1YWCl5yc6czSfobcmZDV55nb8RY/3a44E5CGx4Ui5bs6T35OM8ZbZuVUeUs92II9XKatHzFAg8x5WlpLWqKb/3GKg821d3z7X+Krt98JlVmNn7726fHMm58aY31IugN0e1kmZCSoSIV6YjXtqFAxiOSVSFnCry4+FICVnVNol/Jl7UxOQYvS0/S17atJ9gS+5EHqpvjMazGsYyGneKR0HrgeNGUhdYgk9vpEj88epo2rdiPNlSJ+CKxTPamwHe+uuAG5dZuxwn6snyfAeUu17NA4irHjwU1FWaRaZWvK/GJMT89g/zGsvvnevd+khOMgNzo2FevzKm5eK7G4+3tIWAOOiZYsIDG4bCZ3RJAuZF7MI3LYY1dXa94NSHJBOUCHDWVTr+Iidz2ProDqOrRYtEpiku8lY6DFyAkYmQMpuy0WJnc7lvgsNlcmy3TEDDF7nXAUL4/zEEaT6PZApCcFJPWJuJlgJU4LfPmbWw/TanALlscOHYu//vRfxpv/AIAlEoIx8H5WUJ1bXVxF02U/Kl3DeKQanoDMvaXYzS4BxD7jaCodRq6H+5Mto2q2hvBqDDknNvpy5YGrYOaPhaPLJ+X6ZDqSbJ1ZFF7Ycmue+O4HDz4QV+7dFTPYYXZifDKWIThnz56K3fsv0nP+ltFZ3o/cQhMxJvMMzTruCTRbRSg5iBCRO0LYohMsIFvIVfVCqeVD8tl8ABj15CEktW0wXHYkX6QxL+ylWX7W07x4iDR03Jq558JyDGLbZu4pX/qZHDmwTJ7Xz9yj1cSRRLeVJWkjOU8jlQ+TMBOARcDFe+/8enz5n29HuN6Ia659ajz75uuRw0KxhGtu5cHS2Kex4Jg7HpQ9coemnCtlNrnEXkTqBo22hct6IbmzKX3CK4XC80j9pHfC80osSXnU/Xklpz9sTk1bqYtuQCDz/MyKFIJ1YbXzV+siClJPOlRMfIEoM6zob6cQIF5mHg1/Fz9es5e6FG/MOkNPi03sq1iZML+wEFMArcq93/86OuXdb6L8JuseFDDsBCrHQjOwdTX5KDQ8MK0jP6NQyuMyEgtT9JaEsuemhyjQaolxtKi2hhaJBEZ6dZmgL8tN7R0UsXS10Kvymdvy8glbCG8b4lK7vRMNX6Yzoc3+sQeYoipWd+YpduS8OS9aKPZWMcbXN0VzTBeXVsRg08pA7HaIBD19Yeawv41eyY/ufyS+9Pl/jNt+//diRcoMZUOczgeFivUESd4PXtkSkukjg+hFwIvdxezzn5/GDp8Ahg14YK13SXA+j/Ng2Gbr7FyM1A6fO8y1HRMJCgLm2C1czi+SPMtwxVcBSORV3+ggmkuH4tFjh2JyfELP3htC+Hn2xDmA6yg26MMzAbGu1KvgOX5rmzJdmDPDSHaB1NBGYIXQYDwu8oQ5HhnKHGNKemku1iJcKaFpLZPKaADnupzjnTk5u0XsAjrMHU4Jgql8mvX6cSVwO7PFcZBvdIlUQlBTvXXY4/TyHsoJIw38Ruf1D+/6bvzjF7+olMJPPfnaeO7Nz9AOu1UtfnYOi/+00iLFxoBM2XROx/Og18YxpIxqfl41Utavas6l+bR7mGhhMFsXbK0DMX3vo3A9U6o8o9Iz47TsbXJLHD8r0/QsdPaYzVKeQ9fGUl7yUsWDeyJo6QRCBPUy2454jsLhjGy8VbgLfrpfenLOexG04eWjpcVLBevIYQGw7vneHQhvSdHSfUpPy+TSBCnA8puzoqInAucgdZsMt2SZDSjeg1xfCrAEcwk88oI0ZTKJz+xjjw2BxwtNLVwEQCt6Pg1MIaCrXrlzQoveBK0mF+izZN5GDgdVKZp+nF/2jHLS3ULiah0tr62qksv8OJVd30vfyDX7IWWP9G6ykvMsOzIom6BjtGCW12TXtTxJAr6fqKunGGOcDYR59dZS3P3jB+Mrf/eleMsfvCmWMc81tAFwq56y+2SHpmrKxLa/yAVVWKWFooiw6j9KT05ixPFmDi/3I3f6LOctASgMsY/p+lkBWlvKQl9eb62+ZIXDljD0hgTGCPko3HOzZ2IIObAzUxdi5yUXyXvi7qVqtABA9be5fzr7aKgIuAe8DT/glFQnKJIHHB/5hHPYha6xeExcdpVSY76ReAJl09sKlPPBZ9wd11Jo0HYbi9VLTYo8JwHPu7kmImXClw3JPZhnCwuZ9VgvGj5VR+2NdoJPyTLOBRvuv+/O+ML//KI2RLzs6ivjRTfdjE0Q0bKB83u18aX3JZf600h3jD6Xt2G+CcIatWSOKQ+nBWtm1gAAIABJREFUSUrhhDQzm0qixjpVXmXbcE/d9FA1snOAhDtDOAOO81XOs3Zf/oy0Ux3pCaDo65aHsD5xBOaDdpTQYcyZJrVI9wRPbTCs+yVWqHzOReVZXU9vVjKdMmDHAeOEzON5uVibuhAzWKGgKmFJ6JVHCrHXSjwlqtptARFJUN7QiWe+tHaIyl9uwpIvvxWg8S8rgZ+SYoF02MbBExhdCdRqdVkaztkiwvnZpbZ3Q7PHDem5L9QqK2ArCK8WVuP8w4/Fse//OJobhuLm17wAj13i06gTeFKZPRJempJhoHKTAZWoKIqVUp/bTzZvErgMZj6/42HmnGQ1lLFO8OA4OXYBIkHVjFDeHKHbt9G/840vfTVuQw5rnm4vurMHlH9KgBcR23Fheh69TANxYXkmtqJLW4ynvuT4Uh9SQamoFlWRSwbBUyjVqNJZLFPAMdOzkAJ7uuSZPV/P0YFKR/xjpbUSA1imRdC5gL236OGtoPqIVDsWZqNCBtlYRTPqAJfkZOLZHrNvWEI54Stlg5sg8lMClqx7CjTvrObJsl9VigQBT+NMD0CGFeH26Xk8nQdAMTaoFgTLp1tetGVM3k9LXKAA7ezc59N01I8FcBFNjaJ5Punmdhb+UA+4saAAE/0kB398b/zN3/4DVKUVl1x5Vbz4eTejSjiknCPByruYFPpmZ3tHvk1yAVHHoGKsHIostD0mSZMAWEzsfF6MS2eLliLDRTbN9Q7YSQ/5nl5aFoLMk5Rl0Tuvj/vJ8PJ0xXIiuGv9aQQ6RQMCnDUre0xJp9LCpC8TKTyfwl0WMfRQZSI/l5xljpmj5FpNLf+jeeL54BcK4GhunscuMli0ftdd2K1BS1yca+DjmuSimqK2Lup3SiIUKnKQmUfq9GTI1eXxTOrhR2sOLfIWV+9qoIiSAowfQI8sDq+hCpX2Vy8TsoA0MbnVRTypZx5hCipRR++8Lw7/4EexCxPYg7V3swhN6tdfFdf9h9dEC89CJJGlg7LUBhovwDZ5/UqG5rHFqdbTRIxiyVO+N32KB2lUJpMNjPY3re56zHcqnpSSOYW8Mz0ObpB4+7e+G3fdfke84U2/h6fMoLSrHSozuMEF10DXqWMX1Mu0c+ck3q8gBMODGDLGL4Lje9rzUH+QhuyZ2K3PueRUxacCYglEBizzhn1TeG5EPHz0GLaS2aEdBywEzTj0yOF40mX70/u0CpiMWMZz7lhs2bRL114Bf4YYqspQWckNnCxQsHUmR026YZ8srgvUTcv1xBeGkPBM82k1ZpoV2cbOk1AhAD9VVJC0IyaWNWl9IBPCUlDKkhW/iTYLFgNqeNRYU5FpFnwsKQJMpy4gMcLo7A3HgB1f+DjdH7d67IEfxl/9zd+rHeBJV14aL37Rc2O0HwDILcGxewWfWC37Ie/K4aohoesByeMUTw0Yfrag0v0G0rQlxbvs0Ehj8q6qlvMivZ622jLSAxWl8JnD6+6iattujEtORx6k1A7PsCH3ALoebbmGICqjFbGrhHQZ6lGWtTEl//E+yqtZXjotGSk+6hxIf69Igdee2qg1sWXQGp/KRN3BOlbs6Y6keyIpQUob8ZEgvJGEw0pBeXH3t8nmCVEhS8hoI2C2uh9Lo7V5UximIfC9Ck8klr0xuce2XfZKxEROjg8SqMcj/3pPnDxyKHbt2xcxvRSLt38dpXn0Hg1UYuuT9mAJxtHYdN3lcfWvvjLa6AHiy5u0+Zl3FrRiOfy3O3npAVGoMzdRuCuOkNDyUzx/fZYhr6aeIVnqjxOfSRdVZjJU5GeKzelhoa0BuaovfeX2uO+u78fvvukN6Fdaxe4GaIjj8bjWzNxMtPHIrCU0mO7CUhn2nzRaaGXQwznJF4wBprhRWdbSlz4Ix3k8fn3j5q26f/GqXHnx+7IbgB+G1Q3nDV45AYXsBgIqwNTpMzG5bYs8iwW44oNIoNcwf7ZrpCZKoHjtU3jy8vYteGApSL2EbvqxSTxpWWCBHAR9NniQ/K6XD2lA2K7Qlu4mxl9F3k5N+fSkOVbQex4PMN2AD2vYSocA5GGWMI/M6/hYavFoQJDr2MOtCmPFB0tgNSM8KWT70KdGjrEPjXk37xiaSpSSzBYF5VSAVfUlPqIMBQ55FRiULa18cRuw1DLw9/hD98dnPveX2n13/yUH4qUvej4aX7n4GVKsSmFGKRKd9YWOrpyowKGrpoymrPkBFA7REiZ971R6XyErewninapiZ5SWT7+EKtKJEqYVYVVOjboumpYUAmVBAb5l35Lk7xWP2ymRzhawS29XMpXqIk8wdc+SZm9XRjJ1QviSx/MYh/vGHu0DxkcJIipZReuJ1rSWxlE9Rp4/2gnAQy1hjgik/3L4DAOTebLBynGxSuiJCWgxCq6r4lydECZimDFWTjf/eU2hl44UwuaIVcVrzTXif77pj+Jpt7wsRrHR/4Xv3hsHP/uFeNF//Y8xhRX3IxD8+w49oKbI577qBdEY4DpC59C8X5WTs955MRcPk8jyTzORnowVkCV7/Ae+pwXKHJ7l1kBXktYCIzG9KJJ8QjGULycWs9kPQFNvLMXfff5/xEMPPxq/+Tu/jb5NPHcPPVPK8WHQc+hIX5q7EJs3b1eosoYqSRUeSA1b+VBQTp84FsemptHDhMXGtVEoRgtbIO+M8wuzMYkGUm7AOISHK5TQ3UJD48FxZGNrCr6UIuXZY7WNkfDiqd5njp7HOseBOD17FuB5kdbNyQbpeva+WgDTFaz34pYyNTQDzp3jOePwYrwmr6olFtxRIZe2QCaYJyqPcTcXMmSQNwYwxuZ/PfCaakNY+I1QmeCnVwIsSU2nrI7CAPnLfq5e0GYVAKVFyxhfDVVCNiprbaxAL7djpOzKSJG3mPE5PCT27EKM7t8Rp/Ag1u27diNkRO8PvPmh/btisYbx09PMVpnSSnPykQfjM3/6F5C3auy+eH+88kUvimE03/ZhPNqFF/fU4umigYIleLH4XBV3pgkUTWSbSOqc9Ixjk0zJBIkpZpnbAsQ3zcFkKV61dEv84/8SYDqAgj+UqjDuSVOlJKQ5aWWQ4pfW8iQ4w7Okl+6koZOvmUVVmOnx6bads3MOnLe+d/HCrR60TCzAZeFFkzbGcGBZmNQWOmweZWV9DYDFn8rd934dEUxeTH4i/eU8WQ/pFMUtoCKQ41U+J9g9Wjweq+mZp2ITJt05Mleb/Lmm4LWK1AZuR9LNVzAJzYHLfdS1OTl7PPJ+IFArC624Dwo+/qSrY+tlw3H47odj+e+/Efu2bottv/X6OHjf0XjK066Mf/7i1+LnX/bsaA6UWNmE73bhOpwQPAqwknAUYLneZBiHkJG2EwcJTNklL1vLB2Mxt1JceY7dAMzmN0OAFU9WCPt3aV9y7jWGG9TRuftXf/V3ceTI8fj1/+s30L6AnTr1nEXsg47G8vsPPxJXXLxL7QKk5RKUdxhJdw6HKxQeuv+uuOjADpTth+PcsRksaRnG8wDnsJnfaIxh11Ev3iULPabycqWQws7dU5yj0NOHqFECW++Fpq1n4BGdO3EaDZXISyESHdgyiNzUPJ60g4XLrIApkW0BPXriRGyDR8VHxq/h4SV1AMwwqpo9AFLRWp2EkAsaL2uv6CrRTgNgSSet2BfFehZW6U/NxxBWajfgGUk2MrTuQRtHCx4V1wnWyqZu+H55aQpeIBY5YzcIzp8lGVUWU5nMeXpXVg7Onc/9XTwzFaNYsrQ2ywd2YMxY8dG7fXPMg1+DYwBMeGdcouS2BBd95IE+/lh8/JN/qq76vZceiFe+4MUxMoocFnflhYL0EeR4/5yzXYAMsen3C4RgXKkvpKmAxjR12Gg0cgCZOWHppRjX4WtZwUEdcoCYgJdAtb4L3SeVHBkvTjAsLCHQ23M1iaiLFA0WjWzEhBMsKOge6ETnKGXQHYcYZHPMAlVPSlEMnwCcr7LkqJtTpQPgAklpcK0JB7jNDHesZXXdoFW5F4ClxwZlctQxtF0/MTkTyYrw5AVQGemxcCBuKOwkoblIWFab4QsH7NyKBEWD5Q6mGAg+rquTlVvE8D4IvbThQnpuAlB/vjKzFvf/zVdi72WXRvUabPSPsvGdv/Xe2D4wH5f8xr+Ln5yBdZw6AU9jQxx43jXRxKPD7YjSgrBq4XCzWJTOU2gUBtoLErGzX0WKRCKL84zpOT8vduaRSuKqcTQbWXF9rifjDcQS7R1Pa44qCIhdQJJfsby/hlzKX/7557E/+lT82r//T+hU5+PY+cSblVjE8/JOnT4S11xzte7DY9nI0A/UcJMtyvaLs/H4ww9jL3E866+xgj3W4WVuHMbWLXgeoJMmGpupzf4v/MEeKSoc7t83iAdRaAE3Lac9Q7neYFATArE0i0rMKu7TOBFnlnvi8ksuxWPrT6PfC6vm8Yy/reNbYnQz9mYHH9cWVuLoY4eUw5k7B8UH/5eQlKficnsXykuD1piGSNQTU/Uqu40mYTUeLsepL63EzJGzMR6jMXLJxlhjUym8uDWEvUNI5jcvzMcyvOl+VOTm4AUNbMWyIOy+Wj+PR3lhu5g6Q07cqWwbI3nEvFvocSON2OwbM6g4zZ2P8YuwiR/yn/18BiceulpHSFnhPlreMB0e0DoU0djt1bCh8dyxx+Jjn/gU0T92HoCH9ZKXxTjGxC53PnhFmywmwHQeO+aZSym9FXW+JyBg1N5ShyCbleUEdd63KHeGBoWaukI3rycpT2/M1zZg2IwKm6S7aUzxgVIIWVAyFKXK59++BkXLlcXyXEFWR+2x+/xOVV1WP0NdgZ7n6VUwjHCKd1hAN8crj6sghY1LnVVm7oDLvfmQSnFICMDy5vuaTSZ/qfBMNNmarncTVaXhfHVxf8e/fZyJ51InGZb+hmCbLGGCmY11CHX0/LrS8colH45rlSilG4pzKOwVeFhf+4OPxs//3/8WISDEGLmrf3rr2+MXX/CUuP3YbFz1jOvj5Le+GddO7o3aC58S9T4DjpcwmAECoWw9KCSRWy6l9TzY2CnXm9ZPEEbwLUlKE5ffOCBMJvgSFj7zNfUx8yRKnK5mfxuujJBwDYs5P/2pz2Eb5Ln4z//vb8ZJhH8NKFQ/lGQD8kQMKfhgUt5pGko6ifV4fnAC6cJtpfti6ujh2Iwn4lRASx4nS0d4h/dx8vR59Kuci0svvhhhHbaJwfq/QYRHVYSUmh2VRaBmiyqzxErlEryt6gp6vfrgVfVgc7ovxZMvf26cOX4KOYTVuHj/PvGjpweNn6AlwXABWzmPYhkQxeDCoanYBqU/N4NQCo+Wr2H5jSWVNCYtHf5rCVDSz8rBMYDOfMgGQLEfc5o9eTImNm7D/FApPX0upk+cispSK3bgUWUt7Jk1vHEkWnge4AZ4djOgD3aUiSUYgJ5+7PGFnjA9TYlNpHhwQR2eQB9ka/X0MQD/BHYkRQGjuhbDe7dFfWwgWmdmojo6EE106stoW1dcIeMf9H5swtOxsTdw4cTR+JOPfhweFgALu8G+4uUvj3HsENGHeXIBuhxLXiFzcAqjE/8kgyU0KjckJ0UnES2lVrdP0OHfxWPpkNYCmAa5OAW6QinCgL7dBs1UB9G/RD0loiBwZBjHcWiw8qPNRsmfv5cnl8DEfsHScqhTOsP38UUDnbsq4FrGUXCkXM9z0fIpyahDQq6LXQFY1dHAXLmHHpaHpIO9sZffy0+RlShIKoNihMYfZcvcYjUNbLwJz8knRHOhKzpUj6PydPThwzE6sSGe8/xn2bVOWmm7YkcrEnBzi0KCD2cb8cnb3hW/9MbfjBk8XAD+SHzrDe+KA+N9se8/vT6++OV/idbBk/Ga59wcPc++EiHEeobTPScYdlG9G6/nHlol2azbGmxL0tWdt/YOrWbuk+HyIxKVpXuuieNeVzzC+SxxVwwtj0DiEhWln+FVNkD0T3z0UyB+K17x2teiSrga2zZtpvsFpwTxF3UEErCE9gAu86hhuxSF4SlMBHZ6bmobAK8a3LsM95s6fUoSMT45gse7jwJcyDMz3U9WpjLynAyLpU2e2eI8vBd4Xk30Vp3HUpo21jzWwN9JVPtm0Dne049GVXhOQ0MTGAdzgk6aMwfUg/xblR7x9KIAtbYBlTruVoCxW81lERw2i8JOckuAyX/mtuBJ9mGnA1f0oWAoPPTx4bwA5wV01rexJGNsFI8pG8Z6P4BLA152E4igHquMaircrxnzWTy/gKLFHKo1zdiyb1ss4limJ5aQWxvdMAk99f5XDG1UgCBQqjW9ABLBpFj/ZCXlUDxNDwtnzgIAP/yhjyi/tWPvznjlK18KD2sYhQXWvfIZeutCvU7inYpfdC1lzTuKllYgm0yTLdUdsiawsmLay3P+wjqq/zuukBYL1+hspBUtUT/Jm6jpvD6br/lY2KyqyvpmxKFjExOKghf50WH4H4epnkA7Hq725wByXDoyB9UJz/M+nUOFO7qhZ6RpMq/NAhMDBISDkEl6WWgcRZWQK93Z/1DAiZPFCcQ57+tEj8Vr/ZSIz16LAmzynRDT1eFB0HOZRT7gMJLKD93/ACpYZ3FDuONkCoTxmsuvjpte8Vyt9OfgCFbeo9qCYsfH8S8BozVTjw++7V3xa7/72zHfNxqDGPi33/Bu5B3OxjP+n9+IxZ17sHcTVnQfvy8mrnoWenq8h5Vhi8zIcI6DtRwk472TqZtEKR328ArguD3DDNOyDrm/pSSdaWJ5DThO1UPSzM1yGdiqT80VSG7NwwW97GhvxEc+9DEt3XjZrf8mps6ciMuuuIIOhq0YwI/hxCL2Uuduo/ZMmKQ2R7ly/cyJ47F79055w2tgJgW8H+GSRke6wWCsYllPBV7bPJL4kwgb2QvnPIOFwf9BkVGNpIrwAQq8z9nzWPqD0KhX+5qT1f0oaExhP/mN8Bq4mBlgDZCdQh/WVmzfzC51PpRhDUuKelHwaANgeQ9v7ugUgTA+aUV6zE+d1xN/etBi0IeqHMMwRmF6QC2FFJ3NFeSO+ECtFsLZPjyBg9lB1zHsISp0klzSM6ABMc9XMP5BPiqej6dD53lDu59awVzV4i6s7sJzBKA6YnoPVEB66A5pnJChQeJnvrdhAd4lgPSD7/9YNNCHtXXP9rjlVS+PCTwkhBsgkn80NjIHNOIpYkahLED5DvmirHlseWMdKnueIZw9LX9r+TZQdT5Q7jUr2hohBapcz8e77ueihKvHqQqSfYMNjbUbd4us2IfnuK0TzM2VMM/3Z2eB9Dk9aRW9DI3GFLy4zbEFwXX7HLl0xG/su3Fy2mFCxoGgxaKNE+5ch4vFz98EGDtByRhayXMRljeTLVLOgxxriNmYgIpNvCg8BrxfROvB44dPxE8OPhCnj55Cz9QsbswBYnDSew+Cuzs+/drr4xkvulHhhXtkZFZxH1ptYafuL/Wkcsw148Nv/W/xG7fdFjM9QzGAvNc3PvXJeNpzboy7v/uTePaTrojRS3fE8vSh6L/qGj3O3kQsTGJYZiDslJF1725PipluBbCYlAR86RDhJw4UvXkf+0wsiJyjgcDzcF+Ts2ZMIGsnKOXH2I2Pz9FX8sH3fhhd0YPxul/5FSkWQaeGpLUcDlxr+vzJ2Lpph4aluZAiBHUxkePmkU5GN5iJBzj1Yu3eEjq2uQUyNzobR3g2AI+NzbYlN9FZZMth4+QV7JPOFoMhtALw+gyLF2FcVrBmcADLcVbbvTEOUFnAth5D2AmUe3XNzQBskK0exY4MUiryFsOpI0fExdeszFnYPU57pJkOtmsgebfH2tEYAT3bJlpo81ibXo7RTQz1uALC6WcvdcpwlvSViNpL8rzos7NC7IINwzuFvVJEq4iX/zhloMGTliVWKd9TF6TQ8hvMS4GGPUbymXK5Mn0uPvDuj8Dba2Jr6y3xmlteAcAa8YoFnMoeNjsAHjMRQvvOZYBZ+MrfLIY4d5zZH/E6F/ULyIqnnNoifeKZ61CsCwFJG4lmOmWUf1BLuJjpkgI6xbUpxrtMW2DO8MzOS+ep4OoiwHdUKyu3gKrIqMK4BFM7B/YtlfPVBO0clBUnMiLqXbRRcE8a0dSrWJg3I2ixuZoRCjysb8m3Y15JF1GVw/inJkrlPDj5Lm4uQaiPPH4ifvjDB+PMydNY7zajB1gSbVhBc5UjFd9grBCB/2684WfjuptuUEhJr6W7QNUelWP9gsFtANFq/O1/fWvc8oG3xQUQqxeh1Lc++Ml46jMujcFrbogH7rk76l//TrzgV381FvdvwnUpHLxjeowiN985nCv5J4/KQFA2tJOCpcUtKqWlI/xMCXx+6gnJBSYqGmF1j+KlkV5KvWecz8Yzbc9C+qBN4UPv+xiexDwct/7KL+FIP+DhArb35RbAVeSbNiD/U0NyuFT73AhYBkxQtJXm9zPYf2oAOa5+Lt9hA6qOs4eQKQ/9baXwNfiLy4GYGxhg71ImJZtQ+jq3wCHH8bQSPsF6AN4N921niLqCBzxsh3JW2GMkqchaFiuMSID3o5+MBVGJOsEMi1b12CuEiO6zKgrG+bgm5X2t9HgBjJH7pSFPhz3cW1hI3cR2yHxaNQcsoec/KUDKZwq5t/Wxx26PN5WoUzBJT08gl+NIEJKxlEeBm0gXTTt1Y6s4kdWzdAlIU7J8ZfpMvP99fwKD0EC/2qZ4zatfhRAaGx+qbYNJd/Zh+aSiT7yq21c4/25vVgeozCnQwR32ijgyfHKo5OupKZseS0fLUjZUmLGnU2bh+RhYSvHDIVdXQNjSQNnw4jxgQQJ6af9wpMUkO0N9pnwIWCn3dEQE/pivev9s9t0ik71fpG5WE1XMSL2w11rgLWUzr6ctkjk/6gwLdPS0oDvIYX0718/yRhxQCntaQLpyTawhm51djgcfOhz33vM9PCBhRpPSRThWfK9O+by5fRwKBgkLsmoHZlPpeTc+N37q6ddDiKn9FhZXFm2VvaujvS9ef+F8Pf7+LW+O17//D7FrAEIVrHG74zffHPsGwJjn/WJs2Ls9Dt5xe9z08hdEC/uFk1NFmaSHhZeddgVKowXBrrrDPY3Pty5n6A3BzB4Nv2BYxd1KCQD4Wg+1k/Otly4h74GegfwC3cfJSufSGOK8/48+Hlt2jscLX/oLiM1JoxY2wMMCYu4PRQDVpnc5vkz0OU/QvUkpI4vdCqsTRGSNuyVkc6L4jRZoKuE8OtI3oGzfWVolRazFEYTyayv1GBgejyXsENpfG4wFFAY29I/H3kt2a5Gs5pTKU6iNzbYQ4qHlg6GQxoB1eSisSFEAcA0ocgU9YipswEPTOjmzolvEoR6DgNWsTFt5yVB6N/R2eIBlxfQmA92T7jJAeVFBnXfNQnDXCDLdIS+PcyAIFu0lhjii0FOVkKz3swHsHetGqch6HuPsdLz73e8BuPfExm0T8ZrXvDomhkb0AI4eVCppoAlOqhbyGkq58DL0IJz+0PgkJ/JPyOH8baIkViWdMhjtbFTAQopBprNPGL20bF3phv8SKYtvAV15pt44sGyEqC9LUjkP7/BW59vT8s5gNhCai4DdO71I34qzkbok807QlLu3Th+5vQ9xWdv80ACnYyTZSa2iUWa6ChjEtcKMlCr33oeQkPQR8vviLNhNz8zGMSTKH3rwIXhRJ+BAYUEPQg42eFZQSeJVlXcR42mTkwnWH4MBlQMKWkdSVYuCkWd5yUtuiWue9pRM2ntwQtn0xEp8rIdn4rOVE3PxiY+9I/79m94WC8ioV1cX4/bfvS2eftXV0f+0Zzj5jXBlAiFEcyMS1Aod3CvmDm8yB59RGNNTSSwxcYtEaxzdSlBZ21igVJUnuba0Ll4jVrZxETgVV7nIhtzvBDOGxgQ/bq4P4r7zbR+OS6/YHc978Ytxy9w3nY93J5PFsG7+QEIjItkc8O95VMD0sAhsjdzmOjicM4plKTUmPSXo8JTgIREotBNHqriqNACDFSxpkmelljvnJvjIrkcfOxrHjp1GhXF3nEFYiExabEED6wieNVjB95vxVJ8lVPK09lNC5RfFpsriA8NTdopjpPV5jHEJx7LiiYoe+6b4GHf21LCK1oZS+0yHKBJRxQyGV+0iQMNV4Ek0MB2sP6aRdFB/5GioHDxPoFcOoNNVznX+y1+Z1s7R8DTe0zt/aNfc9OrU3sI5i6e8Nz3KuXjnH7431nDdTdvG47WvfnVMouBQraIwAPlQSIiheHvwlAXNs1zVg8hgQLrnbVpS4mRQzRvNWHhCUKBXmn1PCjPtjXlDAh8nbPVdpUPdPFqJXjpEMyFyTa9PLcSx4Suy45E6HWKfzYhUlgFRzgob+LtrPjgYD8geMk/z6Ly9E+iB3Ld22s3hWwLIQ4+T1W/LLu763fvQ1oDFVaxanT9zNh7CTgKHDj2GTbOwRAThgZvHiKIWAuUm6EKzn4XTU0Nfum9tNPTRECK04d7lDewcyUQqG8X0IEtsL/KyV/5aPPm6q1VVdTm0uKyOYcUYTgiAxSpB/Qi2E/70O+PX3/gHsYidLWHu48e/9ZbYgbDh0n/zyzF87SVxBCXt7RdtjtWxUeeuhMCerBL6ik+ITRiHniZtC5MBvgAuyZm+FNlh5npIHmNRUD21muFCPplazW7JFHFGpsbS7UXQBDhWCXmN1Xjn7380rrnuQNz4nBcDbNAX1YnVCsd8Hl+dqXAEArMWEuNnsR86k+BsSHXIweKC+Itj2HS3uDQPEgLgae2xDrOFnq0Wqof1ZeYX+QzEWgzxmYOZ6zkB47Rj2/74xjf/Na67/mcgA0dibPMoSvUTWhoxiH1wRrfzAaUJNLJIDjX44t7qq3PYCgfPBITY4NFcy4g7sXQILQhN9kal4mrjPM5ND7p0gM3+K1lYAieFF2FxyavK25E1L/67aULhL6Ehe9WqWJfYZh4Ql13f2Fp8S/LCrTde5+Z+AXsJug4T/hmmScrlVbF4Ac8RqwpYNHKmhDIEnoK+f/j2d8FzrMa3H2g3AAAgAElEQVTI5HD86mtfp/6zqmiOPcwYEipfky1DvFtBV7v2kirHMxI/y2wB6Y57laFwArXDM+qOjWHCtwGcn+HH+tYFcOuVAUEeat7fUQCBuHjz6QVmbrBAasd/lUvkDR3tNXF/7cxpyWCXCdloel5dBNWDaY1moov4QGSAN6ydKtIKmq82JgoHBVb5jIb3fPRj7WOPHIwpeFFsMORqdllKXIgT0q6T6slylr+FphfKGonWoGfFtT6ogDVh9duw6lqXRTnGD3L72o+cD2ZtwDtaw968v/7r/yWuwlNymbjvKKUsD8PDLiSoqxj3On34Qnz+L94bv/bbb8F9UBXDcpHj7/pADAFgl7ajFH7J3th44OLY9jOXRN/khrQyBqCusIKAWl5DxSgi4q6qkrNITMdnea6smBOs5bV+p0bRQlbNQuB+IiagPQfSZ/02sJxbg4/cBtPe8ZY/jqfccFlc/+ybBPwUII1KeOWkry/L5Cqtu0XHebFMtdD/Ac3n5qYAXughwjq4pQsAsn1X2HWGhT+PR8yDNTGAR3Uxic48ZROecg07K6Q0CQD5aLFjDx+JPbvQjIp94VcQ3s1jZ9PJTdt8LfCv1cPzxjv5LltDewMEoCoKB+zlqlKgmcwPGC94j9Ut2EyPCqYeJ/CYgAUhZOlfO1EyHMD81ggM8PoaapXINhrSQLG3wcNOlEM52QVSip/h3FVUVQc24V4IS0siVykHscX0dJnfPkw3kCevcg95gaoYJw9rDYneZayjfOzxI+g1XYxdeMDtvr0Mi5EzxILct7/9HfCwKgCskfiV17wuxmEw2dHPHB+X53AZjgaqcdvz0y9+zm25k6+ksXK5ZrMCXO1WoTIeh5SwRFDPYxx6dV/aTplymPNUJJAui+aqvJYBbf3qD6B8hpW4toCL9OaA81iZa1cN+WL1t6LnrPGSTwRF3yf5w++LOlOHkgdOITmfrAcMZwqqM3edw7wyaWCnhoa+yUo8dsmo3HrLy+Fp0bJBYDhZbuNCb4B7rkvruAUH3WS1fWpPp1ZjFoIPq42nsXB7DRKhV12g7mBfhrVbxR5VTTT5qdqBwVXb6J/ZMBD/+b/8TjzpqsswWW8dotYDMoYNXhRW4Z2FqoUBHj14IX7y95+PXfv3iWjbsSRncgesPhaaLmLZxgyaF/kEp42bRmIcHd9O/hXA6jI0HQGDDF3r3Gir62kVW0Wu2HaV/IAfxgoX3y6Mk4uODQQv5doyiunmqlpCIiMLrdYGVkm0XLIRb7vtY3HjzVfETz/9mbiVk7P6V6xkemzlfVnmUzru7fyzokowdajagzCdYWAvqnrcDLAPyWoJsATboOCFr10AtKvejuNTJ1H5A7CxW56rFXD87NTB2L7tydqYj+/n5qfRZ8Qm1rI7qMQ3gYMKaH42EG72si8LBoV7vrc3cIdRb4Csg+F1tdAh38vKEAwYH6BBj5cbtbWwSoEv/98b2PHVyQ2mRbZfQldK0ATAQnIfOTn6zq1JFgW6xo9KQ2/JD8s1HZZRDJhZXIwpLD86jQbQsR2b4/KLL8dGidieBpZcGwCAV//65X+KR5HTO4PCRg/Xc6IRdd+BK+JyrES4CmHg+9/7Ia0F3TA5Gre++tbYODGOYePBH6jO8qGv1Dh6O/Il6YlIgLg6xOBUAELVNlV0XDQpHnvZutw4nZ4gDRjxmt6o+E5jXNpt0kyvM/w81ffPXLHF1q/Mp5WqXScE1fd5UIJXB3B4L4JeVsDLciM5BBKnBGKpkPngENb3YwgksKWMZHXU26NTpyybCohkrG34laPii0HRa1/2fOXjJcwAIya91ZyYT0ZWWIaQYGUZu0+iJA92+8GaZAC3xMV3VEQ+O2wR5pwL8aVHaRmKUPPRRy0sZv3t37st9h84ICKbLExQFuW3V+Fz7BJyTdmGBgR6ED1CyIWdxm4AA4O12LpxHMu8sGYLjYu2pCRUEfUCWAaUQgRbVxPP/VfM+WDwzJdkM6PoSiGQKjB2dtKVwCoFlxUh6GVolIDlK+tkwQnjBz0iCu/VAkE6op+ELSJvfeOH44Uvf3JcjhaPNoBG4+M5/m+dF813trbep91hn/co8xIgW9xs2Ct5GgoDPrUHbvh3rExh8ROv3cmP8HLmHJ5LOIReK+69jsfVwwPj/tlTZw7HxQcujdEtWxXuLS7x4RZcq+hoylwyD6lKNGC8hSp8aD6lsRlCN/4q8lclL6L7Ih9RQXWSeSw4zKK1rwa5I9lYger2uGaYSxvPHR/IF8OYIFvjcD5t9cJ0DCLXxjWAfDBsC7I6Da/rwYMH46GHHtEDOsZR8eTThnrxoMM+hMeU9360gPTUkLpA7u0Euuqvue6pcQC7ZPz5J/9cyfM6jO84PL8daO7lTM4B7CroaH/ps342PvOZv8YlsEU1Wkhe87pb8XANFzFofAd60UQqbwMj5JOLCMOJFEzEl2jCEtX19xTSaWUDjklv3RGcPVnxnjTI/iUn2e1xFqmVZ54Gquxxx/uUgpZkKGXAeSgiAQyTwFCIKb6aLzyQ1KaM8QG+RBN7gdQbL+3iZ7xGaTq3VBjB+Cc967xkGi57Wik/PE/HGpgU3vJ4fi8Xq4SzGMfrXvlieFh4ND0HybV9sHRL2Hu7AavF1fDcEoULHRWOq2mMfRHcRA9PsYCus4+Hnc70JFgWp9VAYCm3XdOEF8QcTR+TkWj8/J13vBEr4veIKGrSS8VR0loMsRrwh8p++NgpJHQhNHiQwSB6l/q5Rk1bOXq5indiSCwpoYLoXawsmUlNSmIksyz0GXrxnqS/yJahoio2DmPSpElQjK3pfalKwvfuteostxAYQ3y4lpC8TAPKh6iS8b9/2/vjlbc8I/Zd9mTcDx6smhs9It7PTjjv4RI1vzIA2RKYzZk3E8jRZc+wSQJVQp7MTeQZonZaPF5jbhaPmIdrVcOe8ecAWH39zTg/dRiQim55bIl8HMC1G1unTKCptNmeg7e1McHeQqxxpAfXRkWQLQxNFGuwwQHW4wHikYRusSPdyGJaMQzgifhenqK+0jf6R5BnM2rxPrzyIK0yuaOKDj04eELkCFCOa82OYE3jwwcfiR/96IdowViO2kg/5Hg+qlwwiy59Pt2HSiX4xIkrlHUuSEf6o5cPrpV+sdeHSsLiAMJW1HAG2b2Oe0zg8Wgc7y6sW/zOPXfES5/zvPgOnvzMgtIglgPd8oqXYzuuQT9qDePnlkF9mHsvPS0t75Hb4CS8dT6lj3NwPpUeoC2QjawbqTP8Sp0gydfn0lLSZTT8FKqiDHmCDBovW0LqQm/zQ/9LEDIvKM9pYixoGUJakMlKBUMpU5ZHeq7pbUsupCTrPDmPRc5DFkXs+Tsv6N4rHmMZ6OyvT/7Sj0yjLxn65Ve/pE13vM7SMa7BXMKJxw9FbQUelQbvpwxzO8RV7ufEsAbvXdEnQLk/g017JYalknGrYrnDGBHj+V5OaGAsfvedb4iNW/ZlSTaFWIrI0MiWQnGwFJdASGBzQGFPiV5Ul90Ot/I7qa6O7FxDIK3rmTsKL0TPQhjOI5VdNkr+pobhu7JB0+94Lrd1Ll5jOqo5VjPFY7SH4+oLUd2Axr2hetHb9Obb/ihefctNsefSq8VsA5Yly5Yv711cZoGvZ8ZveG0NSWBlkTHIk/GkmXt0ulUugpuVQoCLk2fgffAhEb0ArDJf5RaY68BxMwCeMQAOreYivGvu8T82hN0akryaXlpI0RN5qwqrf9jKFn4v8pl4j4dpzMNbqAMAhpCg5TKQ8lAl5thKwaUr8IWvBm17wi72S5hBAzbKsvN5CQB55MjJOPiTn8TBB+5HLQYhIcfPXjRtU43lHOw1A93p4QgQ5RnjN8LVNaY22qh8S5HtKRA4mOTv4bIzjHmQHfYyOjS8fXr4x9VXXh4/+sH3Y3LnTtxzTqmS4a2T8exnPAtGeTXmFnpi64498KgXsXPNmXjytT+D62B9phYXUkEz9OeI+BFlA2MzbezNU2+cZ6I2Z5TA4xNc5EFJFvLVARY6jUV6uo0NJb/Kphy1fxTZYc5K6FecBd+SXFAqvUQUPE9MdqHD29/41W1vycqlFViDdTQg0vtYOiTGsg6AMc/HiK9orgHL4+wUu0rOi+f/MnJYPGGNQg7i8em9Rx6+Hz0z2BRNCXV3mDblJuZWsuzY5pjwWF8m5KtQQjECh9S4LIIxKUZWU+8Jytksr9MrAmC95d2/EyNjYOj6Z9+tE/6SbzGjEjY0QeYEvOe2PbGyrCe7nQnwxUspVO+QlZRL13ndzgvqr5FrTZSQ9CQS2GVnXF62N1Y8LeB0H5L2baLK4RyOSWlaWREXwNSLxZBQx9CK0pqzQbcWb/q9P4zX/9uXxbb9F+FoVsGcWyFz7VnxZSurSn/+3QEIgahDPS8yKS/342tf7bSosrrwfs9MHYlNG/kYqsku+PNu8l44f0Oeq0x8IrtHwUf2nTt7MvZigS8T5Ryr4BjH8aGuTOQr34C2B2610lrG7wV4OGioXEK17/sPotq4DTtKjFVjz+QOVPPAQ4BKQ7uZZjqXvNTKCG2954ZlGQdbZBY+uKKCfWxHsS3Pd77z7Tj02KMxf+E8Hgq7qG13emAUuZ00d4lYQ+e/FnRzN1cYzgG4SgQ61RnpJazCjHATRFRsnduj1wM5luHyo7PY1T+AnBZ5x2UhrJhXwdgqPldz9QDDyT7tSzaKZP/PPf3nUFFFwQINtPfdcz9Aflqe4mVXXhJPe8YzYBxGsGUQ0hf54rzY3+gtmuz9WAZK+4rlWZVNWSZqNfvCmD9i/idZlqBQnvTducG6P7RDgppDTddiaHnIE/KkSn2Yv+5O72CN2ymkRok+yjunkc1NPIturL9uSfIbhJRl9MioT0qs8xr/P1VvAqDZVZd5n9r3qt67s+8JIQjIACIyCoIiIp+IaxQCyCaiLMpmEsgOEUYRgbiDDgi44Agq4zjqzIcsSkgIhIQkJJ30kt67qmvfq+b5Pc85b8cKTXdVvffec8/5r89/Q2Hob+GETt2A9/QxR3ubZ1RR+a5XXfkTniO5oQPh5stayCMqsVGbSR2qrVgT5pIwAXqwM0GY/B5eQF6eXDSnkZmAI5mj0Rz50p9ewpVYEAIiN5SMeOP7r1WhrVwLokO0acF9sQCKIOi8DQfT0TINsMwGe0MgLVtXCMq4Jx2GtoCroryWXjTLimtpteJjq2kawUMI79p2CVP6L/rxpGTJ1znsEDA46wiAb+HtfDSe6eYmJqhM9aWOMNeuAuhKuN94w63lta96WdlypqJwWJZEDaqdZIAdqxYhQLoC2FpHQwHWYiL75vljKRcLsnpe2R+YjjPR72gx862Hv1UuPefMMnlivpwj64AQfnYxSoF3ntIQ1lUJjq07d5aVGXVF0Mh3QThqFKi9qU3pvD0mtkDpraVvD9CB3nVFi10Q0+695z5NARou23aPlh07dsnYBAPUvuLKSYhQNNxcXwQT+4OF0U0yMq5lLeXoUmBnThG5e9Uw7/Yv367SoFOKjioqKA8AIUQC85BcWixLMMJ5RfWWdG0PmKnWPqz+WNDFku6xJour1Xr6lVmxrWFybDRIw/AF2BoeReiM3mBsFTlutFSxBQD9iCQG6IQh/G9UcMVzVXyPe7h9aKz8/d//vdrzLJdnqKrjrJ07ylkXnKuGjDvroJEIpxVLWQqlmzUFBMKikpFupW+HA6HVCIDwfxi+9dHqWOSVd+IFVDbidK0E+bvaK9BTAyHrxzLvM1/sY66HxkIdjUrCE5Tb1c/g3rLJFLq351ZGa0rNfFJ5PJ/J+h/L8wkapObTQIz+0QPt2qJLdNwQC8Ls1VddqVpTSiGwEWiFslH27X1EFfPSXoZMRPASVgivVVwcbtYrQpG070dYcYhasKW4bugBn1gxzoMUxGwIKQSPwLrp/bdoNt2ILS5vDBEcS/PKfH7kaTeMFdPDiIkt/3n72EZ2IAyUPBQ0MpsRqwd3so2G8v7DMLaOuNQOh/4jcz0uQ8zSRJT4ztnATbKzzuo+xFzlWjR2FhC2T7KhRypZAVQ/HtnIb91Vtbdcf917y6/80qsFaO/KPdF+AI/VVg5RcE0qzzr7Y8smLoLdC/5VMbbmFIYaQnBxCmQ162ZTior1aR+nNJhy9649ZcT5UFBzkDu02oEH9pbxLeoLtdxThrYOORViUdbK+Kj6W8UZqOrZaEQlcRaqlZBQSu6ctOTR/YfKzm1q/idBsqpMeQIOpiUAfwQfX2ybu3pUwWv6iTTEcsWqOaoeW3d8/S5VWNwrq21GWJW6QYjWVhcRGrw7SahhNrCjeRV6T6uwekUCq1cRz2WCRNANxG/oQnsimvXuWC8gecM8G/IMeknCpZ0JbqQ+0yfhxfYygdiCQzTrwbZStN3aSxTzgCysLUqneeb3/4ButF4uuPDS8vGP/XF52rOeWZ7xpKer+8XxcuYF55QxdYElN4tzpq8/mdv9dBBkK3z2BGDZjwqLVKHTAkacNWcauswvH2sdUTTvk8Q6scWYT8eEqIEX3yFf7snF2TeLqQoFj06jU6st+BwUrOmmB6dFl//lLTU+x2djaSdRtipBr6cdcaxC39E0GysqeYB+m7wZLG0hlzO2QaILEdT+9xt+8WWbCwKD6YvNodJz5vDDD5X1uVOJ+OluDjnr5rSfxQzEoqERHweAD4q5nrHa+hmEhDknHIA+2rYACN1jTo/sKDf9zi36kTAOg/INZG8SXj9Bito0DTFbQjeattBpZmQOsBOuRWA1fdBMDW9Qohjeg3ZgAQ9yfQVVMh4pwsC/sRmRe0YgxlxujBrB1oQla8nmeq2RA2EUfu5BdxmsAHFee82N5dff/KtlcGsKiO3mOh+Jax7zHpCa8agQIvdjDU4S8ClH950GQFM2kdyxEHdC1mBouAU95djBA2W72gAz1SUuaP7Mzc8prUEN+JZwu1VjqFY+jLbfrtwi4xR2KWIdhJLbPkG4mhGuRy4pV8kyV396hP9kug9bjYtVSdLnlL1JrZF2W8JiQ3RHYfjiykJ5ZP++8s//54tKJzjuqdLrSkRG2I8oOocwmRZetSxgHTrcLeuNkib2cE31jrPyDMCbTgqjw2sYkdBckUXmnC89h3XYkoFm4RvcK62TPbPFqA+4wSG9x0jxAA+z6yJad9vnWKNp+a18LAmtbTrHHerNdd5ll5dTErL33H1nuer1Ly+XP+EpZUq9vSh0H1MZVJ86dEAHi4qmD0gYptMEzQa1txakVRB1BAN0Wwmq8kNcNQgve8v/2xpnJ+uaogPgHX+k87lGMc1LqTIxz/CZtHuHE3zUYcMEuJy6Ej6KN2OxFYFb+a/9NIRw+ukdAei9r9FFQyxYU4lvxohAyYcuLAPaIv1UXfeG17xCfd6FVYk4V4UvrCoZ8dG9e+WLn6jmvoSZtZAIgg6A0qAAkmibfh5Qc0CcxE+LW9qaSsJT29YrIWVBhnkr7TE8uKdcd9u7JQDR2AGBWxSs834GtYPLxFVjxfFxXTbhfWBjA/ZbUvu9cD/jGvmla9jXmrgKQX7OGCv37YGB24Gw2bVnVlwGn0hkLXdGcAWt1i2SV5WP2AzqEI9/Vg861o9lXiwJt9/R+kXg1117S3nHr79JJUVkmsd1Tr8jghehg+Yq5zkxilN3Wcsl6jpj53G4sRKzAXXPvBa9MZij9gwFToExD3DHSH/pngKg6Te0qOjwmFJPVtR3ngGp4JGG7skOr8Itmr4aWl4Twp9917m7vWllIj9b7IWw5NU659LcibZUzlQWtED0yeOnyr/9x7+pXvXfJTgXLBCGBtW1gTQF0jgkLGYmZxT9Y2biulpHb3H76H7lnjFXcHAkNW7Hjx1THqAmYbOf0I3OfEjuG8p4TZabqw50dnTPGKQ9jlJj4AHLUFJ6HMmkB5P2lsEbUKK9Ncf6LPgsG3Dl9WJDEpDnXXyFo4nTsgRX1xfKS192pQTWFcJTVtSrbLKM7twm+u93//tRtc4hRy3NFNlM3DTtLLTAXrF3PK9CBafrDitPmA5hSjpj8MF8+5/4uwq9CLIIvgwsDRzSEXqcHZicfoYVTMpFZiGcJu1Epyuui+7KqvM8K9IYBLG7aymcsV5yMButhDfNc9AUtNzBOthb7pPk1lBRPtusQLdRR6m/4RdfqevJzVHLDAkr/ux78EFpSzXnX8uBkCy6rr9XdEOEFG1AsLBswrJ8fe/uR9VqoYKdSBFKA4zDzfh1qFt69pR3/uG7hYtUtyAeayJXbjvMbuBOYdVU0V4FFi/g3A8225HChHHNDZHT9dRirbV+VhE0wYXyWa5PNNDpatVtNAHWQ7FV5BNoWxfpbtB/HeuQTO6sKC5mtRp0Cdam+57Xa+Hh5qZiLW0I+Hv3b9xQrr/6ag9YYBBBEvHEWFh7DB0Fg9HzsVCizXRjxliFutFp1vCh0fr+mAswHGKCV7bdZbPG16zLcjIBsfc8C7lFnpHn9ClqJtevf7hLuVbqMc+a2E+AVrR/9FI16ZvbUYmqqnG7Iqme8H4DUvsctO6GV3ipelaUCE+QRU/eVs9guf/+B8r/+qe/V3DgpKyteb8Lvb8WtC5gBVyqKVlNuFMZG6XIo4TroJJN15WnN6ReXANj6tiqHKv5+SVjRHTG6FXKguw20a2wKf2M2XZzy3MOKOH60GFhWI0Bl6Sw8diX6FJR17xCIjPYpLcYOg+zQ7V9NQhFTaeMpTIwvl3TsbdIOcyWXeqv/9NXqhhaPcS+/Q0B8HqHczRwdrtc6y1qIjhQW89Y0SK0GLqqb5yflZyFBE6kRJ3DZWHAnzzfOKrdGKRKBFGrGmlj47mHj6LSZhpA1jPzfTirBDqcYFLN7YD3qZVtIAk05uT8auGbh6BBwwmPFS/ZK7utsRy8alNpFXoRX3l+w4GbEM2wZL99+Be+xpio11qYv/HVV+l3PKi2cRCxHH5wnwDYYx6xgxuIS8h96E/Uq+8Z1wQF92PSWWNLi5N+AI07gQwKZ0ZbAESEUJcwhh3du8pbb7tBh4rlVTev+anxh+qfLLpjqrJ0ZRm2yKJ7JFm6R4KzbenDHgbNFj0mwdDWSATOaQ1DYABNU1MqMP2tXRqzx3UAlF1XlM1YEiFnb3420TEun0tcNVtnuMyUXcDsCfFlXa3iXHt33bU3l5uufmdZk9sEIawoYXFwaaYsSdCPqGd6UdLhkmr+1taEIymLelFtlTdp30J9miJvG2BDYsquAdZFb3VF5bT3K8qdG1JrmplDx5REqcEViqzOzZ10ftWIymTEi2XirB2KrqkLg1IaqBaY1Q/JPRpj0IVzpnS+WNCNoCrWkbeIyshLxwVuJSItyTEYCudRY50IRKwWWoPo370K8cMQy3LznK8l8Pwb+x8sn/nMZ4U5KWqnz64InlhUmsTyBqk1PXK3tjgznZQbh/w5a+3thvZyREM4NtWDvrd/XTlTcrsAzqUcl2ShTYxuE42uKRF2WmtC8DLoY1mC72SgDSmHsxX4IFl1cZGUBE0swnrzmRPVFayhjSWXakhTgZalzFPIX5WXoo+9omsaDFI6gkU65GBSd3mJ8rIWVb+5pB71KtIp5150oSKlQ2VC7iO5hHgf4Hm0hE4SPGKBPD9RGMNc2OHKl7a+Gr+Y3jKd2hHqKhzMD07haGwUgeH/982CESUKGfwzWel8olldETRJNoURco8MmYi12oSbz7lelxVFv5uHbMG1B/sWHQFmOaP1ICaBLxJcsojyH9ZmQAOvo8q8YJuSQyiNN73m5f4xrXaxiwZlwj6smWszyignLwXFjqaJcyHCIBxdBdGAMt67upVUSPtSelsJt+oWwbnbIsKLVrmWwtoA5ejsGTirvOV3r9MEDNvX3s4GKifFnyUj9fk14GaVsrZIq7Foicu1CEsBqqg3MmGt8ZJoGYFVvypmgivoVr60iLG2YFUM9ox5Hwb0/yf8a1M5jOcoEsLO0Y4chPO4TGRNE3E9NU/N3qtMVZdhd4PwuAj1Xe9+b7n1mmvKMoAxQK40/1Zt9OFHDshNlGU6vFueBIJDAkiCZEHPGBHDa659WZbAWiZoIYYEJ1rl/ZH+cuM29Gd9YKstz17aya71aiqMBJYYpV85USsCpXtl1XWvilTUEnl+faksDytnDlBd+zZ5dFLlOGcYN0MwuObJBBsN/tgIbVrmxKrjja3haZ9jX0Jr1RmbiRRmpE/9mgdqiDYY24WbSC2ohm58TuUvt3/tK8aoaH7H5xYkrMicp+gZ13ROUIW71koYUfQ9eSLKtK93pAzovQYlNNY0GbhXya5LMvPGRnEj1Sd/SAJMc6mPaZQX9DMuoUM52YIEO0JvSWd4njq3AuRPHp9SIu2M3UUYaENntS4lyV4OqHxoRGkJxyaPu56NXmXyMD2UdVNeCK/sfLZaQoLrt2PrnvLEp1whQagEa2F73epUcvbjzlG94bhLnHZp5uKAIopwpZ10pwKxdxKIKHvzRzBDttg2jf7Rau8ssMweSf1oX7EGQ8/BfyvN6m+nFuW0qkVGsMcaP7TflK+t6jzYbpyjilHOjqr6kiirNgLMLQUQdFiGvlHy+bhBvIQIMVuDVngZFJIl6v/ai7JOrzJWXgZ5dGy60vXm18klJH2B/9MHaEb7sFobz00dNii5tKKohoFfRQr1ILRIHx0A6gIxKclwT2kMLhMGFblXRGTIWwlOpXEtZfvYOeXN77naCaiODtR6vs7cPwuNtuPNbKybU6fWRuomLhEHiL8RdjVaYQurJp055YBd1w+bCvBG51BTXNoETjt0DgZG5EP5oKMs1XIwKeijNpdjjnUIxFfA2F5jvhomZriLNsmqzXv3u95T3n+9pj6z+qoScZu7+T3r8cCIHBJgMUzc7+RHXBQxc1HNJEAwVhzAgyyX5empaC21Q16X5u4mSjmv+51U0qeYf1jlJe6UqbuuiSkIySP4+3aMy2FaV3b4soqd1UoZgW7hI+P/tPkAACAASURBVBJUBMz7bPwDDdvetwr3tkXsBltGSoIUHsnEZkPtMbgRtYXkSTVXgX5bh48fLn/x1/9DeVUPyyWFHqRZsehVGoS7CI/0qrvHmqyuRUXpWNPll19RHnnkEeGt9IAfkEetFsjkWlkJSagx1hzhISuOQAclLrOCNmhUSGoN2eoDchHBxFjbgtzDcZUj9Usgzaur6qqEC0oK5Y2VB8ODNa0qKHXmueeWRzXSDCtrRK2QR2SdLizoBGWNDkoId8kKX9E62ds+KcHB8dFyzvlyAyWg6AK7+5wzlFB6pguHR0b0flL8F150qYTrmCON3QyusFIQVkzACsCi7gkuOu+AZ9Nct7ROQjtGUbZoYBRIpcl6v476brzg34cvnBLE4dWMgNzHKrlzqyS7Rpk7SRxBAolYiFblbcMkDl/jYXOUP5drXb3Ap6pAjdWIOwwuHoEYjzg86uaJ9qYiCF0D/NZfeqUCIWT5QpgQzUp59MFvlNmTx02E0NKKY9LdImzNaiNyUqe4uNeSmRfMh96ZhHulvRlzJBlCTgsZvpagyskZ2XJeeePVb3N42mosr2dXw3kivJzxJlYdbshGJY3AbqKPqUp5XqYBgp1rskuWI2ymBVU9IH5uDZAEPP+KdAXvlL+JNPKXfoZQ0H+JuelzNX/Fm88m28qIMPRqK47twh00ha07cqr4AL2p9QG5Ede9+6byvhvfpfkaOnhjVgEU691yM681B7q5qo6ucu/YrZnDx8qocKgp5RvtOv/MlIaQkCj3hf7lkg4WWO6iIReH55/SCKwB1cCdd77cQeEpK8rF6tOEGdymnl0TpXeH2sYQtcKd50uBFeeDUejMUdjSDCE2+WyBWgMXLNTgKjlWVVNmQmNSCKwceBkR06KsmOPHJstffuavyr4D+/UjBsWSZEvBPAGChOdHZKV4RiJdIJSa0C/hdMYZ55VjEhorq2o+uHV3mVDaxWG5d8OyeFalBInsIey8e9SPsKeqH2O2Y58UJq2gt23ZaSU2o2gkrvGQBIXaUIiuM/h1UJbS9Oy0wH0N5hhVy2MljxJlHNNAjiUJtLk5PVsRQYTzrEqbenX92ICil7LMqFNEgA5JgK3qnXbvPtOJwmNjI+Vcujxov/qUbL1daSXT6t5K1PEJ/+UJ5cytuzxooV+Jp5S2EkRAmcJHnK8tI71Or5JWjStqL+tbhhuQN4Z+E+nOBlTlos/DB+Bjnci4eYVzqd6P8V2+fQzt5xMRiv4oz62oqYVlE2nh41hancOOjWCLMetK8bnjsFVYtr/5eVje6JbpLFZdNfLM/faoEFhv++XXKJeP5nyZvrKs+qtD37lXGlviSVcyJt1RQhECfxPGJVK4wSBL52Eh7NR6RCYvmBCJfJ4cohB5nPO6KcODZXTPZeV1b/hlE4yjZw4P5yVIqNzorBZ3jygDD+Ye9NUy5+h7cqHl7tREU3p2E8mpp1Q3I4dkYYIJyu6RcGkhEJjQyQFOwhQYCxZmGRnGRAo7FaBzgJjdMGhcvuBYYVLLuCqwm4AzrVhYRQB0qY/XGr3FyGzWUIcbrru5vP+mG5QTJZcWDIMDAqh26gQXpF9XMDrtkZiLFa9JqLiVtfO5UgqNsF/DOjh2svTgSkltAGhtjPWUEUWm5lQPuiCXZEhWAcNNBzWdeJmRXnLJ0H0Diqz10GeM/mYIc7mcNOGzm4GLb8VSd7e64s7s77SGJvk3v7fmNV+crrVsEVWnD8jNOiU86c/+/ONlr+r+APrRbD0KZGxsLnhY5rosqkGB6XYPRXDrsjqHxMC9cuc4F95lQYJhWK7y9u27yqzSMdbo9w2myP5hpUmY4AWsENX2QA71qFeCJ50nqPEbVJrBtKyjVQkfXN8eCZwh0e+a6Ghcrt+8fjepIRtwEq15wIqEZMm6kmWm9xuSK7ekz6woGXWof7wMC1OcX54yDkZQgCgiuFef3O4JgfqkbFx6ycWadcAYNeFz4rdeuavb9A600nncE/9LedLjL08EXvvYo55iQ8IcNZlP5yfeVFDCrWrgG72TYXLt+Ul1PZ1iQrbOYp5z5o8aL26qPRBe0dDEdp1vfxnFbdYatwoL3CohTCG4E79RUhYyp8+3JXw3EL+KkdMfMvfw1Soq8m/7KbEuLHHCOuIB43BYwaJphGcFrxOIIfJvhMlKzeIQerchwD2qWLYk5Hn6/dvf8rrNVXWGbIQ1rZl2Jx58WJsrrc4G6WJMYuwnsI1+mel9SnjLCys8CyPDmNRwcfiAtgg1Kk6czgAjCsOgWv68y8orXvU6a7K4cZHciCwPHrXblahHdECkeOrjgoflx9LkejHD6rygwX/2KYIpkt57IELmOrZTpRUWU0h+N+Pit2Z5C5YKQGINkaPE71vgv9O/R/dpWe6OArKxNjHZydzScq8eBrnfiRbWMh1lWgMIv/tdN5b3a7DGlJQBVgwnZeTN7xfCdDIjrpR+sjCpxnjav2Xtu8PuapRHicuwGupR4oLlxudomtc1wJBThB17lkgjuKLCWi5VgYCWTy14ws2oIm/rAoW7hZf1aMyWm2cJH9scCiDdFIP338qFl4sghtB4tWhRnsd52ok1M1mQN6HutTDHcLF84ctfKP/wuc8rERSsKB0eOAMaSK4p8NBL9riEhoWVrC86KxAgQMlRu7ckdxLKHZfg6RFmNaJuC7MaC7bmBFEB+ronbXZgayoa+hjCKfqlwJt36pNgGtR4eZobbgrzo/vqpgTMiLAyXLxRtTnG/Z6TlYV7Nza+033bGdihvB8nQWMZMeSWLt8opoGeMQnOo3Z/wW17EQQS/P0aSjEojHdRU7O3qFnikrCzrYpk0vceq3VAg0N2bVEratHvkx+nFAjt08WXXlpW1LJpUpboMQVPZlSUPq+W5JMnT2oCkoIQsiqXJOh7JBwHFHRBfa9oD1gzeXTdMrWcJmPa1p5pIMyU2vkMiC7OOHO7hPwWlWgJX3vik8qeXVvj9raztcCApaK4k06RaCDKPX5O3MGA4mm5nUqQpE2HQ20ixao2JhWG7ATasMyrpGyGSEjL3ON7tGBCi063qGPX1W99/eay6r/ASbpkBcxoqu6JA9J+ShyFgVZIGpUEpxwHBh+WpeScDh0cU3AA2lNloNdBaOmB/Ny9rNHQHmSoqJC0xM6LH1de+vJfMi6T5l/x1xy+bZsC4AfPukkYwGtETxqaRTjFJUthsTt/Ogklkt8mLBtZzdZczoY3gQU3+aP1PnEPvaH+YYxdrwvGp1zE9yRK6G00U7oWzEekw+poqQgaZFi6JMZcdpifYlxZArzcjdfeWv7bzTeWU/qZXUfLPHN4FVo8nhuE8buE6ziigp9P/Z6jQwDutW0z2BFuJblyjEISwRONk8mg8VtyPUTE/VsUHHH9nsL+EoATGgO/gaUEOK/FDsiKWXO4hj3O/nS+TEipAGBRDpF7GxFWp9edTgrZ35r2Z0XIHgJmf+ue75SP/8nHyrwEDF0mjV3qXisSlCsM4KC7Ad0OZG07dUFCFreoV9YSVtSqBD730r/y8151WQDMFd1yjw01iQRHdUSJrGc6hMiaoRZ2Q+7UgNxCXDRmLtKocEBCZUrQh54sXEpTh2SJ4V736bNuLaT/Roe3qCVclwUYrWbcW5BngnUJ5yJKuC6Bv7QCIqlkHrpfyJJj8EafaHaB1uI+V7mD+lm/rLah8W2ZEI2tDuPrpjx7QpYtfLSqNA0EbJ9cS9xLeMrhfSoJcJVYGR6RZ2LiDYDXQftALYm/0dGE68HBRgXHDLKHCkzcpcExY8LycHHPvfCC8j3f+4yye+tWNyhwKlGFJ8IgwdRsONhDiWcR4REi8f7XVIx4QNVdbArLrmIUlj+mSxGQZB+Y+6vrl2cAo3DXGsQxXxEYq3wH/1//jjdLYCn8qmJnEv/m1R/pxCNKHJ0X/iGG4pAIQtKdAxx1UEl2/WhfcKzWQK1JUegdwNdaGGJj0jM/FHivWsKzn3B5eclP/VJeEqI3pyeDGqFiUNY2TARSJDVipGIh1ZoKplVNGuuYMEqybWtIOPxeVUYsMP/AFpFhdG9k3DsESTR9x+L1Ziax6HRfIsxV1hp9kno8MJe6VEK/zbrAPrOW4Qf48IDC4CyqJbxeoLu6VU5JYxsfyi0juHVL58FYzuUlVmWZDMhuXuX9ZIlMqkPsxPiu0i1Tn4TXJblFUrZmdqzZ3mG5U3L9rGdlidEOmcJk1/O1vesogirk2Q/W0qSkcZPgCNGtpqPsjzOTg+w1c9Y0zHJRXLh/KAneRxes4bIoQvnp//7n5Zt3322mALPCJWF/wIZQhn2DcpGszHj/4C4Zb05is1I3REM8Zk3RzRylXprUA73Xin7GlB9KrbA4q2x1rhVuFC2PSCcggk2vN4qb+4m4ysJck2CHudeUhtCLkEuNt7sIDNJpQb9bEd63zFANK2sCSkQ0dVe9G+kW7jOm9xlTxHVAuNeaLLuVpRWlaugzduPTmRdLdFABgzFqECU0+DkW4bC+JzLnQSWSPlh65g9IDNBdAtsKlb2RMGZ9XRJsPgLXOEpAVZo3ioLRAGxDmx+9U7/cTJfJqZrggYcf9DSiUdVZjik4MKpqhuf84A+Uiy+5RIm0wP2xckLWOQMIkj3H/nCDQfi7CTB/2Da++ZKrXa9YbYNORNnsyAGn9MeLx00M1XWeGRAJPsjZd/qAYZnddM2vby4qF4bEOUDTObXZPabSnJU5Wm8QAk4JgzBQ+/tYWDYh6TTq3AyA40b0srBc+MzC5GYQ7YBR0DS9o+Wipz+uvOjHXmlNgfHhjeF63S+viiUSdyYg1+lcrIrl5q0s4BrDIKz4HK6gX9N/7PHxL55PqNqbgpBKomowNPZY10MQNWcqGiUAXxJI+RPzl11NdCbagRWTKNq+IN7I0UjHDlDJxjNbjWiVPn7TDUpreM97yjRAcXV/bZmxRtJCJORxwrmX34aDQujxjuTaCEAnekaHjUHhKRYKsgCcJaV9XqTrpbATsurzlbfPhnDHCNJ04MyPLYfQogiJJMJUEz1SqlN3BoPEFM05IHy8H6zd6tNCzDMUEWq4oKKt22//WvnUJz4tiweXkSBDboEruCKMrk8pGj3geQjrtn+2PpMxvQqWJSbjWev1Hl6F960uxYnOVGag0ekKIYYV465g5eh96KzA4BQwEyfGaq1gsKsSLO6OagbT2mpJWZI39b2uGxGGhotq95I8Kn1mkWRcggWKOgIjbMqSHduhdtSjWxRcOKGoI+k++rmYd0XuZtoMkS8swTZBd1Ki6aR8qLJA2BK/XCGCqcAMnSA8xacqV+ABLGWsS9M7/CP8lfmeRBexjqFRBuBmR7he8IwsK86ZtAvyuwYk9BcFHRxR5HKgd0Lfaw0jGi0nrG779q3KH3uJxswpeRjCiMb33pl++BtrybRdjYj/pOED0bf5j1ziCGFlRvMi+3maGiOzfP8Iqei90FMCCsmdTGhOH7/53W/bZPovrgP93KcUbj72yH1qdcuNBYLqiSR60YSPxY5Ic3PiPnDngFQpjPXDSxrLyqIQWH6YNnNV/cCf8H3fVZ7z3Cv1ezYzQsSFxvqzIheQ0pqeboqc60bZojptBUXI1Huaa9CW6eEUvCSbGtM0gsSyTfdxWQ8i0odQAT+nZhM4QNghLBOBybbRV4l/KR/HGoF7479XgRbZZNcz3lxSKVzWYfyEjZbwdqkSk4hESGAr0oq3yLq6+ZZbyizBDh88GnTZVu6QNGuLQHJ93GAKtIOobRJJOzmjqdAkfgpXhGCaEMANrO5bw5zy/lyJVRsz3vgE/9nazCUmQ4e4g1VFqFertSbXnna7K05YZaD3nsMxpse+c+aW7lYId0pYfexjn3Di6LJwOws/Z9HoezrWyqWjdtFDasWEye9JZKlb7pX3DvzUFlnuG6vCYj3BEFx5EnxFa/681uEiXp3DBp10oS0JMJJk3V5en9cdMwuDULgH8GJW4S6SRCjhqBbfvr+e2SvPYlhuI88Cw4K2iUguKWteqVka/BEcbl1mztbt6k6KxyJlv6RGlwiiDSkrVrskIderz2BRkQydljisVSA7rrE+v6ahMCSqom/Qpxu4wdwD3Qzma4GV9dJYIg5IXENiJnZZbTjQKogibe0jyai81qYimApirUtIzyiAMaB9H1Qu3rAwzG4pwQsvvaRc+epXlqHKBskHqwft3YgREfoIL5xOQI23EB4LDgYJ8L2dBe1x4mrRknAKCiP/xh1Mzpap1K5ksLgUP9dn33r9b2wuC3RfXgHQXC7Tmjp89KFviTH0IW2yNS/X23URhsUAA8LefpG0DPGDXGcI86PlMFlZOWkP5GIpn0bm/nc9+1nlgit+xGAj7T7IKiYytEYO0MTOsmVsU4l1LLcyVvV/Yz01fzob1nJP/LYdKW9/yhq5w5CsH+ukc1cibOQXRcgkDwsKjv0atzK5WeySe9nD19bkNVDgqGJ+z2GwSwhEGxeWK3GXA3iLMcQ0CP4NuS1rcrFv1XioG2++qcwRwvfzlK4gl2Ph1GQZE4C6ITyJfZyXlbt7C8NhE9Hki15AveRIkaNk64MFUKMYYQOVhAYixGMliLkZgEF/dpsYWMK+W56PuY/VQx94E2H2Px1PY2H5naqmrKEHe+shPT4S4UReWYswLatB3oHv7C+fuO0TisqddB3dhhMj4/quweCUyBAdQ5joPzlgEc2cBQK07r2zukVPLiBnfYDA5ADo35SOtfy8FokKRorFiJueeZdo6TX2S8JmXc/uViSOj1FqRtq0hazjR9CDLDMB+ewHuJMnPxv7ohmfEkfNdMrXomxN6xyWFbaoNBIob5CR9XLBcCMo3p4TsN8rgUBkEawYxcCUbHDJAQnBIfnz8B6aD0vcFowCAwDp7jKB2ynrbl3Cp4eoOuflphEJclmIaUvA/jIrAfqjhAwPMlgz+LK7glaaXVOt5KLW1ks3VrUc79N6J3oYTtJTXvLSX1CjwovlYvLezcIK/TWF7SP3r5I53wP9IBERSP5ZoAHDDC5ETUzbUUELu5wx5+cmFXCdYaIYGPHS+AyKQfewG6qfve/md22uyMUgJLoqnGDqyEHlYakflrQOVeruOcXNtVncuF8h4Z5u4QU0+u+iLzaSUSAvoHh9StgdBqKJH5vFn23lac9/QRk/7+kyf6W9pFW/9OWvl2c860kuXVjVwY8OrSu5NFrf6qC5fvzb+xXxCXYRFoK0M0K8blsY0AIq0t4tTQzM11pFa4QEB9p1zcMx82GCwyxgb3Z3sLwUqsaHNdCfg3F0BOuKsVQcjwmFTUYA8Pu0Q867xE0h2rqioRnv/80PlhtvuUmDSpt2sZ4y8yyJ6A/tf9Q1cbPLY+W8i9QKRsSbI40wquTgn/kLTEOHk12vVlLOWmsR09Xctkwgzt5U6ez3tQCQMOka5F1wldjv4IwICVtxvhkjmQhGsJIaBWqaFFPfh9Is5jUPrvjcX/9duffr35RAVra3lNMKGfz9YjBXO2TvyDQ3domwZPO9zgQRXDWhjU0qhVaiPUSY01ZmCeuM/cYqkpWyQYGkGRjrP8rAtazsFCC5PksNYZoattyhnKk1DbiszwRThO6mVDdwrfAvAdfGLXHFwL/kvvZI0C1q3wblvnWBxksBrQo8J6u9D8uJLZOgIR2iX0JsTRb1gvBG0kJx1VCYo+Nb9QzRBfiW00WVdiIA36kRNBiQ3CPRllQNWysIIVmhCB9oEqurGzewAt8tYz79r2JVudCaPSMIRqK36BOBtSrMTu2GnXGPAB2Xxc5shkHljf3ar71JDQk1TdyGCpoYyoqGilDhb/tIFpCxrOLChk+xeFPKZQMD6rRybL8PSdnCskuYr3pHRJuvbS2dfD587rdufZcsrEVtqlyShfny6MN7y9FHHpAQwSRP32vfTh8GZBse00GwFT2KcCGMak8jNo82r5aRHkPPuedF6Kfd172jPOv/e1HpPf/JMoN7FaZdKp/9ly+Ul774Bw2aLmlM1a6JfoGWNXepui+hGMN7ubd3JoHS5gIGdK8S2a5qNo8PZfxRZdQ6387vU1259ISP+epNrduduqkwaefZ3vwIBgs7C4+A9/WhXpfLhHgW2qz+HgG2KoZdmFoqv/W+3y43v+9WNXmTkPBY7I44CkGy91IYD+9/WA3xuhR+3lHGlLdT7U4/I1K1HrMxoWigdJPgV/hcuo8UipMGLWSyTO+Gl5zrEZTdWF6kYrHXtmBj7pN8ZzccgVF3ot7G1xqK9fr1fKJWrF1Wwbyifvffc3/5qz//pKKC6mAg5mAgpnNrbKGi+WGpCKR1WWPOjoeO7JpyUxQh8lOurl2i4GXEzRAoDHXlDWg5gxKzpUHhMu687j+g6N6AtZHNNOcmLXGPRBKMv/q8OP+GYfK9C9JrO2ZcSEB2rbVf+VoMnaDwn/IcBje4YB27CuxP/1FiFOMVqzFWzrrcQ+ezEQ2UN2Nq1l5g5Q6SIIt3UgdPEN1dksfhYIx+76pOLXKZCgArYgR5DtEKwqyZflouF2Mf+M+vDJ8icDDHMKz5EL+Qh8FeQZPkqGmqN67pkII1eOVMybrw0ovLy19+lSKp2csaygoFVF6rueY+gwzXxXVrVlKlL7Y6mjOE5/epClPfIbDCdfWdzJux5nw4NRDEJba0fuvW69R+mw6O8p/llux74Nvl1IF9uoYNotSizhDjfrp4bGTY5ie+PxOH6XPVhXmtB5HfBEbA/vhZuIN2nGX6dk2UZ//sT5eeMy/VuQ2XBRH1dw48XM4+Q613NeizV88656xtMqcZqRXBkLXXpM76shEN7YXDcJHeHFDsrAigHKwJsomhysS4sza8HWpNIqnnxKGlcDWIctmyQghiOVQXJNvt62zNmCqQ/LH3GmgLpRGXylReOCPu1aqiSpOaAvThD3643PybN3nCixk3xwOrRwPWRFia4s3PCpAmaVKL6RH2gcVqouOrbYPVrMkmRAtZuThbwstVCrGp+Gc3xcH1nWON1ZswTETSodON1SU6dHKQRUODRj+v7ncTehbesb4s1rXZNHvkiwTPP/v9Pyl76fwhUJkxcpwPmB8CDXeH6FXUQtotmy0QZjZu5SrKvGAImJEMEz5Yj6x8EdiqPrdIkiaCFNfXFnnOlLFeCL0RleEMkbtGvZ8EC3lSc0AQ1YqiRbFXS3sVw2EZbUdE1QETJg43QQYJ6HN9yhPDre1BWOHAylpkf4NdImzlnOi69ABLgmZLkRgaUi6WBDklPOvCMweEi9llrSPvenXPfp0PzQuRQKSdOJiBpY9raIMva3bvevbE5BXlGUgARUWqBK4wzwbXlODEWtNLkthNVQOuO3vNJO5NFcdjMQ4rr61fqR9Lyk8bUXDtZa98hcafXegzaPhnLN/KUzWKHY4M4J5ZDzFYsIQduKryJ+PxONsoJD4fNWjhUrmg3ls/suJGSLEXDW/9wPuu3cTkJA+GaM5BleWcPHDAmoonrS6BzQhQ1OW9cj5HPOJct8K8rFXrNO7Hl07/Aj5XRTCbw4O0uQPdW8sPX3VlmVzfrizelTIrM3qFMLNA6N0K706p2PrSi3craxhQtrobXG/gvVld7Ab6K66g/3bmYVU1bEGLFtoKiwAylmOkqTG6HTBvV66N7RDLjVwntDTnnkPtmLKA0OTC8Ka0K2FX6uFZBNodjfUXLCUDOvF+wLMIgx999GT5oz/4g3L9e64vc7hYJpyIq7S0YVncJy4ixEr29LzA2kER4QAaGZQXE99uT0LmGRWuC7iWQ/bx68GaA7ipIRLcr19DFNynHn7QiLQNBCuEwe2ErREda8l9Ec0sXH8ox2pHambPV3pvo9VDmPAUezwnaOGLn//f5Yv//AUBu6dsPbWhmbR9QUn0C08boP+//iOowd7gpjBY1pMP9W7ux+Xol+7u6KmwI8qF9JwlCUCEnMnde4Z9Rh2gzgFMSUw5rM9jzeNogZXS32pGnsSKnpNQOXWypJrwbwB9gkwVLnDgKKkIHXhB+0Cn3V7d18A+SsQuF3Rfe/1j4DPJB6xRAolhGNbZnIsy+mnTtKl74uKhnCzsJEigsSEJC1wzSoHoSIrBCZVbYNGvDR6zIma/Q5dWvDnsKCjwOh8OB4uFhZVHixqEKco1xfJdcmudeC0+X9tQ6ZKy7ocUnRyV67osBUMWwNOf/ozyMz/5UxbCjhrWp2RmAM/AtW4J3SguXj4mAn9Cv01dhvfCL0lqtYyyyx4NaEyM2/je+azps/5t2/GD/+16WVgSVuSMyMI6eP83y4l9jxioxYRfpxBV1yOwevo3yphyfbCg4iYoAsHCcAVxKZg2ooxsBJkT+HRISEgMgt7N8fITr/vVcmRpUG6ftIjMazQQkUHeb0qlJZdferY0IoWpvHBwKttMnbyfvOAG5jNmPyHex3x1ZrRZK+UeJj8idWwIm8TG406hAevmwuiuNDGGwq/4ZBvqWiOQFgSnmRXyoPaOW7jG0DEgTINKLFgx1nA0iyMnCeJfK0f2Hi8f/dhHy7veo64VWMmP+XxEKu4IOEsFzS16MtOQLwTizLFp1WVuUW5NrEi7MxYqNk1sMbS8Do5hnSJd/d0rcLVXCmhZ4fbucZ2jG8opMilcclOCjdwigGXvFNoRVxPZ4f2Opo8tlfe0MsEapThZmAwMsCSMau9euYJ//Okyq3q8GbVkTqKjV+89pFYOS3HYtahEiGU3MD2c3UJgaA1Euzhj3C8sTrpXTKgWEKJdEV0u0yVX1zGDgBw1rMcBWREr7l2iAmOElp6DgBuWIFihiFru2inBHrYECVRQDqYzXDIDB+Okpzxck5burCfVAUS6CazQ1Zi1gwstkPnO95JIA7WzhURucr2kAOgugbAij4tKKBKsSfoljSGCp3YOoZMILixlQwpOrar2kfbOWElYueBu1CpCy0ky5hRgQlquQENYVYnu2oWyoRC/wnCAFtHjwmmup0QmNhAoNQAAIABJREFU+BA77LJepVL0DU+4D9rIuDpdSMGBz41v31be/JZfLVvlVSUYk694PwgrrJ+0iGkCLbBNeDqWcX7XAl++3tboacupWWf8zgLKYF2eY7wROsEb4mcfev+NKpaXby9QFIzlwL1fLyf3703TPoSWk//A4OW3D22oqT/+r7ABd130DmU8t/xE4xPWtjqYDIOxyAAPmu+eKFe+/k3lgRm1/+Ba5Qux2X1qgXLmzqFy8PDh8vhLztOEE/n7MAxrjuA1A9n6AWikhMfjsvGtEUA1QoKmNh6V8G4AwtPpDk46b8LfjG+kQ/ekdbFp0wLNB8/fmAsG3TGIuZSNyzr8MS6pfrnFWLOIjP+ws5WZ0dJVqMCUh/aeKH/6sY+VG2RhzdcMf2tD/c+3s3ZhMc1qTPganIP9YA0PfedouezCbWVmQeehjGgSDhEqnLNrzupeubQnqKz3EAB+UP3Ql2cWXHRMLpHfTUqoRyUfG4pWZexT3pG2QeCSrMfnYCGVe7rHFcqKgRFYZ2qk51pUpcf8g4D2L33hSy5FWQda4GqsL13Xr/KRQdHQoOsisS43ld6h4mYR/iLCQ0KF0haSPPvdfUH3RRFqc2jbQlY+1knrGEoHEQs4bY4zy7XGIaw3vfOwrKtBek7RUVTW05Le+aSGWABbrGGdsCYCIeyOfp/NYLTXQlxNu8XAHDQNRA/AjomGI2ygEXAg8wMRPASnXV7dQ1YlfcXIs+rR88HZ1iUYoK0VYVrsqXtMiV7WEIT81z9qq1KQuKycfMZ4X6VAkyW0BM1jHdNXjvpUiopFb2577ah9AH17iFbScl9xkzEmOEtHIQQz6HpPeSdhVu4gbXoGZWkR2YR/+hSEufKlLy3f/cQnGtNusEPMoNCC4RcsO3NE/bJciPvn94SWbDZVeMfSMsI3DmFggXyxL1HSCF14lC8sU/eZ+9Bv37RJNjTu4JIk++H7vqEhAo9on4hcEHYGGNYWKjekT2rP08TJHtZCaBpHOJ1EOi/BktQcl1C1gci4E9PdW8rPveat5ZDwxLFRJeGtgV/owOXLb9Xk3COHjpQrLj1H99ehtvAomgRejurwzzPeyk/wS5nRqx0ZPz64jGnPvnQ2ig0k7SB5IcF4bHPXVsHBpbhxJKVlDtac8SkEKMIwJnCzfrivb+M1tsPKISUSBcVAwAQwKLlQ6567D5RP/8Uny423vrsIusseGQviK1rRwDlCoX7Pe5w4oXHp2mawBQJSixJWcyqmnVs8pYnNGnw6uiPRsNb8zWcOhcf6ClGEgO0CMSjUgCZvp3A/741GzwKyGqJkUH1zu7EaleqyrP5SA1pjnywzSoE2taAu9fHCSp3WOv/od29TK5Z97vqZIukqMHW7UbVyGRKQOyrmYHkU9/ZyXkTltNRTokNA3624r1rjMgwqQYGCRMBtcE9d50EVolsEHkIaRbqgtTDxZos6O4woUkd6AtbNIMJcn19USsGMonRYZdQqYi3NAYfQXNH94OK64VlQmcCG27p3S2UER2gcJutzpDpnyjUoZrqPWjYjtGypsWb2j01O0miUL2eQwA0RdraIwFQPaSekBEGL7AlClbXYHcw+YoHY0uWZWO6mETAe8WGYxfuVVICwvp+v9dLtgbNm7VhoKL8e1gVWLVN8QB1TR5Uftr6h9BstVpkz5bIrriivftUrmNYY3vCoMV7kNL5ET3YEr80Ewy8hoYgtc673Cn4wfbH+alxEcEdgJeoI7/AZx6GrZeBdi3D8oAQWuT1o3DXlRh385n+UIyI2cmRIuOPnhGow1Xtl2QwMkh0czbOp0DvmL1E+nAZ6ZCOE6O3TmNCxRW3MdN+W8vLXv7Pcf4JC0C1l6ZTKTWT29gjPAnxdEyFffNF2ad5Mm4kFyqaEXxLJCSMlxyYgqw+o05/cHn/qCG0JtdBozswRCTRd3UrWnFFh1gdVYMHj2cRYprG02qbaJXUSaj0VH0YIKtNvY5LbBa33NZmSTiPQ9/5vPlT+5n/8Tbnm5renVXQlTNOVBT5CNgweaVLTEHhV/eyQ2qvsOkvjwfSA6clJpYhoWoxq82gXc/Tk4XKReiw5F06fd+QP5jHGEgsse1flciMsNpmaSeFa/kJY8lmVrSCYVimwBjBFQ9l6JYopHEa9oXrVLw1i7d0+5pq9e26/t/z5n/2pi24dh3JL5Fi/MO9WTUce1X3GFELHUjqpqNmg1jsoZidF4JQi1vSHmpBAm5HLxYTmLcphavlAA7Y6JLD1/CXAe33TT28v/Ten9Y5L0A0iEOVeMfWGdY+oFIbyoAXdm64Gq3YxVVgtGoK+Z5hnoPvNyrpzsqpek2x6sLVsF4gRrmEseJjWUyn1S/fjwqqB3RDc1SYwlma+TYSbs8NKRhn1u65P1yIUuc46AfdR5wTeBbiuiymUp5GhW2ubHfR8nYVBbNMXdAaOCu6XgItzAR0RjhIwGSHceIjyrJyTxaroviLy6yFdwspRFuHYVlmkNDRQKZVkwaAs7m1Ku/iNd73dVnFK6JIGknrSPCMcENkSNyDBrOYltSJpRBDWOUfoYIaVNX/0T/MKO5WIq+msKk/423yLUPzIb9+ySZkHZSMLMgUP33N7ObrvgDRQQrSrAjdNoHq7fo1GQWBh6bi7gjAtTOfeDWlLR9FhWm2CW/dC8fj+nIA0b99YefWbri+HDixEKK3NmNC6lYjar0ryaQE6552lSnkJQdeRebXxkcx/3FtPddVUZTqEhycxk0BYI2fVUUlSozdNTFP58HTSG1oz0TPvsc14dg1hE0kftoZxyT3Khtlv94ElCEABL5YT0ZyOBebZjTwbYLLdX+sQEcIU99z5gOfWXXPL2+QSGqUxAcWyi4HsGkVAX/bPxiHuNj31U8oze2rW1u6ImJJ3nDx6TC1RhPFsVzdLdWDoZKu71k1rljJopRTp09XcVuhe/9mS0hpr5IkXgKDWTkkg0WFCLVSkXco6yZCA3tb2Xm4wLNrkqPRjTsLn/rvuKp/8s4+7m4Ez0DHjEQzd6iMlQHeCGjZhS1tUMcHuPHpSHRJUljMsIXNo6pT2VlnecnP79Yw5udBMZtKt2W3X9WGNIfywlsCfBmkzLcG0qLQYrCSeQc7UsJrkoeCWtYYR1i3hvSiLbMlNErs8vgyLTeaV4JAVJbbOS2AJ52J2oYU7tBAYwgofJiNlAljCRf+8P2dde+VDF1g5ldZO01RcH3K6kvaDNRWoAtfQZ+Xz0LWycPulvGk4QOIxkU/yorCmPD3JggreiyVjdSrpBg3xlZZLmO0JnpD/GJwWwS2FoQYETnjFxZaoB69EbtC0c2V5VvlXZ7gZIUphXhAR04iwXN/8zreUM3fsjCh2e5bKHbBMjaCfLtWpWK/pOZvhigkHNup+6f6ZWRAFkKh+vJLmDrpRoK2v8FDoTZ/78Afeo2J3BJZ8fAms/cKwTjz8MDsslzAWFhjJ8pKmg6jmCCARXx2z0u1TfNPUKUH+/SyCyHvHAKL/e285JR/5Vb9yjRJTBfJKy/Yta4ST3MyegQl9drDMCC85WwJrgFoD74dZqfrbNWu8WggB+2LFQDCJKnKIAYYN4/gWuAwIFf0OArDBUf3uqjkTC6ryIudgbW0dZW1OtJQSmzpUwQBA7pPktpjpBr+bqazf+6hs2geMpugUjPAbX3ugfP4fPifQ/R3CVDJw1vfjHn4292JFSOkIrpaMt2/vQ+XMM7fKEkqy4fTsTK3op8UxRJBd63ypHTDJgut1GrdTByyU63vWj3ZhRRPKR/saYI4Q6+zvcYGwFPHSG0p5eBQr90vRbNDiWUtNy1v1Z5o8WR6574Hy6U9+SnlYCt1LONitdkraWtmpmYcTsq62CBKYkCUEcH5IU3C2jyF4e8ujk+qaSrdOBQccPdU6BrT3fe4+ISuCCeNaJ/jqKhFCncGgfo6yJenZgkSEN6ZuoAOjokv1+VoRlkRQCI9gVRieu+PqxUgvwCohSkhfq1n1kJoSk05LkC0zm5BXEjPK/YjStRXFkRLlTPUGBlMbchpqgFfSI67BGonjEOWDLmudLcwqC27N1j37jThG2CUrnXtRzE2/dwILtu5iUuV0cScROu4kQpgScCKgvGEK0yS0Q8WEsEoEFi4nxgWC0ePK4BWs50SyN5Zm1UVij/YTa3VVoL/SafQuRFmvvOrny1Of8KQ0Eswu+O//NHPBwr0ScEycfGOhFfrAYPD7OoHVCfzB2arVbA4wcQb/MuyDEKtC0Xz/kQ++VxYWrTnkEkrTPHz3v9vCotUtORruRKobrIjhpPhkruuhAKYuKqY3EEIFratWuI4asgisC8xbDhrJ2VNO6eLXvuGmcvLISc2KUx2cukGQIEeJCeU+lO7sPosseqr4Y052hJbezn3VMScjSmz+JvqEOwazJSIR7q82c92MTaraCef75zXqaIASgVLNWVs3Xnx1ERGcWFrBHNyokM30uJnchyvStzqP9eW20DBfEZD5RaKE2kNF077xlfvKP/7j58s1N72lLKqui8xva1aYwtZ0O7QIAmOA/FE94Tx9rESAm8IHaa2SEP96OSFBsV3z+RxjN5GAb4hwde8uMqq9X9wDtqjWInvMHrJenXs3ZkzFPIyekVvnniVan9bB3MFFA9x6F4H2PLdXAzLIxSMiBk3B/Hd85e7yt3/5CU2nUWtmfU/6h4lb9DE+MVJ2qKndDmVSDwmIphHIpPLMRiWgiLKdkJWzJibcqqgeg1FJOXPHBmGkuG9u9li7PDgcIoZ2ehKYCE0NSXLVkocVgSbihUAT6+lzJDsn4odFYWvJ0AASB0tnRb225sspNfSbkds4uaReWBy1FCqdIQK8YB1gTYvWHGCKNcUTWgQ0SlRCwn3hKZORYh+h+FqCUngcDItAIx2GDqNgi7hm2t2KyArP01pXVcPolsmkzgDs003W1gigNfY95yJB5MZaqCiEHHwTmgznBAaw3rMyYuIVtZZYXUhI3TvSQke86FSKPhVgjxK91y3cc4uuEbJOv++Zzyw//pM/Vi25puVi+bQupdGxVaj6vjE8DLRYklXTE84xb0RY8ZUk7+ZJwQTwQAZy5LbV+uKaD33wFtWV6sAltJY1meXgvV/VHLWDsqhohAaoCHBKMtyqCjL7ZSLy0tIiykfjiZi5luneFIQHWbW2E+qi+Xx/mdTY89e8/r3lyN33lB5luU+rW+Km2vxOH59Wlfi2cu5LfriMy8Lqc9Jksy4ifYPiEGavOVF+S34XSewMMAuO04KuboU3JdfVlhb+AWtNgp3r4rjOm982t1k9MZkN7DrUDZiK8Ku1adVay/XBwJpAtYtFWRBELCYE/1iRy3Hnv32r/NM//ZME1psU0Roq99x7Xzlf/cKHlWncK8zCJjGvb2swJvGqtQz30QRnTeRenk7L374BEa0iZ6Mj20VwAk3pFGpsIcCnkz65n9JV+uQmrQplrskXEYQILV6Q3lH0cHIcI26xXQ6UEu9U35NFGV/U/Skxoo0NQs01p3S80O//5//6Yrnz//9COXFsn5UgvhOKgqjfVrVe2SOhtU0WNu4dQuOUBBaYE2kCK1KSLGVQ1wwMqEGflWIUhhNmQ95mJDLDDSIDGsOuTsHA8oaxSdhEGOUKCz3dAwyJiU3RQYmsIaR5BB1LpoWBnTo1XY4Lf5tX6seirFgipVFi3DvXmfjIPwIbwuJDWGK5sBdmQDL0E4iiTg9l4RpCJwoHtIc2DDeAs3VSVmDOTDl31wxmI0hwLdHp1KkLLmCq9k1STUxvjUe0JldV2TxBmQbXstWm+9EFhOnfRtyI4Pj8WSUJpHSjpaQIl1CVJ/K2+P2YLKyLLnx8ed0bX2oIJAKy0roFUgRNeC/PNe/Dxcgv/rbi5x/Ne4Km+FhCBtZ2iAsHqPigXYUK0HOM8WR8548gsNgLhVwXEVjf+kqZlMBaUFO/WYGgc2qni9uK5zw6SohYhyQznO4N+SIiiJAiszfWC5hOXBPwJg5yoByThfWyq24oK488WOZUK/cobWJlrW3MLHuU964nP1FV7iS4ARAiUbMZdjmiK3wQiQhGg5jZMPHREnWTsjN1IxCkPsxmotYVN1Db1ksA5hh0/D/vkHC/yNXaK+ZeGMMYUN37lMPEwrLAssWS9RpydeQkhwBR0p/7i/96d/nKl/5vecfNb5RLKG0qQXNQgxX6AIp3bTfIaYDfbq+CFWoHfEqN13YMa4CCeo/z8A2VaRzThGGMvR3blYirrpaxBnMmJiJR4rpA8T6sDk2ZUdFTGdwhc1/dO5fUF35IeNectCchftuEFNpayFZhZ4Q+TBqigyZjVUeM5X2xerDCYcSFycVy51e+VL7x1TvK/Y8+WGvx8rtxYVa7J0bVLG6ijEuw0ncJwcq8AOMoJvRktPcJvCa1gWewb0TcoDE+YpCXDhu2/uKeeC6mU0Rw/5MGYixJzEl33HisjKLDHEMb6HzAnvQMQ8jIdMEiMxJYc+rqefjUlDp+TpcFR8rppAU9JhLYoTlTHJgmiZhRTLHqogTIiGfjPBEPYQzOpzsxTMIRO/AjFAPk7DmI8E/uZf8AAJ3eczojXHBPEaqiItHFWo7D4nEPK2aUur2IFHdpgEj4CLWmuMZdsl5Jc0i2SvgInJfUBlnZA8rGH9LmLeiZCPQhZfLv1ii0t73z1wT3mPJjDZpXmiixqVndY4Qhr1rlgz2Z8IT3q8NsTbZhsSKd4u6Gsho/E61lX2KIWKp86IM3SyHoH9rQ2bnpcuCbXy+TIrZlJRLO0qNapmw/eVNSlv3q/z2k3AyKP50Froe0TGQ0BYPmMqmZ9WIS8yctP6bk8v3Mz14ja2EuVtNqX4ZRKDJFfgjJafIwnOtiWVrtxQDsaPb4v7yUe1dVQA8pbSLB2ov4MCEkchizlda5bsbHkZvxAGQT6o5Fwt4jkDDp6VkVorYGwr+nzKU+z/kkbtHMHmdIg50LtBkYBsTSMpiRZVhGzpyX9bC8Wf7lH79a7rj9S+XtN7xRjoGKS8kdUgvdo0cPCxCelrV1iQhGSXxaE8aAOyZoPfR0mlW//X5pwVH1NEpve9Yf0986rO6PE1wdLtIO0CVThzf1nSOqxhcm0a1pL6eOlV0Xn1NOKcK4Vkekb8hy7qggQvjGz3i5aDe3ynFvIgRFCpWdYkICZt23SSWKPqKuovcKeL/9rq9ZYHFm1KmdtXNL2SWXY4ueyaTkAZnohPL5PflRBlfrGdu6qDgQyZZxdyTIeCWvCcsjFlcEiKxXvASIuzIIhNAvOk25ETuVPlqe+2fXLcEdrDEh707UJEP/lEqKjp9Se2KN9Jpy9DCCImBLlKR73XpYBl1gE31mv9DbjrhpHf0URGPkUVGAMtezcAPJnVrTL+y917ZACCYwTlKB1qXI/QToWXwxIOHBpB5qCVsKTKVqh2uS4BrRgXdDUwIoorm+XerGAAbt9jpSbB6MyxkqWMF+rgnnc8TT/cPUB35I5XESXLNu4KnW0SrG7N82Um65/gb33QrAn/1swSD+dgTeVmg1NmxBZW05qASO2tAYhFSrlnEQy4YFl+Si1AlzWRVoKCL+/Xu/IwuLZ2vzZtU7+sG77yqTh74lM1/Z6MqK9rO0GP49rFwbKshpAbthLZGIU1zhhL5hNJuiAIhYHCJMtnBmRM3BXvpr6TEkhgJcB0jto0c8LTuEtWBSW9HWr0jW5vY99u0xWZAYlvXZqIiKKrKqxrH0qhuAuektSW6VBZCtiFhN5m5vOpZDNthWlV0gXEps7QgxwtGObNhHCDvn3lUz1JKl5HtV+FGMvSRM8H//w7+Wu++6u7z1+jfoPmP1fQPIz85PacLN0XLu2VfYyqRuDIJz/pnWivDiOQxMhXgHVUpRTc960Gh48qsifJrwZjvXZqVBsULmlNskC2JEOVQrMveVeKOef2IYe8rBFjy0GY4COwT7q+UXGd+FGxW30YRLQTPJo/puQVG+henZ8sB995bP/NXfSAjQBXTTLu/ZuzVWXkJmiFw+MTMW1qA6XqIAmN7jzggIXHMyj5BrhEXEe+j9Xbtq1wlhMCBaCQjOKuhVb0C7GcO2aOkXj3kDbSv5j9PEk7A2rwKoFQNrjaTkzFFrKCznmMD/I2qdPCmmXZBraFXGaxMZRxfo7/VN9YKvrnJjUudBgaVqPX16t7hmtM8JrRElpisplQxENFu0tV/pBhuycCpMxuaLBnWOuISSgnSqXQYHM1ki/FASdZ8qBLOuSHlvK42x4EBABGvL+lJW5J6O8K4TgsmdS0859pCA2YhaQvdLic3JJYSHhwaEsMmz+k01nOzDpeV+YGYNJqg0Y3jBfFifV40FC082vwo1U5A1Y+NDH83pLxMulFv53XqYe4YWu26TS4iaYFDlgoDS++64vUwf+ZYAPbW5IBFPTyOHBeBvSKPM3fOKCm7kBQAeWweepQ3EQiEHiHwN6g1JKvWztSnzY3uU1vDWGgRA2se9s13UBITXaIM4m2yrgf8hGJrZW7/3J7k+Jmfdk0rCeV/ftkYYYhnECnG1PuF2uzipvWrWRfAoLIyKNdC/yXeK+9hxCYlVRyTkOfUQ4hry8PRqasmrlC7RoO/zn/uXcv+37y1ve9evCA4WTqODZFz8icmjZedOQsfqdDCt7poSJrMi8FFNkLE4dM+rANj5wkKo4K75Ag0rwhNwPaCBCuvu81s3wW9AIES7AJDPBB8+r5wbg/F+/3zWsxYJq8viInDQggBmENxF3bPTL78KECLErnmURc7kGEpyfue3PqBcrCmv9Ie+978qWVgpClT16TZ9OocBND9FuRwFSZvCr9IEEbcrOKkHupKq5nbZuFqZzUdBfebYIWDRzgjXnGfOlBep/ZeYPI3Vo72MzY31BviNlg2uicKGvlf0mTlZMyfEB0c19OGwghnzi8rbIoBRqcCJk7Zu4+K1zHNTiKGYtBbiHRAKp2GD5l6KjxRQWFRb8tYFoltZ5xtK1iSR0+/tciB0hlKJZAlR0kXjP362oS4pdnUNlbSHJp/LVjECzbvehBa/AbvSfsuC2hQ8Y1lVFOCyFYuArZ/XHfuUmExKNwE36GVYHtWgAgc33HCDUk8qhoWFyqNrFDuKO9atB9J0jAdIBo1BAAfF3yg3xkETXLaumqdjfg7H8X+4njynwRJdv/+B96qdEGHXVWVTHykH7vpmWdQQVTYJjcBhUv6wrBwWMCzPHKQ0QffznDTZlZsGoVOu4LA5LpMLV2vYnuzwifPKy9/4K85QzuZGWmddWDbsItZaBbqbgInYqkIJgZOXq/I3b/VYweZv+UySOzuYiy0pthICT0tmBGl6alULyRsV6e5sYrsAsWtMACYCGL4KAh9cEANHMC1k+VS0VlsbzyWwsaz9/LvPfL489MD95S1Xv1FwilxC3XpGQO+CrIxdu3fpWvaNwR5L6id1Sq10d5QTas+iVCrdpF+JkXAwVlcEqPfB69b9T06JwXEURHQKcpDwuU4Y3oollmpSQPROpCYotWDdVirXR2xT9SA/UnjGsPc5+GGwirYHSR3R5w2q2/SIxJZrt0L+liJtN1x3nd7rlNyy7vLTP/qDCqZEWRDBYYoPZSsUzcfNwvqhmwN4FoSPQMrem55qtjwtjyOEYTQ+xz/pPIAlH5fNESLepyk8fQf+Q88sCy7nftTPmgbiHvI71yYqOjapqOlJpVscUPfdKWFZ83bdzKH+vOnGOUwSLPAjzGpTTmkkANzQDq4iK6lYIIItBdOJvpKfBuZrzNbF1FUBw5yUArE7NFSEFmpit6PGtiJj4bps2CkNOJHkjuVc3NNMy7RA9KlhaelC44DpkmEgoYLuTr0hAVX5kSPCSlnTotrO8HNaKBPFfec1VyvhezTXeYerwm5SiOcYxmm0BC+EZpoHYgyQvbGgJxgSbksdr//PvMg/O0nUbHtVF+Qndn1EeVjcF212VH2eyXRf1mFtaH4apig1UNgYCzr08WFhD1SgW0JrISKWbqpUeYClLSY99BBQ0O01/ELqiT1xWfnJX36VxlJ5TZWo8q8mWEx4iABH8WqIvmbW5hJsev4XsRCvhOcihPgmfbn9uzpAgt/bEsOygshdjMwmYNkZvgxh1Y1Mu5VsvJ9SwUO7BbZA8gKtKZlXX1MjEGROIqiWjfO/rBZrvo9C5J/9i8+Xg/sPlte/RePOcOl0Pc3sJoWZ7Ni2M4IAzSKFwaGt6PngGotyA8uiMsUnhsoxzczbdc7ZFsY1/mJhQK7UgiwE3PkhCaxNRRDdCdWBg9MClc/asnRUK8+zUKimpvtok7OFBVLz6+wNQyjgTFjHLhchKzlYUreTKmnEqALv/fvLH/zeH5TpqWlp6L7yk8//r54XSNQQgJmcAYt191zHPNeZMBEHwaX9IzKW9FyEjJ7nzqwwZ1wyPw+Xx25PMJXkI6GNEUARjPbQUB6sM3LO59EYCcFlhqmuJ+U65HTRtvnU/IJwxaPlkEbYn6QYmZQGWxI1uugp5xVHA/esK/aeeeURYC0xElpwIbXXDz2m6yuK3bdF6Yi2nLPF2vUuCHVoh0glf9wzv7rjG27ih/zk3TirYMquD9R500U1yctYahgYiiA7mz6YsoMctkYNpqXtst6J1s10bZhTN2BOKQKru/z6268tu3Yp5cHCMIGqNv8gopnnRYjZfbMS5Z7IiYwAg3dbUlCVTR1+tlFcz8MCi130ZlnyhhuRC2BY1riS+McOPVwOfuOusqSx5xvkZghwx/JBYC2LaUYlsMgsJkEGre2Nh05MfuAFDf9pnUabJusr23Y+sfzYa35O+5mXMNGxv7wF93G2eJOy/J3PxcTP9x4Z1Q43SHmol7sY+GQz+UCEZ4gbABLCYeP4lo2FEZI1D9E64a/toGP7/B7tnjW4f0/iv+1pWRudLkVAp0PNcRlZA1NuAcbDdITUldcmhv3rT3+uHD14qPzSm1+rujeNnNcX1lW/tKmr8dmI6An/AAAgAElEQVTNiqVRz7ZEJT3pDlrXooTR4Uf2lvPOOMvJo10DCHaWGwHgg9azKmzne9PZwvnVCBotrc2RS7Jr9CHr9b+tXKIPXU5B8bO7edKjvu6dtSQWIyAt+xwXDKZ30EO/u/PLd5TP/O1faprPcnncZeeWC3fvcA1gfDLtv9boqeBaGXl95N4xlisRYjEiiY0UOHOyJHGq6sIWl+mB31VHHAAc5tHanMCh3zMSzCrKfa2DoJAoCR7keZOyJJy9DtaKEKmWtHvz65nQPIA6Pa9mlHh78NHD5eDxI2VS/6ZrLCkHtOXh+oAGqf/zXjP0wZ4C17NPVBAAyiM0EyED+Efh55w5Naa7oEAI5FBolIRSN+ljKAe7wMQl8EcY3/gJZxfr2kOEuU/DqrDCSOuoOIlZjeig7uWeYQpCxFXNkAuUWbeME2hcDXvKyOi4hdSSovdYiwwVHxCO9Za3Xq3edRqcgTGg+0DfSWiG/gKoZ12QUKMn/yTXoFDr3xntBZ2xT/yW6y27zMfmRd8uytEwBd/xnN/7nffqXpi3q2rN+3A58I07y7p6GKGVVlQuwwLw/hd1mEyQHXDFMzkdqAduSBQqRaJIBAsjANEmqyx4ehUafUb5oVe8OLkvvII+h1UX4YWWMBDGkv3Hn2ra3C6evm/qFSvMwPfpa5pgM2HUfYyKZSEUeQa/eGyqPxuCO2zLLpJQ68MaARMInsJXSgsiPCkSTiY6t2WdMBIEG0b2gQHm2rWN6wyzEnYn4vTJT32mHD98tLzhTa9XBrrauuheJ04eK9u278iB+GQQziHKlC9EEMTGCVMtKg9qQq1AujwtOJq5OqNePuepvkFqXcD4qLjmBtSj67zQEHZTFLxnlIiTfi2IanRU7lp8nFhjtngwtpwxjZDESoEspJF1dp/9q78r//bF/2Nc6pILLxIBKSEUC0v3QyyT8DmqPLIx5YaNjoophHeiQw0KUysnhqC7AkC8OzNovgA5VMxVRGhTc+iiYMQvLwMUQXdRubF0FWCQL+unJxVM3q8GiGTE80wA5bw7B1MzzRF4wCKUwbgLBTgdLWyUViJL48jx4+WRw0fKNHWIXFMTNj07ACVtKzUWLLQeJUddYpjPxgy0ZkuuKb7WKkZqive3gmCPZOUJa6JfO0KlqUPqUPOyWEOq92POZlXmVJzYaKhVGKk64TyatU9qkQSWj49uJ1IWDpjBP9AWhecQnKKEGvRKXeeCUpw4L/5NudyvvuWt5cLzzrBVXmXTacX4WIFlKkwE3hRrXck1sfZaJUX7HQq909SAJfj704ZL6PY0jQZ0N06zroEBD5Zj93xds9rU0hbGWCJhEZBaVgAAsBrmky9kcxIpiXVlawK8IcBnTNDQdgBa2msMlT3nPK384M9LYFVLIC0x/E76wqSmgVrT+BwqC4+W9HQUhBYE4GTCCCs30vM1YWYL3pgK0fZEbHiizd6G4UQYtiGoNsXRrjXXI+vhmrgZ6Y0V8xYXDE0c3CvCKmH/PJN/p6A6AhY3lAacMDfV/jSp+/NP/nU5dXyyvOYNr1Zpi8BW/f6EXPGde/ZE6PMm+suYCVgF1pYtLuRpCHBWM/6OioEEEJXzzj/fCsNtSHzgYmNZNstqFNi/Pl+OyTU+VwNs9+07qCnDGvShOj608rL66sc8i6Dl4jbAodW3ObPcGhhpRDNHsvL19hKY4Ct0RjCJVauJ/SZU/uEPf0ij6B+y1bRL49HpyLGoJGSEAdHBEVmM4yqf2aJUlq0qy6Gwls4Rxkddp5fSFZruzUtArSodhKjatMpplmTpMMyCv5clkBkvDxlRRjKkiolxpU4w5ICpM2A01BwOKLgwoGj0uCYSjSg/CosrhfDNIoiFE7A7WeW0VuLv1ZVupTrMlENyD/cdO6qCbBoNhh1TDO1N1/e1xYqtciKBFPHHUnLH1iqs0kUhuCy2bxJd8+4WzqC8EsAUILcuJaxr1UoUJR8ruJvEUyc2VCbH7cuiJAD1uYpbGl+1K6ikUFgUahZ2ilK1ocFeaw1rrEvlOaMaBtMt4U6mOwKsXzQyLNjnF1/3xnLFZefEkosY9pM70suUG050S2b/k0/FK2qNC9zNtaPw4ZMoUuuPMF+UCQAlQk4Xc56+O4rmtt8lSkiURK1PHrinnPyOQHdpb1rakukOTsVUkEWlI4wpl6qXPCw0MGatss9ocdGtuo3kd1hKGayr0VOPYuhSucGFF39/eeZLfsQeR2V/L7ZjUYE9eMmJCOXn1eWxEEo0sIG/Kf5EzVdQvlpuzgNjA7wpqZniM+4DZEESYRghk031kyoY3bbOkh5B4DBBJUqbbrFymtnKkfhutuxChoZg9VHW6vl8WHd0dpTA+vgn/lLdFWbLq3/5lfqt2uzo03OyaMek2TLkwk5aZ21+R6w1dUWwBWvrC4BYtXr6IPVmEWy8s95TllzSS7RORbjQpPSj2aQd8ap+tjSnNAYlrEK99ct0zlOba8gz235C7/Us2DvjUKILMuxjlOr96J5ZCZlz/80bb3JiK+vcoSGd4FdzAvNbneeIhOa4sJIJCa2tSq8YlvDjPTytmNwsyFzvsawav0WlGSzK8mFIyTxNJmmFREBIQSL3azMhW3Yb1yLKNiChOMp9tcY1XDMJPwp5GTRLNwfSPmjul8TrRmd8E0sDV9wtV9hL/U0S9ZRGx+8/fLDsV8rDoqdJIdigg9ATKQCmRaX8YK0z3i15YcAn8Qjc04zf2Y0P7oRbDZhOoizWGwxqu9zdV0OfxrDYY8BxR2ZDZ1Ys/MsuYdjBBdDsoKOrdjzNk+B/1CpqF3Sd1sTkJFvSCOtgg5uqu6QfFlUIYFjgWgzoHZGF9eKff1l51vd8t5sVOkZoWmENodcMELF/FxzWUgoM1yGAlhFkg8LuruVueMO4r/moWoQdysyrehsqj8rCeo/hGeqbHvjmnWXh4ENlVmDpKrkr+nmPhBLA77IYhJYgfSJ0moxtGsOKVO/tIxuY9cXFsFYxP4iBCNNqdNUlVzynPPVHnuMSjrA0B8Zz064icHUjn8a08W2DMWEJNDyLnyW8i2/eT9qFGgw6iZneqLZ6KlBnTcXicrgRLHFHjXB0BB3CjFNj42rvI+cftZA2Ll4soI5z6XtHgJjG7L7V7a3CEKHCsxwFEtH96Z9+SpOcF8orXvtKWSiY5Ix4mpfZjcke8NICCAFetTfMcfLktEB5uYA23SLQHYGqhEF4v19VCasnTpa+M7dp0jaRRBvcEa62GuOnN5wgd0k0tLUDQSgmnyYBCeuF9hk/k/tUCzK6IK46rhwien6z3PzuayVc5uyGnXPGrrJFNDOvUVdz6qiAoMWaAAul+eBWTWYZQWB5KjPJl2hCuhQQsVOqDWOyZNFxvnQaxVJhzLkVlp7bp2fg5hmoh4lAZUizsJmK0ECI6W2cQ6S8IgksIpcIs4FashI3ha0BHMtnHf2FTvRMEltnVWd47NiJ8vCRw+WEBOeSAiiuYLBKbhgO9AEPkIKAu4hLVzFJfW7NCcT6iRkbYYHyr6U4+hzuP+Y11QduEVRpgeGqCRxI2NiopcVzpTN9zH3COrRJ6RI0EtfXhAlEo/tR6+u0DL73hPaURHmyNgGj1RkJ+nHtJaD7rJ5JZYtmKMpI+b4XPL+8+EefV3O9IJwKmfAojqIKP7Oa/2NDq2mEMELxVTllcWsBmeCEscA6BdwcVl3dSKl8z1nbrgvojqBYLffccUeZO/Cg/NeZ9O4BbEbC65plEdCYujWQFwIw6g4N9tmRWBIeCrljLibKBRgfQJqA60bfaLn0Kc8rT33OM2tiICZt3AzwCtowp8pNRO9yCW02ERHn2OD+RUJX1oko0ppnxADT35ks9/zJJ7W23vLs1768rJy1RX26ot0a7lNlUsSifenaXhkXr+JPYensULJsIzgQfLS1dasY73h+Z+ev41vHRuFayw8L1uSj8EWXBG5Jm94//bNPqcf6annpL16ldcpt0e+pocPCBXiv9rAtxEaT03IBqTVEWVQTNcKXNdfn9coCmbn3kNISZsr47m1l8+xgYsHnuC3MR8a4tKlchgDkceHtVMVEyyZzErhFXgNWZlI04n7zuQiqTOzVWUi5obVZ78LJxfLeW27Wu847l+yJl15WxuUC9ijPiBytBVl9K3R+4JTFWFg6oxpjhsDpVya23UIdGD3Nl+mEq0Gl8gS1R7FY7RKhtbVWXDsa+/XTyaGG7B3kRwA5MgrORaQNZUOhFa/BZ0m6JYkVBVxHuMOwwo6cty8t01oDAZcsyzJeVNb7lGo498l9P3TylED4GdOYMUbotwac3EIGfrJVT6JmAjYEXdifdQQoSdswKMmhKpWRaLYFZiwAUenz0llzH62d9KIEngLKJwsKfkm7Gg978PElCLamM0Z4Z96fbqP7OjJI6hElUXIPPSDGeZLyoEzS2re1WafRIODnVBLWrYRWW6tqBnLx055UXvPzv1CxsjBjBBUCMza4qQe64KlVqYaa4h3517wT9GODJY5lLsw9QopV0PonwTf9n6OEH7zJtYRomTu/9u9l7diDZX5KLqE3GfLMfF26NYxrZiAE5SgDYC8WFa9grYxkD3Gn/QbPYkOU+CYL67JnvKA85ZlPdfKjwWy7ZhER4Fxdir4w3ejItw+Vk3d8vZx57lnljO97SulWeL4NoWgv63C6njc9vVmO335H6f3Wt8u8hmP0nX9BuegHvkdTQLwjVThnc5vAa4BhBFLDvbJJwXJMMnHNc9rZaRNSdr21x3DKBEyMq4a1hXauVpplG5uvzQP3Uim5LIYVtUf+lFr/lnLlK19mgRXLp8giUVteMWC/iAmM0OkQ+qI0ak2tPgZGNBHa7m0UgrPvIV2b31Z4FsZdAqjVR1O9q9T0DoVjLCAMxXNcJM71Flm5nbW+37cxqj5vpq/vW3EG/8T/rgIu4ksvKI1PqYXe89EDB4VhfdgTmLZsGy5PveTSskXYUpeEFNnajflhEg841foHq8XVC76Etec9T7nNivAvymZWXG3AM6I08Ahwdwe1h1aijI+v1iPWBufnDgfGRuNueGiFFQ6yQd0LJLRGUQQG+qHX7FH7cssiBJ2UN1jYnJI9jymZdN+hQ+WAXERaJ6Ns3SKq0nOAbzYVvkj0O+5WAjlOgLCFmlme0Iifg8tXfSdbqtAFayJYQ1E4CqMqDVt/npuQdbfZBKzbHg3XGlRHUKR3VzpvALkLN8XCEtgIH2NQdPWo2Fr5Rutrc2r9tMWCdlF93deoRpAyGJdfeN7lF5Q3v+513tcEmuBtsLIYNtzbTQKhKdMF64tiQzEaSLHlUC3H09tsnvGVtuwjxHhHW8y4wfV6GyG3kYdVmfHOr325rB2WhXWKHtaJbJHjRH4gbWWHR/o9pZYGZJzsJnVIRABaRjuv4oPDp8Y0Nyxe1vpHyuOf+WPlyU+TwNK1hKKt+eoXbgYHvqjykaW7HioLd+/1hp714ueWrp1KrrSyYRviblrX6hpmG07fc29Z+/Z3NFZqqpz9vCeVbZc/RRUHisVa4/j/rM2zhbEUvEKEXpXqsWQisEzaEewmtLS4AKMhxM7JJ6crnw91d7xABJjDsPwwwD2DVtcIpYt5KM35k4/+hfLbu8rPXvVS9yiK9ombOr84I4uBPc3Bzs5h+q8rSxzrtTJCxeiCyldNVjV6W4jdORNr22A+VzVaJKwXbfsZgmhSvGq6FDIaZMgzOmTIdyHKJCjWiKN3I2b/3aqU+NTHP2GsaVj5O8/7nqcqcqh7kclOHysinKpvJMUjoCprUL2hrDAaOhpncea89l9roGSJANkaFQdViJMfyP7iCmKVOpcJV9CAd2MKVsm5g7lUCwBZh7VbXQ4YghC+cwtZf7bFX1hGWKR84aJhFS7JyqIFzf5DAuBPHC4zspTBvEyZVnjpWtHtTP2U4FDbh9wnYmrqsrwN2GxxQbcG+lWRLMpesL/RArau2AO3mHFjAei2IopVMVYE1h6P0yps7QB0p1rAZ1z3xXW9RPkUZbSUpW++XTHcW9J86JyxRUnKmjqu9tuU3/WpYScdWvbs3lmuvfYdTilp6Uahfe2cFWOIDaHVqjuMt9oXqZZ4c5W4BpoF2/Ou6G+7tPmkdayVjH5nSy0Cz8r9Ix+42YoUCX/H7V8u5djDZWFGPjMtYinR0AEsKkrDs4Y17aaXMepqqGaGUIvfPpcKJCyYqB6aoeaYOIokH1kC5InP/oly+ZOe7A1zJb03/jTT87IL0lozd+8vS1Mn7WJc/OynqwE8Qy+CemVLsnD4bloC7g9v+6Ny0ZlnlgcfPFy++3svKc953g+5JtHgl+VVPu/iad8nBOQopRktm55RT2EU/9uEh9BPFCXIuVVzFUhYGzHfzdb6lb1Y/m1BV01f/ZsnMY0FLOT35b6Oi1B+6heulBIGU8g1MZPqG1qYYmUlGzgf4GX8wfo5rdUStV7bTEh/zDr4MaIm7wjOtSwrgfHo6XpQbSgDjnUVVZtVtWPspGN6+o4QFBsYwLazdIhNG/Cv//efy//87GcV2VMLYhH8j/7g95Q1aesuug0Y9AFQz1RlLnePKvlI4DA0j8PqofymCSz3EaMdM/iV3VSieRFYzuAHv3KeUcrE4mYQfcOqZDPIP6rClXPmU07ziFvpYBHgNG4T0UOibfYMWGt2gb3EMmMwxKyKox89cqTsO360HFMPrSUa0TtJNTCErTQJSQPqfhaKPekKGUOv96dAWc+1ujKIDSyC0q6RXiwn7zupGWRBdjSPPwOx2QrFcvaZ6FoLNAlvGvKxapdmVdrw++odqVCxIUGagZQgjIgFyBP02VW532PD24ULdsvCokkBEX5FX6VEt4yPlBtuvUF4sd7XlmzDa2NJ5WGV6kyD2WtbSpV2E5GvwqvhsFbYdal+FQRs9pwvI6NWanyvz35ILiGV5OBFX/3il8rGsYc0o1AV4+TNUC2qdxKNG3saHpKBLRM6w1EDlDez14xscxjjFbA9BMMEkRV1G33a819YLnuCBBY/N5fVza5MCIHOk1GsFh/HpL3O2rND+MKYupzS0QDt3UzJKgiUTDivgQI33vg+9YK/yNNQLte02hf9+AsD+Js4ncftTfP/Q0SWUhBHNs5HWq2WWAm4Hq59d50fnNOur+LCa/FACrbVz/FN4g7yZhwA39eNhqYV5vNQj9v+8ONlh8Dml/zcz5R1Dy1ISUVEQfCONgD29ICMKnx8yDwreqnzVQnBVp/fKkojwt1Ly25byCRSxff+aozNVVq/k/TQbrYCYML2PH5etb/3LoySVfPuog1ZUH/7V39RvvjvXy4rC6l9e+ELvl9pFjOlS0TUQya55+BxlWtM/L40i4S/aG08oha9NO9jxdT/Ealecl82Wd8S+I7gkYNFUivdbyXkesACsVjAh+wu63IxGZxg5UlqBneEbB3NjFACtiDvDqGBO0n6AbhOLNy6x6aNKOwVPR8L6/iJqbLv6BFhWWpNrUiP27NUC8mj1+1mRRB5DdAQistWIgyZIwRozseFI3lohfbBDB0rlvpGu51NAXn/I9QcAQ8H6j/KamIN43bZFjeerPfDqjLwr99SLudeYQgvdlh5gPr9pjwhR5WVCcCYMRoRLAh0d7Rf1ucwxeqCZq679RbZD9kryyCTkHMD/BU+CUXkHxEyjU6aQMv6uUEEN2I8ZTuVH03nlU6ryRsjQHemvUwSFlfKHV/4alk9/oCaszFWHJAwNvKKW+1q8SpoIzTMwbrHucBtNBMCDPOuRQawLpwvZUEjgdU3Ub73hS8sl1z2pE4XUpZsl8I5Gyxe7T2UmLehqbMP7turdiS7FUHapTCrcB5TIGvRMwyIcuAbmoq8qqGkHy0XXXph2X9wXznn3IvL83/02TaLeaPH9ogmw95Wq7UmhIomqnVf1S2JWGNhYViws5YwmgPJPncUnje9isW6pphoyXaOYIBxmdKCZbFWPvKHnyi7lA/0op/9iQx18OOq+HAkJEMd0NpO8oThzDM+sRBCxQwaXXRcieqK+p7miBS4uJNBFV78zkmGMJSpOISVCGLWjBvirGwqBIwXJdSePDeYATCfy4Jn0T6FlY/I8PmTP/rj8o1vqVpC7i+5ci/6oWepgmJvWZT7TsIn9gIDQ7cLySVbGganiopathFp8a1Khh1WAiiuOFYY+UDLixsC62dUHqbxZNpD3M1FtVuZoa2xQHxcyXFFsEc0W29QTSZRWOBDTLEZFB16iChBIq3TWe8cjwVVWiBBw1iD8Lw76Pp3cLs21O8ZABwsaUbW4smpWdUZHikPqSXQpAI/TvrsUra4BJc7JkCtNSLXq5czbobrWF1aFAfNHF0dAsO7+aEgGPONvndXW+hFwoqABgRX3Ui7RVaY1b3kPKzk4CMkcqxVtwCClrCo4GNjzxIQnowEZEIxNAo9/AWdr64qsjsy4eDOgmZZ2kpEkTDAd0tfeee17yrnTChSDb3AtyFGv0NSpPPF42IqQLNYUNXWqpiqg1q8g+V5BJbDW5RhsdUIW4IgVoxUCVAxgJejaz7yOzcnfUjS/Y4v3FlW1FqG/jupW+K0xGx059B6KKjtZfYPmgi9ZcKt1pQZt8pbHlS1GUS+pLar3//jP1fOP+9Sg+6dqvwq2KxN9d+0+kJ5co+S9LapzcUeNb7v17VuLQIOxMGHHJwjMy+C/YOPfLScsXt3OarC7cuecEX5YaVO0Byt0+qis6mtGJlGdQi+ut340WJQSjdiMyV8ihnP6zsCrXej0gNWZywSQQKj6WQKgz91DNhoUltINT2gZYuDYQAi/94f/veyR5OuX/hTCKyY6r4D2+1j0/PtikawJpk0EcOWOOqH8GWhmp/HhI7WynX1I9bocGgwEL8F54f7YyuYGyADuRYBDe4mEqLnuDS8B+TicujXrfeSwVVr8Ga1EaWi0W9X+e2bf7vsO6h+ak4jKOW5z3xGuffuO8qpySUlHwtE1zNG+ifKhedcppFuAnmZlVgzs8c03HXPrh0RWBsUBAs3UgrBwrx6tQnEp0fT0oraGKvOb//RUxriITcbkayUByZJj23dKaX4eK1f051nj1vxboieEAbjCspsVVLpkPK/6FUFVuhyKASYM7+TsAoQbUzTTMzhV9dK58BcSTLtpzWlaN+x42Xvwf3luAq9wX9Ib8BaoRiLr9bixwLI+y5BrRo9qIy9IU2IfLIwO/QfyxOYgKOwS6guoAyCcX68rZHqFRAtI5iAMLSFw9mG+zbsXkjAINBsQSZaSB6eI4XILvox0K1VfGLg3ZaNaEEub79y43rE44uyJGkN1ascLCaOa5hoecc115QLdjBOLsIqCi8BnKZL484htKCN0JtNGTNGgm3JU2OtjUhjh/Fd8OSO/5XnGM6pdH3bB26s27la7vri3WXh0J1ul0oYNhskf1btkvG4h7CwmEDCYpDkSgi1/vXTqtnpb2B2XVnB0yWZ+c/56V/QAIXL4q5V1yJuS14Mgp9WA8FTJ/aq1u5Y2bHlgnLOheep4yKh/2BmYBjGT0JRZb9Ghh169Fh58Dv3lUElQz75iY9Xnd0eZ1uHOQM+1t31dacn2WSjA1DHbDpdLxhD28eIVWEcCQGFS3magfmAP1eBxs5u80C7kqwjzE7ztnW5FLf98cfLWRPbywterKx/l4nEDcwpJy22lQmpCYu+o/AiAqtpMz4eYuD/qvWJoDF+wqMj+ryMakR5rRYwaeU7yGQanUsIKwLedW7aZ8az0+d9XUmbpFtAz+rnSPw8UUdwHywXcMsO0C1rRgLkne94t9oMn5CwSw+qM7bvllCimyfj13vKtKykDVkDF11wuSbcqKPE/MmyTU3isIgmto6ob9Yegb7qrKp1rpE0qrYqC/ozq1y1WUEAC0sz5YhcsmOTmmZN+J3BEjCA1rTljIvKFReJxsTk88pKX5yZ0u9oN0xaAydFexphMnr3CVlzE+o+MKToK5FZcpQCfXLWMBTWVzDKFMazLySwanq0+sY9qr5l335oXzmOV0ByqtvNcHikFCggQPqILqYiAL6kh9pO5TgRwF5i3qIU2JysRA5+xXStXDUJQ4RE3HYFJnCBTW9BsWyxm70wq9rhhh5j4CBs5fWg/JxvRRSxgtgSUJxZH8Xm/MxRfvW+J1Lp50sgK1VjRO2MurXIJQmsLposav3MIu0Z7ytveduvl8vOPqNGF/GseFD4q7mHEbZAEkmetvWOZVWVeCuNi6Dld4F4jOVBh9GfwYF5Sd9LH3D/M635Ix+4BVnnLfnmF/+9zBykeR8NvdTwTQcJcyzQJpnuh8KwmNzrJE7dg3yWRJ8q4yEA2FT5xAg6kjphoQV1XXz+z11V9uy5xAxuSWuhxnXwQfJZDsnU/vq3D7iUY9fOifJdF53jLOhOG4zOxiRl/9CJhbJ39mQ5ev/D5axzzyljmspyqRIV0WI2MZuI95GHc+MmQ4WV0aswjMhKNb2xh8rgLRk0CYKJOLnDqNeSGzYkx7RlzMJH6GdEe+Hhidj1/W996KPl8p1nlue++EelYZJHUz/tfxPFcl5N8+fNKgjPWGG+f8RSvbL9vIMcdA7czw2p+/AdsxE+ef4FF5f+UbXCVfmKK/0dzSEipfenhEbzDqfuvlu941WipYjemjpQ9qj1zaw077obOGZUu6NzrhsNXtMt4fDm179R9EJeWSbmPO85zypLk2pXJIE9dXKmnFBScq8wpy3jikbRvFGvMqRxcQNKTdijxNgzdu1R7g81lopMqwUO05oW6IYrfHNReWyz6rc+qSaBS7offcSw2pb1b1yw7ePblabAeHpRqA7FwRfcLU7ImeckFSNoNcxVinBEVteIMFKSdqm1M9TBflkI42JFkaRwOVjVkoIHU6pUeFQzIPfuVatv4XNu3V3PHJpgruKQ7oFlBCbnXC6lR2zXno+hKLSuJbmyC1IKsBB5eEvqwXVC77ei67GKSKUgpaMdsxfEYhYAACAASURBVANP0KRdQxg7biBvFzKMaYIR4HSGJM3ZmPAZIRCETVHtifFhI1kuM4KD/mTYx6ukz6j2dEBCbVHeDmPfnLOGay2B9ba3v6M87oKzk4cJHQK+Q43+d4yIphStyNlr811+R95ZTIGK7RlPbLTMYuMJRBrHi8PdtZMBtMH7MpcQ02xF2uu+//hymT+uiTkiarJywQBI4JuXhUWuyrC6NfQz3hzRCS2oCRtu4QqFmH5wXYz+7gULwDyULzUvwnzhy64qO7dJYFU30y9oQg/2xXkfVN+nL+3bX1ZFkBfvPqM85UJNgq4lJLY+q7lN3SKa59Fj8+XBg/eVAw8eLHu2by3nXXRBufBcbSjlDjZD2MiqofzWHGLM2Th/3DNWTeQZv89PA/Ln362VjEFr14Txrty/5jJxLVGeRiGAv8Z7ggWx6fRaYhjFb37oj8qTzj6/fP8LnisLK8Bwcm5wQ/N4EpWbYLX1Zw2P4g8e4EO2wI3QqrLNhJqjTZ5afocy4F1VyKp13f75fymXXH5ZGT7rDFkbGaDgGYRyB1bo4T+3XKa/9u2y8NWvyrpReYaU1zb1mn/2q64qk7t2qc6MYmUxOEJMjMn3uJz92tc14Y+vfc1rxHxYBsJo9OyfeJHKscTUC6rHm1JTPKL7LJ0TJxo4BMiubGqwpzN37Cnbtm0VDiRGcqa7hBI1g+rNhICC6WfVoHCBdQpLWqp90hFAMCHr6sPVI8fIPdvgSvYtStGdHPR9P6kM5Ls5gZacQgD3jKODsYmwx+1JV1CEBxYaeVzgStP0fVdH0of2q3+choI40mkrDxxkU3DGhMaTSTjyfuKbPvEBI80oC9o+oRbEEqrrDLlQIKEHrE57Pz8rQSyhPCcLdEpHx3xERxWtQUmrTnmZg0bsXnXFWq1eDhuIAYGVII75C09H/3S6AZ0a9I5rGn7iigLlX/UIy6LaBNB9Xc8elsW5qTKmZTAsFJP+jWIZGu4pV1999f9j6z2gPE2v8s63cq6uqs65e/K01JNHmhmFUZ7BykISEkJgzOJdYI2wFg5erVcIEBIISbuI4IW1veCDbdLhYBsQICSQhOJohCb3dJjOqbq6clcO+/ye5/2qdbxbfXqmuur///7f9773vfe5z03l8K0Hdb4oYXfYxOkRbhjAl3mnyCAUiytKfMyjuEBzoM8gqfDHcl6toFegWMy3xV1M/WUQJVfPGdFVyMPC8ixq8Z77+pcEpS/KsulmtZAUpFIOMSMI260N7ulT+YeSQNlYNDhZ01V5arGqVud+mTeIwPAwOt8LIurf9EPv10j1g0ZLXkuiNCA1yE7dOGpgWpnEo5fHBUevafhlS7nhlpu1YDWnSi5ok9/hvZEQTU+rml6Td8b+8qulXVHCPa9/cRm685CzeeMq5YHdA95JgckRWXOiahASEDoHGytULaWtVWM1+F1g63d/bXBEOKwIEk+QJBW9M6xESOo0peOQ0rXhV37jt8udB24uL3/tq50Hk6hVIowO0Om+7TU7CTWHja/v5qSsF/1KeKKcSHvKrKvvhHuJS4hK/dzffaWcO/tCWVV92NVRTSuS0NCuBAUKsZ3/p2wGw+TOFlIK67Lwm+U23bD/pvLga15VNu8X4tUY+C5QjBRNhxJC20BpIGkJ/DVd+1/8xI96gAFoUrCq/OD3/ZPSqvylK1dGNUpLHCWzvRSASPtfFJZcDrmGvUI7O0a2iwLQNfXWZaY2EanWwaXrwtLqvA6a+FDdL4jrmhQXoXdKeKQ1jeqdLY8iInroSBgHAOI4BDytiukFT6oI6EuMbAZAgDiMQqiPhPhBtnVgNKMA1Mm2uvBD3zDYdE6fe1Vu4dHTF8rpiTHXOgZZgGJWy87hbcq1YwrQopXjEBOLRM5v3Toio88ou/Ba5glJDNZazwk5LqqrBWVIz0xcKdd0TUcOE9ZOnMWTI6qL5DScRijJpYMbQnKgEBxVkGxRGoRQ6N60qG5DLuWyqsHHbtusvy5up4UQk6C1lt3ah/ZupXBIVkjGbZWH06n92TTcWn7uf/touUe5lAx7JWnXE4P0l+4P1Eu6zhAirrqJnt7kz9S1JQ8eAkhAB4654QZpjgg5ykCayhsqa0rP3mCxyHFcSFxCISwUxqS6W57WTMKZK2eUpUz4lWaiKpEQn8Uikk2MZWhFgVTU06FSCmdQU04NnKYuSkeEFizAyVXd2AqhUSGx973/vRLM7db2KMKUUqAw6oQTKYwpKayJI6PlzDe/Lfeuu9z3nkfljiS5Mn9JwKy4SPe8OKsxUSfPl7b5yTI7Nlm2afrO4G17vbk5vXwTTi1KKcjIXS1r6NSvJUsb6Ixg6AfXp9Jef79JT18kSs8z6cyJOYgc9Fe7jMKXZnBr8n9AOGsirxH+X/70b5ab9+wvjz7y+rKqdrSNRQpqq1rHgpiwboOe/ABwXFZOyQx2p8ZgL7+dp2QruD+iaShh+rj/2qd+s4yqpITUALvXCE0gq5WdFbr9WdIEdM8IEYS7Pu/A7m3lkNJR7r3r3nL/K+4r/RpnzvNt2jKkgSIZIDEvt21RRPjP/tRPljPHjulnglFCQ8Ma6fW2Rx6Sb7dUxuXuU/RNV1IGexoJSEkwqBMXbnh4sybriD9BxZLZzXqRXFqVKt0aGMvurqB8ppAXisOktLPKIZClkNSZoUVKgiJqZMwlKCALvrc7izLLHnsdLAAgL9AYrhiKC/lIYMXoUz8z0mJdiVyKaJ8QYjyqaUcnJ8bdNNGdSXSpftVG7t+23Up3XiVuw5sGSq8+8+rYtGiLfZ6KhEtok0YWv7yZBb1/SbWWbVKQ1Jd+VgM8Zm1YIdVJLo1BhSvzZCqjkCrT3sMgHJJHCZ4hc0yuAj3BhzJMFz1Mrho/71hXUIOfkU8JZ6YEcBTJqmoWO3sG3fJ8fm7Sfek75b53iMQaVhLwz/zsh8pr3/kmvT+m0W22+YM8gsZIdPXgWSYGCUGTjMpgDch9693UFrOHWGVkH7feHFY1wfZrOI+SWxoYrsKVsz+SNQxWy2f+D0pzpOUnpsupZ79cZgR1F7BusiZYoFUpLFrLuPxB1mFMDb4uyLouwxPQaoZJsWhqH16QEyQeFiFkH0K0a6m9fPD73+ksWvfhAXK7Pw/QNlELDvu0XMHz/3iunH38SX3Wannkn7+nLFNV3pDa9tuqkOn/U1cXy9gJJbp+7mvqWzRV7n3fI6X3pgPOwWl6OkUH8B94iZDLsVjJwDWdql9nhJiZt/yUxcE9sDIIwgKh8VongvJ6C3W1cqY70vIWIXN/66o8uDaELRbwF3/l02VchPB73/nWcsOhw+6rbgBooYwV95UQIFSQo3Zh0NztkrFdgADcBR840g/0enErzK8j7D4n64hymNPMv3EdqDM6WExlJijVyoGUXLvGjWk8+jug8faDGm7arZl01+SeTKg0awGXSwqBwPvQYH/5wfe/W+inT21WripPTsMlJPx0DB0dP68Ug9Wye/um8qV/+FppExdD4XyrCPYX3S5kdtdB1Tcq4XJSvBOGEGWmqB4r3Sm3kqqJbkXuNg+OKIqmtsx6Ro9wp8KgZuISDCDSt0LzPK0R2eWU+MzpHjPVRttg1ATfiUGMK4N76ARgULxrW68HhhxQCqT1MFifIPbc6w8Sk4xTnFv/psUx6SmMtl8Wup8pp9Tw8sjoVUcwmVfZJeV7UJ1gNyka2OpZAOvm6hgaPHppzDK1dfPWsnPnTkUsVQIj5YM3MceUbLljNGq8okDB5596ukzp/UbOjnhDPxAZ58yA5pDJyvXQ1qnevx1HUwwhvK14jRxZA0Vd2TPSPew2CngwtBjqRq8HqCJPrhzQzxeURtIuhdXVpaCE9M+gMgTe9sYfKD/yoR/10F8HtpRQbu6T8w/wwKPC0NHhBZnWme4g8MbvoEX0Hjpf9DidgrVPEIdgjK+jFs3cPeirjYRZzyWBrqAjX+ofW36Nbg2rIjfVDeDkkzr4Emwa0DtYYt9d+U7Ke/HgS5XmnBOxOTdEgaS4LRVtDiv9YEmaamCot0yKg1rWpnTqIdt0MBbUtbRXqGuXFucn3vo9gv2bLFAeJODJtkFYxhMShsmLat2hAt5OCX3XdrUeue82+dNNG5MAAm8UGyRhPvncufLCf/qL0nruUlnrbS2v+sCPlNabd4aki4ax8Plt/i/yWX+OctDvg5pI8kxkg4Vzxn6TOmBfq0bHKrLJdTBZXM0wJ+kMtnz1g4zY4o6iiDzoU7f+87/0yTIp48CIp+27doqHoY2PLKkkZhW3jPyrDZ4s/APXJkmyeRqvF8Jc7RL34efi/vxM3BX/1utAMUIu1FXTS31aRPqcJiCtEFjRYXdYWwmDIBWmNXuyC0XFSval8BgF3UnDPbW/ieEgWitlwmRwF/Tyb37O5G9Nspagw4uR1/T617687NukFjp0XRCC4KDDiXmYhH7fJYXVLlnYpBY0A93USgopaJ0WKXlxRnVWmgh0mtvhPkhp6Y8b+unvNXEtRO54rbtq4hbqAIFizOFUhWU3jMgVQm/hRjwqTaCfGQDE72voSe9x8CscVX6Fm0Y+Gd0bTp0/W45duqLIZxAWQYxDB25wyxwQApzamowIEbd5pWYQJcYFHdBsxt07dqkX2CYbsmsyMORAtSmF5x++/uVyTHu0SGQzu2hRdk6jmwQY29QdjlRTOxnqKAGwiGD4NIMDhxZxielci/IiByqdH9zJgvPEGRAl0CXjARqdFafmhoiMA9Nru7uXy87bbi8f/tDPJl/KLbIx3P5YzwYAGWUupJf3euCoejY2sPoDR4vy97myMPvA+kJ4OAYPrpXVHqHw+C2dUygBZPIzo5qmxy6X8899vYxdlCXQplB1zi7Rw+mahKxbAyhWRLqfEnS/dfsdakMxUBbbZxT52CrrPVu69mpAprT18mJLefqFM+XF+28sZ8+eKvt1KHu1UK+875Dm6am5mnzaDiG0jPTiVINwfGvlha88VUZ/748UBpe1vO+Ocvf/8A7VIQa+O3LSKAOXY7eWp79yvIz99n8rXatjZUElPG/+1z9d5nYNZipO3TbnYxntAVdzgcySiyRYVIHb1dV0USfCjYKpBKJRnS1yFRD9zyFd54fE9YXoAOgzDSh9xUln4Pf6HsJWB5ykwg9/9FeFYqc4cg6lYwHda5vr6w/3BRKwS8iB0fWwTL4XCRdVbzx7m6x4t9xlNpSIXbvSTdqFkIbF4XQpiRJFYJ5JP7OBICKnd146P17+wx//gay+wvHYM6+Bi0N0f6DDGgHmpzwj92IrnIOS3K2UtiR3iwZ/mby9Jot7dfKyOBm5fUIPb3/Lo2WkHfSgSJh4rDlVMdAvnuJf4D68Esh9ZEgkNWOxOGSStXmlQJi/AV0iGxJFynmssNy4LvwgpUAEh2joZ7eWYylZo+KJw8k9unzHqQK0e4B+CBHNGpsDdJJvlBW5ftgKOB0shVtj8zs9i9166zNG3glhKQXnuDr0Hr8iOoK9VWRz55bBcki0xCalBoDucJEuXTgn7k41op00v+xQftO00MtCGRkeLrt371GEtFP/nnEZ3Jye+bNf+vtyQa6ij28zyKQqV7SS470Nqd4ccxRx9XBo/Gd1ViODJIdKVQU9CnWynx3r9IWNTvM5d7oOPeOFY+QSQoVdmxsXnzUgGWKUHL20llWa113+2Qc+WA7sFNfIPAcrHEqIaoE1d2eZSBa+15nzJslzQ3JAge4fNy9NNTn+MR7Iuc83HgN7zF653C8J3taKXJMhFNRmjV86K4X1Lc3Fm3QOlqEiLoMg3IIsWK8KcJfEuZzq21Z27b5RHRi6RC5SFtGnMO9C6d4qVCWLuTQ5qx7Yl8uBXfvL86dOi2DeU/YODZUHbjuglh6DUnSEknu0bpDpGfnu5ElJyrnjo2XuvDppSlA6h/rKgTtv0zXRK0QNotGdMwuJKEG9clVhbbmFhJCJ0vVvGSh9TI8WARsiq/bIgnMiL4VeSoAn3ANnE5NdizZHQLHooD7er88i0kieFIKN9dYnd9GPyIqOz0sRuGOG5CdhOYh6oMB4jzeLg457Dfwmk1j3KxdgQoM6W1Agun6vRzl1acBpKuNBN5DHURHBhyn18T/9+SgwftbYJd+TN1+KIftfFYzoI/0Ll35ifEzj40fLv/3tf1cuXho1r7TO8FEUpbW3QyCO+nqYrJRpJ62GUYhOZsQFJsoUC27mDm+EULnIambWnb1wtjz39NMmkuFF3/Xm75GbJ1mixESGz6O89L0ZHJ6B7qPKhxrqH3DEmfasy8q9onEf0WkjEsMA6kmTDW6+xM8bNJZ5BJnqbOULGYzsQiWwbr53M35+j0M91f828c3FKs1gJ5zr054YxWS0oBcpeZKJLYgJepRp3UzTeeE0HNaVMiOURLdTDvKtBw+WTUJKuMvYsSk1Mjxz/FTZJF6LXlzzisZfm5hwTe5uvX6TOC7qO9ESx86cKl99Vk00XZvIAeV5uYUYRyPDjbF1lYx2RYn2A9TTvM5GNwmwzluszQkcFIBrsrFlck74MBdW22uR7Om+OBfsVVfXgBNqWXD2u6trtbzuHe8o73zzmzcy+iP7qaRwHy4HryDikc8kxcJpO26p33Vyjzyb3aB4LnSygH5iOhcc4bIQK4ahSwEYNxrkNNig67vPKA8LeH9J1uLKkSfKtfEpdxdA8ZrNkbW8JuHuk6JZFqF4RKTrpCw4D48VadXfFQmISTG4NAnDCiUXHFetWJcW4e6ezeUn3qXSnD23lVUlpW0aHvTC4dpx8LEYNBCjA6cnSteKeoYTdFrquNVk9WYZciCX3BE0mtqCpffRebJpFdNEUZrDzwaifJKCYWfLf1GC4TGSMtBWI3S8zBErrO13KYEmq1dUTBRFPj1uRf03P491abCe01g9843Xo0hkz93jHNXJa+vlfB2+/ntlVX+crHuWhc+sb6ppN/53TeJXRvhMmVRNGKkBSyLFnzpxtFw+eU65TQRVgi4dfIAINcKUNeZZ9SMUU+rqJIzegmT7N0Wofj6tme9b14BgPfH88fIHf/SfXbDLe97x6OvKoHpMtXPKubr+x9raohIQUH7eyPCQ0EefFRmGE3QF2Y6LCl+EUsU5AEnZsPGZKFH+bzoBN0JRRI/iosURkecYKFr9NpvTzOzjBy56Rrrp8OooMTlXGMJcq4WOosggh8nzDXlXshWpJ2Q9J+WKnlQrnRekkEj83CSle3DvvnIzqAl0xXrpGWblffz1l75YujdvK7fv3S+qRDlZQme4w1s1nKNPJUrrUoDtIqo/97UvlyPiHBfh6sx81HQWIxMEgjPVSEf2wlOoQDhEfZ0oCvGTFjYZohL0RWka0VN7G3gDuPVwS8wPZfahrrumdtC9QuV0b1jSddrb5RGhcpxwqpVuWygP3v9g+Vdq0IgSc1TS3gCAI11aLSumCBB+SP1wjo6Ys+ZEDukEwzPh+iVI7y842xXlolFpw9xGkDlKm8Rg83IobUh3wtmnj79QJo4/UWblrjgbmgdBkQDltaB98m2XB3rKC4LvV+RmYPXgsUgCBFXwUM1Brije7P6giMK3vuJl5Ud/4J+Z1yJhz+HZ/8/Xdx/1/59fb2hlpL0+YOgpK5X8KP+tZyI9nuprGxTSHPAsLIRrXpCM9KZbO2iukt9WkLWg1K8R4tTnLTq6EWuAAlgUEnWyn9DokizukpACReS08mX3nMujvxlrnjA1USU3I8OqgyLYYDPvUdKeRAO6rDoZZW5mw5HMGF6LLxvv33Co8Fv0Cx06E8QM6ETpItAyPMviq8yMNS4wz85xsAXTl5VS1tACYlievbUHb3UP2sqB6SLsLbRNKciEetV//GMfd3td1u+tr3u4bGbiJ3vkSgi9G2E2MlK7IpH9fVJW5tEIHDhtgECilJakFeVApj20BDyVJ+Nw8KToSGY0GuZuoC7q/rOf9mQ5UOS5sTz8zAQ+yCvWx8reyJI9AI2BoJoUF+4vrqcVNetbxQ4VQieKKUUKT186Xo5ekIHXmg+r3OrGPXvKPk006pGSp43OkozFpGZOflkk+trwlrJTKGyH7gkF3j80ULZsGfZQF7hEerD/6Zc/Vy6rrYtlhvvLMc16s79Et11nE3rCNXVGYuio5J1RFO5Bq/q+kQmXYmk9nPps4y+5ctArVStcg8Re3GlTFHonCAuF53/pILGWSN8eKeUf/p9+XHvOOibKjc5ya+e69m5Z1MhMXWuG1ZiDQ66rWUcOjOsJJOm5MplJ3CZekPjTJVEMuJNNpYJdyt/81C/IdV0qx557vlw791y5evmKc3HaGZAKLFeU8Jpcij7VYXUquW9ZPm1GdenNuASySiiGuHXxidlsrqEknXLTLXeX17/l3Ur5Vf6JfmZb0WgU/GprEGA/cpTyB0e+EFTCWlU7N1raZtraunbExI+2YEVws0lp/tWtg0QWM8yjkwHd16aeSO6flCDykHhvo9nYf0hsZ5zLsjAWncMMf1CRFvfbfB55apCmDFxwz+7Ah6BTLDhuDFEqk74h0R0C9zXqvVSFY8VWeTZbeH8PEmBtEkJ2jaKTcqxp8p8aXjYnw2v0Pkj1Vab3OsqFS0P7ECks3A00GGtv0eQK+W9qzayVcl3u1/3Lgv9Q+qbzOTC45XoprtAmEfIQzLhzH/if/6WI/XEjlEdf82DZLoVFG2BGevl8cajcZoUI2iYrsHYnLyaJ1flqukc4L1xCyHfWdkFEPINoV2UkyANz/pYMp0eus37xE3Offj6UEzeMMkzwKF0KksFu4afVt9u4JC/Pa+W3Zn1YggRNdH3235ZeBok8MEU+L6pd8slLKv/Rpw5Ivvft3Vv27NhmFH1tWrlaY2PlsaefLXM0DBCvNSI+drdysrYIjW1SEbFAltoS63N0+E+dP1O+eOykJvPIHVKZTySpGgp230qT6oJozuxdSPloLL5j7zCG6aPOWm+UxFihYRhZk+yxM+XtN2b+aIfWtV3uPcoL403UkvQQAjdOF1meLP2qeHj796sueNte7WncSjiuBhDQo6ynpy9cH56Zos98TStvzeknnFwDCZRHWgx51xBjDI32i4TeBXkHGC/uw11jAsyjsCjHOPrME2X8zBGR71JYWAEPYmGwpHIy9IaBoe2lQzwW2rlF/azdEg/Ni2B46aqfAsehK1PqQPuU3S9+WbnnwdcpNMocNLkeKc2vUJV8MUVXJHx9IvGBtCQcIiCkOHigJJ0YdXXcEQeO6qG3ItNhsrWuET34qEax0LFhUBa8W2kYHDqUlnuG625JteDMO91ANWpoXreO1YL4Z1JCS4ruDOq93dQy2oXgd8DY0AhuIa3X4sJccS7OXG6QveBPBTqeqs2BAfHIMECuknyIMs5BioKzsiIiomu76ybWyoYBRRxcQx0y1qaqF1s2nr85qCaZ7dqy8TEgRo72fqkVZPqM3ME6Yr453BYWfQJrlhMQZOG2LLa4kSj2wSqxus/8gvYvEL18T1DhD/7sz8rTj31TMrJSXvXwvWWneM9uCFpcASs70J4SVBUr7ycyKDckrVBII8izwPUtK7IIqmox+a7xXnRn0DQnlFaXFBUzMntURsIBcUttOEee13JoeJhnqXlzbvVjPq6mqtgweVNzWiTXYCrsIZIAGlgTdA9RzG/J0Yors6go64KM8phSPM6LF8S9H1CJz+5d+1Q7KRdXCm9CB/Sxx79VziuxuVXKakAZ5Lu0Fjfv2qNpQf1GwEvO35IyUMrA33316+WYEkeJ0LuWk8/Etau2qZGp7H91hf0ICY6kmyePjEvsftJ1CeD/OKesMwsUCsR7WFE1OMblNjqvXI86UFcvyHuCa1sT39WlhPGWtcnSvnNLef8P/WDZ3b/dHhSIto1aShLndW/ojs0jmz08hMjwFlVHcI7HVCyOMcZArQAWrIArbK1q10/magPl9ymHTZ6335MGlzJUql1u+a1PfkQc1ko5otqx88/9Y1kX1G1Tlrl3Gy0pomaxS3Vn228q2w9sK4u60PrYKUET1Rr60UnuySFJqB9VqO8UmVmVz7z38MvLHQ++Wr+TMrL8CNizuIYrEmGSS1UOQs7NxvADXaJPGdaNGsxsvgolk7NgLiQIJO1PfAtR3b4HR7E8bYXFYX4dGp39Sp4NPje/aydTV1bO574qJFAjJSOeu8cxQwCYOoIZQfFUGO78Hv0hOgdi8qAD6x5clIb496nw+mSRGueF18Vs1OC1nxE5cgTMEcj6PvtfvLk6CX5PUioaRGd0iXKrpm6dkhtugSnOPC/5OyRhgmDNKbHe+ewGnXh2na+aqB/CjSLxJG+nNKTdTchcL7iRT2Pp4ScunL5Yfvc//r4GbUyWB+49rBKrzeIxQwrbumIMFAVjYCfsXduq8mt4bvKErBhI8cCokbBJHg8lP0munFV6wLQOAYeDhnL9GCSy11H0RAJ5HhR1XT/ulfHw7ICDIxaSENKBKbEqHoXAQfKaND3Tm31DNuj6CVrFtc8YMMaWTU1qjJp6Ys1JwfRKBnbuOqBAlNqvSK5GVWt49ITy32TQelSOs2OwRwNlt6qof7Mb1BN8WaU0Rwd8XCkEX3ziyTLGiupZrbAqKe09RiasjAkqVMRXkXjD0zbuLflvBi32GjBY4bGQu0TLE8GOto6CYx1ANc6hrPl/tJHq6hwUcMnswjZFFts6psvmXbeU9/3T98qVV3sg9lTnECTrVk6SE1xFkoAX5xXsUUnWsDqpoCdHr5KHBrpPqRhBmHW91pS6gUgFI+SJ6Q3XppX5X0cx8jnpjiKz/Ruf/rC6cayXo08/Xp5/XIl/4pcINXOToAKazhXNs+sY3q2C2R5xXFfLlvVpRbXwa+kFVPkOH7Yw+WZT8ON16G94yavLjYdf6ipxQ2vIO10dZMtCiuVRp1FpdA/GBJ3lIG3epsQ6E4o55+nPXX/PMatKzLV6XNDnpxLo5LDo98zP4/f0DO8S/wanbLyKFwAAIABJREFUM6eBDryc682oJoxyhY7qW6eRHn2YFlRCIW1O61wiY5SQaIae2xgrOhSuCeFBkIQQ1bOLa2b2HIiIewlPVc24oXOyqnlJFE/VQhsHnl81le5+loqWqi/GRfN+f6FAmn+D9ngvG5vDZWNAWQmuEIfSv2JMFAM+g/r8JpPLNdzvzwtpbWXl/B6ibjg5NaJYrXLI7sD+GA5uL4fhr/78b8sz3/xK2SX36IEX31K6uAcbBWcCOuOe1BYOVxuz8XAt6G6g160QXte9ZzgECBq0Qz2h6u2UEjA2OeFgBQprYHBQtaY0/MO8h8/CWLlhYj2QRuI+DNWi+zW4grjaUk4YINbGrRq8cXblo/zgzvR8rJ/WEsWWlEcpXQ0ZviYUcVVTimbkItJ6aee23WW7aiFXlfYwOXVVyaUL5YpkrFN5ZjdKWQ3RURXdoWvRYw7yeVnP+OVvfqucUIvvVblji6rHdLkQigBjajSCpKCIidKSaMn/EyF1GZrlLl+O2GmNTQ9YC9ixtDx66g5PwTXNN4U0D0+p9bFcp38azRQ7uvFO0kfM/cJa5spNt96t5pPvTAqM7uM73/n7cu/9L3c7IK5LtvyMkmo7RAf1KI9rViVURAmHNo8YTSZFqWgG6pP62Z7SOzRSuebQGeTSoTynZsaFNtk3clpUqyzD1EOw7zOf+kWt33I59sQ3ynPf+pZKLDS9RVqVrFVcIw5rx5a9pXOLpr5KiGZU4jHUNq4uCvo5qQYsBGNAvBSQovoQZ+RqYZUbdOiVj5btN9yhqnVFglhI+9fhDlBYyxKKiavaVM6KlBr9sLACQ1tkqRh95TOVLgpGTo5uIVZVAH3IggbZOHMN+if8B2TmsqIO+NRA5laRpbTzX165pufqFiGqhaXfhxYei2L3CZdNQtor35tDRFtcyim6xQTO6nVwK9RamqDEzdSfLnF7/tyKWqxkUbyG6bpTCF+7z1FwCECSuIP2mj71EJUpbo4qixqwnbRi8TP4F8lnyZw/VEcUpZWYebwoEwsn7iTKG2WnQ+pJOETfcEet9OMe+C+urhFaOEG7aohR0+yPT6lK1PWfWl+GM+QO19VFYdIN+DqWO9TX/Y8lcFPl/tv3yyXU51Fvx12Ij6IcwwhANac0q0Mx+jlApjyT7sMWnvyxqngW6W4wq4xxpREs6DUjQuB9SmTuVTPEdr3W+VUV+ZkiZZ2NVusaWmHl51FYoCv9W/fv6LbbJiE7QWS8DfkB5cHN2UA5EIVepjyINjErZXzyiiJaS+Z/RpTFPqLM9g7JIb276MZwRq7Q0LadZZ8UbI9QZLc+J3E1KVYZ1CePPF2+9sKJMq/F94BWEmOrp5Axb+EwjZe8NRgiCraTCW9ZyIP7d+Esw33RjjyqK25tGjnW11pEM9iDpAKUJ1/uvKGXdAhBdUrhtKu6wZ6O3MUWDam47Y77yiNv+B5l6is5Vu+bU4VJr3K3GsSNsl2Ef5Sb2CV3kgAUZDpcJ88Nx80AEVe81kEaZMePT4xqYs+Qzlmf3E+1ZRdCX1R4HoNBDWqPoqlM7m759V+VwpJiOvbk18uz3/yakJOiNmr3ARFNaBHr2rPzhtI9stO8zczo+TLcIQVDfZD7R+dQBoaTqhCERUh8WYWUd77mTWVkx43igzbbC7RlN0RleVA7pVy+PKGNHhDk1wgo8WMUxm7dujkpJ2yQew3h27IhKXths0haM6cUc3jd0uu6yxKiJcFxE+4SMFwKqCxaPPNs1EvOiV/oFBfiTcJ1tDzQqE2Z/Sr47NQoeZJQQVRE/Qjj0lWARybvh80n36ZfEVRPrzExa20VYbLF5qqWjvyPn3DPjTqyHMYSWsnVlzqZljB7fb0ZIBRqo7SskPJl4tMYiMs0BC2CjA6P5XL3CruZBDQgmrNnEVIUU3opNT3KrAzNLXGvKJTqUlfL7ZHqOuzzbmCXkVtwcK20QdZBpivokqzr1Inn1B55xlwnybi4pCbRycsS6qITKAbMA0UluEuU3CyKcFWVxPDAVikk5QIhN3oP9Xaj46MmgYelsLrUn61LqIV2Lu0ihc23ufCuutBG6xhUq+DIHtxUs3BIqmsuQRHiTcST0Y0knnpQFUu04jFbnDYWWIpFPOCK0CH83ZS6NdApt08IfFCRQpoEcmgJFqDInjt7thy67TZ1mWXARmYn4hJywCeXZsp//ZsvlFEj4fSlWlVU159uWUDGeSZ9R/IdO4yi52b0TGYXN4JOFl6LmxHUxjNWUfQeAjBEiLeKb3WrZFBveF8saBQYfcHk2jFNSBFcEkf9cSCttWvltvvvLQ+/4rUakDuUYFuk1/fKf0GBLpcyMhdqpqxGe9IJaU99Lftg4MHL46KS3DYvWekk+VlcGUT/oiomXGeodA8m+LCtK2rK1vIbIt2JerzwzJPlpNzCNfUyop5oQZtyTX5oj7iG3bccKoMju8qxE8fVFmNagzFVOoPCqotmItAWq0YLHKHRhsuvv++R7y29QmdDgzuBXjlw9mDyiBTpjl2Zch7JrAaM9m9Ssphes1UtTVBYPJd7RLHgJKnZ1Ur+DxdoomognUziTS8hNDNWmQ32hBZds13vXWHzTU63K1l2vAyqTs4aXNYAC9ctiz2rmXoDEsA0tghicU5Jdf19OHUtKv85iN2qsQyaYgO46bi+rlWr97mBCC2M1jIuZeD+otKqoqtKyJEsr1HqrCy8jbK3VObajasDKoFfaZBK46bFbcyNux2tDyjvpO7MJ9Nr0xRqY3Gbyng72PAGIOn6XJFLDnpKeygrQgG564Q+RnHIoBiWTGjhohJJFclR8ijvA0FI8eh9pCxck0FZVPeGzO9DxtXETpzYFNngMjB0ZiC5cof2CB6D8pYxBTiGlRIwIE6ohT5aEmjmC6Y7iJ6DVAbzP0GDXjnQFauAoZCS3EBdOTNW6hywplc/kUHXZxp1cFpByzUyLf+Rzhauw5SCm6VjhF7brZAfCouAgGWFXDK97mnxWPfdc6fqC2kSSENGhsLCh7V4mMWffuMrynni5FMUjAEm2gzaTVTTp4Rt0r6ZP6xRcisEexNwPkQPoTb26F7PyMWl44W4MEX4lxjequt3dQ5IwQ8rojukUqHL6kUvBT035jV3wEOlQSHzUU46Kwy3VVAERcU5ZJ3L+my5/+GXldc//KjeK+WuZ+12kE0974S00s5cRp66WY/zY8sxsnDFGbe2KmO0rPeQe4fAOGlW/6eXvLlt3EaKtNVZlpZCggg2OCu0vMKD+8yvKq1Bh/vYk8+Ui8e/XRZEJNJlcJk+PRK8nbfeXkYO3CjhWirHn/2OuzmOdAkC409r8d11gQwPVCBCgb+vvyCsJWXBv+IdP1R6Nm/RqCoNOE1qsQlu96HW62ledvXylMsdPLGEoZu61FZxWE2IZIMnsyDmffGNchRTqNygm4S1yY2ibm3Njf/jbvg6FGiyMbrHsYujZbOSWPlAWzKEVzdHr6U+QV5CuWQ9Gw8Z3XAI0NJYiJDIvAmF5ZY7Dv8H7aQflm+Rm/XPXXCNbFLFrmx8dIldQA6WlUftnm4rGp4sCqWiI7t+Vf04aBHXyq4geS68uM4H5HUZWx4Fkhy5oE1f29GxHF4T7ZWINfrD4HDdJriAeSAto3Et2XFavoggRmnB4YNOGEF/TZOauxRdsvuvtTz37LNlXYRrB/2xfIil6GpOGvdFX/arcvVW1WWgq0VIleUjXw1OCURIXzYsHMMopMy6hYh3KbQO90hnABQl7jkICy4rz5yaQX/5ebO/7Auf6XHvNbpq3qUeVUdtIfuVisJXOnwGyac4XgqA57arGD6VQm0iaVRBdKj0heoA1mZVfA/83DPKcn/5A/eUXhnzONhocty/tvLs80fKF5SsvQANhfsGatfnDfXuKCtSJpu2blPCnz5DiaYdconGlNO1rHUk149dI1eyrWWkDKix5lrbgNzkkdKuNjXTPSq1U2UDChXelhysPiGm7vaBMmgOfb2cZYyXjAXPDl+4qteuaVS9p0979JmK4YWu6HdGpTPctnagvORlD5VHX/cmKb0ZgZJeD8sFsExrglWvOCYT5KhZr38y3hHL1DMy1Zqp2aqcYQCLzsyckhpRYgMCRsnOF6MJn7k8Y7eboRkOiIjasa/wa7/y4fUlWZKnv6Gk0QvH9KBXIywiRTfvPVi27b9dEH29PP/cE3og8VvatKEOFUnqoT1AwFmNQGc0Y1BTZIGwsHq5v/E9pWuHoL3Kc9xvCJ4CxITF0vdY4bErGkrpnCG9XxveI4i/eTNtLuAaInccfnS2+Qn4lXpww/kktuWP1e9WqfiXAgRmRvD4HZFFwr9BLCisyxcvSTEO29WDH6pXKLNqczPsbHyUdkpumr7XRk7OhUquFweDliK002FxrWNYm6plHZY1aqn2C7dLwh4QElTFmllZmp+reKt5cN9/8lAMoYHc2gPHIyrkSwY4ECaoLhNvcMH0RObO8KmykOG7YlisC71Tvrjf0/AfiZyhMza0bg5/jc7iJpGeQdcENG/SLrwDUYa6KmTr1IXTZVLIvEO8BtG/5JelsBXrPqdDc0EHkXy2dqr8JQ/tWscul0TpL5NzlOKAIqV+lZY1A6ppM0dK5M4Z8ClnwnjSsSFPgxIHl6cOkC+SV0Ek8DzO8UNyeGaWBwJcAQQidCahHeDRWllhxaUmmEHPKE9i9hw/1owUHqgBKj/Eg+n5lqSEl0We9wo1nLqg8XOHD5dNntqsg0hqi9HZSvmrx75Sjqr2knY4Sc1AAbLuKlcS57XStigXiRbOGhg8Ppc0ghXVzToCjJvFZ6qGUZFJtnVb/2F5B8fUnZWwgPrEqff8Uq2L7GvTcA91PO3vU1MCpYfMyzjMzV7V+ioAorVb1HlpQVGb/KIWVQnBQlAtcrmt/MkBW58rd7/k3vJP3vQ2lWLVdGp7V8iZ1pqCaBtQ0GGdfVBPqoMDFfn6fDi7ABmkGoHAUAJ2vJu1pHvFkji+llalU4DwtV8O/nz64z+nqojF8tRjj5WpU8dVSzgheNZfNt9woKwKFY1fEdmpB2/txD1QhrGuONQhYlwX7rCvjDtAzRk1WzU7PLBHm9xbXv997y9rQ8Mit5V7wnMDQS0/ce2AuueUgHdZnRqIHnHDW5W7cXD//rTdqgfQyIBsersmjtcHHfDQ+tGS3IU+hbndQkSLg3b+9uOPl4tnXkhfbdXueQw6rXBp96zXcWw2bxLC0nXIfYK4pc0G6Q5DW5UXxkRj/RyWxfk7sr5TsixdyrkhWoNLSKuO3mHVwlUS3huGd8zVrTytjnxg/EEU8NoFIZnU2s0/dndWH6yg0DiBcWmC8MI/NR1H/TusPq8zXwbFXtGd+agoDz56g8gHafqYBadWNcXRtoLJZ8coZI+iVCtW8XMZrXJwtTagWJCV5zhifJqr+HOkxHQwVxY03v1J5WUpWobQZfRZpi6DzMblWkzBNaJ8dAiWZEkHaeJnJMsYLKKVy9ovujAoWuvJTRg+eDiIW9+yM8BNvFP/iFXWHxpMrtEfisNg0cTix1D62YhemhdN11X0LZjDXJeXRMoQObEsQ19QIJxOqBuLRG4X6RnoG6NCNQuYWy8T4nppmXNGvd/vfPEdZViKZVXuKGtGWc+J86fLt86fLYteC838FA/K4FwQ2irjtlgfiG4pxgEFhuakUJaW2Vcpd3e8SDrKwCa5gTrct77olnLy+Yvllh27y+X1KbUUer60ihOamxXFI6DQI89lcGTAxmWH2oifEw0zrWEvoM22dvFaq2onJP4sE6coa5ILS/G8glOrJHPi+q3NlBcdvqe85V3vdCa9dZvll9rZyJBTFIhgVkTr9CLLIYa/JugieXh/1UjaaHtLclbMVTMhSYexVVFg9AvtaXwiPvlLPy9DvVCe/sevlwkprGs6+PsP3Vmm1dTr1MnTZXZCnRgUZevdBOSmZmy1bFZNEdXbIdzwM4UzjeBT58dhCLneU+5+7RtUNC0roV5YLkzF50Ybk6jmqKJqqyDm8HtdQpDynU5FFdqdpW486U+yO4Xr5j7yKZnx4bJgGoBa0EiQXNBpOCPrtqpi05am5AWlgEvAQnEQdK+b1Fp5QlnJoKj0l5LQyL3Yc+BAOXbsqPtKGQk1LiFPh1trkW8rWxSuvePw7TJAdATg42uPbT7DSMM/9DDW5JrFHcNtThkOSgCFlOe0G6uDCGHZlITwSf49CpDggJCKEXZFb3aH/eEZWumCVIeztc5yU/LS1OL5y1nG2IKqlbhL3KFGZlhXuA8Ukav+HaPygfZ74K90eN2XXMNE6Q3l8iieyR5zns+RTCm0MRHP3YtTfh8XoQqftaMLyLQ6ODAIFY0wD1rT+vXKpTSi4TP1xxOadYhocUSBOMaCMVA8E1lg1ibiTOE+KMQmEmU6BH6wIlO3jsFld2eN7A175cgcistKNs/AwAgbFQY16LOIUpvTQnHp/0vzqDWTcpFlqjskx14n3deCAg5j45d0x12aYzhT9u/eK49k1Q0qL45Pl7OTSnmgksNBjg67UozWWlpQa2IR+G06X/SEWtfzdGo2Z4tSBfh+BQ5oSekPllPuNkBhlwqrZ8Qh3XTgnjJ2/nhZ7+0QBzhbxgU06MlPpUZf16AUlhr3STkNjwyWsWtj6tm/oOnpctdVM7i8NLlhJEkl4OzR6aNLv3MXBbSqymVuvf2O8rZ3vSOIshpNO7pG+fEUnJ7tnKTG4BFkSFa9E0b13DT2DK2SYIABTiy3FRnpEXTAJgLss48xYp8++fF/zW/Lk49/vYyfOl8OHr6zXFHDPfzeVdrTypow3ZYET7JdV8RR9LRjKcnB4uirDGeRUKsETB0T3dBeCoOLe9y3uAYS55Y7t9pHJZ/C3SZ9nGJtSdgDHYBWApuCHtz1sb7GZ8kHQitC9bn+DTJwVTyrBHqqfnIbZDjCqj/45D6yuHKQiRSA1uZzQGHyS0LMhjLjm06FT7F489qgBPqCM6yOK6ydl9D2DGoennog9ZMC4e6W6dLgjhsgjOqe+j4oc6pqzq6Xy1OCcerD+Jkb1OMWyUZQfGaS8moivTfa/JMVaXQQbzSktsXgcDVoKy+IWxo1W5MV/Pm+T96MO18/M241li4o1u600UlcUlxuUl5orHZNkdYTRzV3UEmdnCGXHFVFmvYseq+UVtv0FbkMIbFZ/wUhKedbydVgLZblCi2szRlheD/1O3KUcBFxpfrgqOpkG/YsdaIejuVnQoV4zD3RKCtY1ibBhCa73cYOEeMPNJZ4RGQYSsho1ffPb3E13WjahdYYFPfjIm2GKKhysBi+FbEjMp7DlsMYmSPiTbkLeWO79u4os2rh/cSzctegPqxMg2jb1FaHSTWAn8lJItCKLs5cVPBCCsCNE9SLTCkGc+J0nNZCmoCu0chMp3gkjMXAUH9ZnO4p20bUEUT3MUPgQilCjJbD3ewW6b7es6SR8/tF+0yUvbfvK8986ymtuzhH/W5FffMpMDftgJESIuuRV9SqfCpPRyLQpGjvLrXPueuuO63I+CKHcVU9+TEdXXLHxebZc3BlSnW3cekYbEHfLvQKReYYFYwO5f8tGvfmrgyO1kqBqw13uwzAjBpQpj6W1ke0xNF9fPrjH5KyXi7PPP5Ymb54obTvvl3Umt4k7Wr3C2utG6bFqbUkisCNFlA8UjLAPELS2jx86iSh4ZNjGVEpmkPX31p27thfLl4ZKxdVzjDHCCGfJ6IiwPJ0KeUgtWn1MzgiEZKNoZHwMnahUMI1AmcfOOQ0KCsoJFCTr8DSCCMfx6Mnc72itcrr8B4WmFe30EvaY+wrM+aDm+u5arzeBwqkyftqk/Qj3OaFdADZFLsp3B+tbNgIf1bqp4i8uAoGBc4S872HJiRBD8vp8hzkV79z5wGsHoeNtaVnuSFEDj/3b+XuKBmWD8UVJW03mPvHbffZkgtAcAM3BkTsCCC5N5lf5x5evN9rVq1mNJ7XIOiMfCoKv4kQque/qh8WFMKPJ4USYC0yp4+i66sXzmne5cnSLrKaWwHV0LqlGxShSBbCuyDDSM+qxq0j2keFQTgz7jNjs+gclAoiKIoYGfon4R7CkWI4jFh1vx684MJmuFaUFXwJz5fxWSB1q2Mzw3pWjC4/pwjbe3qdf3RhtIuz07GBf7uMhNC9I2EoLEmNMkNdAycljV65oFK33ft2qjB8tDz27AkXzps2cA8pPbtynYaV57dFeX7nSWSWAZyfGlPCpfgrlC3ktN5Dm6UVlcisa7KNB65yjKkgkJDQdG9NeVkiOMqIrr3UqzImkeBrlDc5eVpGWMT5Ng0nZuLQgw/cXb5z9OmyZ3hHOf7UcyRJCZHJBWNwLhRIjbbSxJGODS57alVaj4zMZo1Se+BVD8nQBEGRjOxk0NrVw7bPYD9RToOnir4wIMiiWwLRAIGmj8AAXcrMquSwUwGMbnl0Awp6UU84rYoA1rE5xy3/58c+JBppvhxRacDpo8+XtYHdan+soscuoG7QiN01tKUeHA7IK8gWU0gKUrJB5GCTJR1f3hBON0LD+j750q/XgNNrCmGeOne5TKpflgUgd1ldJR4EBZUwbDoSptMjWIyIkIc54FbZcudwWEc5YVQCZi6HX2QkF7V3KVoN4c2RQ7FyXB0w8HRengaLIguiw+eWJVaKmUi74Wr5wOIq8b4wS0E6Sdxr+CZ7wjyTN63JQAYO1whhJSkdfAwIkGDmet6UaJ8oX7tsDIXwnbtvkdfdn51nMUVmvzIH27VnXM/vjeuKhXKrEa92IphW/Lpv10myRibXQXI8E2UuIfrdzJArUUTMrXFHtO3lSpXqCRKMO+qOk0bH3B+RIF2frG5SG3SIXdRejdSSLOg8qSy12yjuIxkoJHH2qjKB+tM2Rs2R12Q3Ot6fx3H5GdLZ1EqSlADLK9xk1onnySRm3GQOBuOpiFTFfFH0a3euIrV2iPQaYOE+ndlu40Uah31eKwDOA/jLfb1QrJbDBDfW3DQgPCUVRudGL5Xdaps8phSGbx05LoUleYHv5Tn0p0cHc0RDK0gX2qYupMdOvKDPYcK1ODOUjf60y62nXbPTlH0eqO8Tj+wxfOmq4DPXtl1ITQNnlRvXq6jbqDgq6jNx6XrkWra2LpW9e25WC+zRcsvNN5aTR9Spd36qXKMlsrwJEqbtfNPymDSJHpU+Ce1wr9Rot+ozR3bcVN74fd8jFz9GzgQQUWjLV0AFxt7Sp59RvueBEsgXfzk/Odr6IoEU2csZtDupfepWjWif/pKAyoRsklCzvnr2T330Z5UysqKUhW+W80dOSKkAsnHxyEhWUFwWsJ0yClwpmWBzCLIGpB+YBVrGEsbdidXn4jS7J0Uh/v2m4d7y3ve9Vwlgc+WymtdNC2lxfRTMuhRR6uY4ZDmyObYc2iigpuOA7WqjrPR+mvazG4gfSWbuuw0EtnLVz9GJHHKEnWXELZPAOExKSFz/t1DqWuTA8HHpLOmcfR+ILCsdQ7FooAesXqJ8QGWUtAPpEhgUJNbW2Vv6/yJkrp8R4cQd1XtBqkZgOe00hkN5cfBo62vXxEpTxwRI5XUIrDca8v2FV3GejhVP3IsoPXiRoAw3xbF/GviYnJi4dYmzVqXI/Vg5RxHyldrNcECQ5UaHdY9jCBIUCHEaSmAjoGhp9TF2zt2sWi9vU85UJ6hM8GNRpxHhGx+d0PskoCwFkS+mGfte5QLIYA6oC0Sf2jszjozOCuyh2/ToU0HE5hv1rB1aD6JOJtHNYyWg4QJzR65IAYgR5W8kLGkmljOQig0gqIvsailOjCWqSo9unitvSi2hDjZFvx1S7Cgvp/RgNDHapFsgS3Bd0lhnrkyUA/t2lVHxqd888rynPjONBgIaQWmjPZP+fc+h28rXv/NY6VIH31a5ciQ1s3fOmzOvg/FIBBQjw2wE2pEjVyQ6u5ZQnHEX03Gk1ebFXXFW54R8LcdCQAOK+JFWcMOBA+WihmJs7thWzl95piyL2F4VeiKfjvFbbmpCm2k6p6rg2HQKcluUfrDtoDist5ct2hc3OaSDrBF5dY3tjnNSayACwoc6UZ+DalQ4sTXdhLPqMiFoDOs0ErbF6YFU9VxLbo+U1AZzqp/6pX+1vixNdvLZr5QzR06XFlWic6jJLV8i90WqlVYzMnY+nD3K9OZidItsM/+AVaNsJPkeVpy4d3adBPV1Q107Npf3fP+Pu+h1Ttr/mmAeitACxbFw7kuslL84EERtqtIy94JQu0dRUEJC+plIY8VtuLERp8p1XHCbCE8ge3ihKEUfS1+HfzWEuF0ZKzF+zQGpZCCHgdehMH0UuQwIJugicwBZ/Io8bC5yCLhTK0CE2ggHNzsK2o+Ru9y4rQ12q96qlRcPgSCxFIZxPnJZLiMqA6J6X3wq7pwE2wouOWTcryE6r6rkpr1sPsdcDbdS0aNzyrK2OeGgMX+aXgNfV9/ne0cQ0+bFLzFEjaJmvel0ukfpCL2SKs8+pL+7cqqmRfqCljpwD3gm7sHoB6RNugCyp0oCoa1+5SHxuR5RBjHOOuuGenSIPRDBT4UngDXHDaZcinXDdfMJrO5mXajGqGHMpFjcQgf5wGipwjUEexRPiPmK8HR/rse0MPDBQdh0ISD7lZkQXIf/MTdxVAhy28hQuXDhfPn2seNyu+T2E+1GtnkGhpQqdUEFvWVgc38ZGxNdApxpmdfcwrTb4VDZOPA55D0a9eqeTEQz9FiIT7JOVN3XZd+Evkg9cd0rCBSwC1Hu9IIWITAlO9OJRZw0k3rmlU/Wos9DGZI+sW7SXU0PFCUkp5LzvSKOsb9/S3nJ3fe5NY65Zj9LE8UjiFaj39lFG2y4Y3fK8KKxTHC6iCByTLNBRIb9TIfb/CCuYvqD6374Oa/51C99SGVeK+XEU58vF549JWga3mJRh58EvyUtHkl63USbKECU4iKC4Mxi+2VAuhzbqIfwQxYhfTMvIetffv9eAAAgAElEQVTdu61877t+zNYVIaZ9iPkCsKrCzj6HDcnMgUE5GLXHGvLaRGpQbPo96KxCSpCVL+MfEJKuDi/bZIFjU6MY7PqY7/C6RdEYwVkb+mcJcwd+xq3zHdQ3xL1g3FQuEO4DRRnXLMgunBeuNLuSEhfPikML2gKh4ECjSQWw/pE19TRfPqq6d+RR8XX9PmJd4YXQh+mR5AfJpuIKo5Dqs7i1NMrKaIEHQiE03+epovTiQno+nMnmKM8mX8oRNf0+6JNfVHTo5zGej6Kz4MVl9lmuNMK5U2fUkbO/3Lhzk0bTL5SrE5PiWJQSITQPLB1glJQxpNNcs7QsKJyRrku2QLdQSBc91Tz2TdfHldbhpaaVRNVOXHh4JRAkyNcuilwvhy9DV3gPuElPnsk64Wg5qIEKYD3ZXyVnsi7OSNcjksuG3JF35qRTG4MoMRfHm7PVvuoe6X/W8H3z1NRJQXTpfk6LCnn65EkjDcx6Kz35mVdo91LROClJJTc5m1usuT5CZU/0dndmfuTKmJchtkwHIu9O5xA018oAE2QJ6qbyXiA5xvTh2nrknBtsokzq+TWFIxOipM1VXYe6xqaPfieKhFFpqhF0ixmtHTW/0DLd6k1/z113lAEl8Dp3zF4VS4xM4nJX1G3esQnUuGGPPj+8VposJtoe1Y38VOTM/kWg/TdMNmeAYIZe/8mP/q/u6X7i8S+U88deUF1UY7UpaVFrGS1Gp5RVl/KwUFz0r+qSXwv0dQkGiYlslgFFdWmsOJFYtZjAJbxhW3nz2360EqhEmLg2hz7h/EY5sOkN68PvfO5ZAM4ajwXiQfiI7OAmgTIckYNbQpnxkWkPwuFl9BKhYCMzEvawoEDP6j4aufjQJ4kw3RpCzUcD5f/uoW6tWF+v13AtsrM9OdiKhcPboKbwSWAgu/m+kjaGTgTeHg7J9WxqdsT1kKwbol8VqteHP9a4KAasEOok20htHv/3wbHQ5MNCfBveGQs2WevmDhyZCRLduEcOrpVl7psIr3Og6xqYSeGzbXCCwDy+nc8PLHNk2Par7mmjdHjNN1RUz4yxl999iw6j+ssrDWJqWtdSGsOAolCdTFgS8qbkBWXcdItoaaHUI9dlz6AYVgWnnEgoJdApZTWkmkL3xpICSNsz0mYyQg5EYWYFxVnLuq7ze7pDB6W5/3CGJg7s19OOCKOaBo8sJSQ8Muu1J/HXqFVKAUSBC+oQc7yE5CQqv/DC2bJzz412t85r+AcKa8kGjXA9k7MZTEGTPDU/JA9KbhzX7JRimVd2uyXZVQEYImRAKkLRL9w/RqItmbogP4oC7oABGg+4CYNSMhz0s+gQvU/QyLwlXWIxKiq3WVEJTFv3gFI1aHcjhUchOshW99cJ6a4oZgJa2mvyElVje/hFLxZXptYzfm6eOVwpkh0ekTMbfhQ3WTUMdrnlbOvnyQRwC2kkSXvMmfXy+ToETJK2RM6mg1QKl3pd0QWf+Mi/0qWXVPj8pXLhpIZgqvyuyaBGYcFj9UpQ6GrQoqfGeuIbp9FW8q+AO2nXyoIkJdGfr8MMwtp6y+7y6Jt/uApH+hwRroa8qc5VCMuEDuvfLAE3Glo1CiQ3znFAinmw9KO2wkQ5JaegIgcvoT6nKasBIaDRgyLoD5XIIqipHjzQXT2U1iFV4bjGq1q6qKAqACgLW2U2jnVwCFVClgJQFJM60/sQuM2LlYUuTLuVRsH5Wuh+vZ97MjyhE2oUDO+hRMh8XFVe/DucVO4RZWTOqHETUUz150ZdstiuJeQZ7LdkRe2WgJz0bwt/RZTJNeONedbmWrF3uNlWpf5dlH4MF8JoV8y/0TVk8P7sz/9Gruliedl9h+UnKdSuJMhFVU/0Kno6TLGr5ASCeVYkPNdsr5FLlpAEAtZ2kQxwHexFwt0qGl6ywhc6GxBBq4lJ/UJw1BR2g/w9LNWtGv1sJKlyEBzFxLrbOOE6hktjJVhLpuZgu8zNuFmfnodCcTLQ4SRJ2GT9pWAzMLTOQtQ1Nxonkl9IOo/ef+TEiXLrrXdIYS2UUc0vfEL/Jj+wRdE+Nz6ltIYhJHJbSC1Y0l7ArS5cVb2uXOgxvQcAQxtuax8Omz6zU3mNykPQOYR0157p+st6EAr6ndvlKHCoB28h94cSUeKp3eM2UhBQqkJ4us66BqXSsNLdlV3DmIaRPZScKW/LLWigATD0Ihxf9KLblVWv4mf3qOK84QqinDCSMcgNgnWDAjhEc1wYuRrZdeuikPnuRmvUVVNvMDCVUvCTeEAzBL3+9clf/GnJmkZzffVLygo/osQ1oGXgM1aUrN4uXEIZO416sY/a2aXws3xkLuByEoU8kQZlZPlGuUHzkPrZgjZw2+0HyqMawmjhRtjhBegmaSsdpeIHxGJbs8ZNsQKuh6qBXkER4YlYpGSSVyXAB+R0VkUY8trXYDEqycqARysBkXlNixXfmX/P4Qt/U8FDPbHGFbo+sD9uAa/JuCLTwUE7hvx1wSHAQWJWXOxt0w0h5D6XcwQK5ckmO9KV52PzXb/oQEGCAAhzctiwdjyPnWnnRVlZm/CoaSKUrPDMKLaGi3MLYtwYFA4uOQICWrqueIDtVlpGc6xBSHsONb/LXkXZcuj9uV6rEKfu/w265Bq+blv5wz/8E32/WvZp5Nu+kU1yQ+CuVP2l3JoetaLpUkGx25w4goTgBN0sIlN2aaAD0hkDuot5iKsdUnoWGtlvcap0hu1T7RtKy1OIjchj6WM+c95ZMiOGavz8qHZzY0wojmY6D8pt2S49yoxOsal7pT24jSiDVhwFTXeH5Bc6Vdcu6aIUwdWrs2XHju3KmxKq1KScbx87raGrykmDduBsiwfqkaJKlrxcLCEdeJtBKYozx4+VXuX5EfGjQBjZwKi1d6fiYvvmzS4QX10bKEMDLeWS0idapRTMW1mWoxjYK7qfmPZwtK0qWQGQNb1+WflXbUphckmSEl7NA6PTqAYhD0s5iUaqKBid2VWNsX/pS19S9m5RcIB1hceyt5ETQSCKioUMv0BSUaDIGci9kQ/doZ2aCkpAhWb1YzgygweZijzTWhmywBU1n/iF/8XpSk98/vOaTnvaI4xWJUSQdMjOwpzqB5Xl2iUoaCWhh5dbayKOpLYmrOrcHO2AbwELaXQkza2H3X3o5vKa73mXD3Sb3Tpa4KJbEJt0D/DAg6rQbKh9wllkOLJY8SgT70J9T9XIfl8Kh/nivVFSXDiIxQSfXR4QWjbUvdWNjBqCmd9H+bmRfiXtfTWjhpDW5pusT+N25Xf1fPrJw+blrqo7hzK0tx3k4mfhPlAwVjb8rvr/ViJEIKsqsxKOATA68LuDjHIWUZx5TdanrkIY/e+6x9oPyy5slL6VFdc2YkJZ1bpJXmLukAtUpquuDVyCXTXkofJ/QVuZ9edl57G5ln7++//hP9ndAOncfdvNstRpDezWMko67pSS8GHXXx0TB2NILLVZAWFWfUOOGYRtB21I1AuL1V1S/pBdGcmje/iLDQZdOapqPqXhWJIOweHN83jlrfghlDls/jz3Q+PgYlgVOUNpSlNQ62irKtnO1OiqrJU06cNJjqIRF+dkTT3aTyn/an+Sh5VINCU3+Mnjp8sVVV44oYHb0rmibpIQvnxD8UVKAgWdaQ8JYF0ZPR3uRkEK3FHHgQAMjJDXZw4MqCJAo7gYFLOwTC6cdkEZ7t4LGw6QD/eWPDbOnUsL9RjwWx2qyVxmYIjQFlOHuI7z/wBDzLXU/VAa477urlJQ9FYK88EHXlX27N7m02YX0KceQ8ZDRVlZkXMbkUDfA262DTjqy+fdQuLgnM9ms89+B+ugNec6DnQhp9qxX/75n1GwYa384+e+oFyRMyofoF6KrqNpT0sxZreqwbFiLB7NtbACVKaHOI+iCSkWZQLDkp7iKlOQ5bhRJN1Dr3tjHsYHNM0Bk2iZw9Coqyby5bvPheNu+kA0SsFLYMHLp+V3hiz14AejOc6obxCmwNEmC5raJzpeRtlUF8ZoAW2ZXlfAWayWCWkvJr9r0GA4KwcdECUJhsnz6pjZRaikue+MQ2ELF8et2RxvgvUeCoDPZ8PzHB6OKVcOhRpVVteD5zS6iqJJJM/iXH+WWBH3d72gunZ0bdbK13ds0nsWpdlcIyo1rm7Ublynyo3pJ/QDI3gC8Y08ODUFlxeAxLN6JFCLUheulD/4z3+kagnSSIrmVW4vO1W/GW5JoqvBux0MU9RXG+6I3CVXBZD3RJYobiqioDe7wJnmWJDIpHzUNSaQ4JQTURfkEKniUP+PInaSsQ4dSaROuwHFEzljjSn9ypmxInLZDVycJ1qTcyVF4d5OzMwDubI31u6WCSs/Fh8XCpeJ1AnkXhHQC+rbtV/1sFSEMGVnWiVMz589Xy5OXLUCxOAT8aNWr1WpA23qetApPq9V5wuAwPWYE3D58qgCJ6y10FRwihVIV6vK3fSsAzu3lpmpCYkx7aAAG3KftdYOLEie6GKBHBj5CaWs1JwoXFH5T87cbxdXRUrDiibAGyNqLTKcV8EQzRIlVclUAwZcl3v5Q6/U9Jz0dPc51FpFMUVZ2Qti3UFzEW7zkrijDq6hFDkzRr+hgmxYqjLNSasmn0Ryeo/5GfT9r37kpxWIWC5P/N0XyqSKkOfmZLV0b91aOGry5mX9hgaVzqC8mAinbk41hd3WykE48cpSvZ4TEwtB0t2iKr9vuOfu8pJXPJKM2LzC3So94ZWbM1lTXQuOCg9o3zK/gytoDosjV9WF4ToZ4Z3DGXcoZHLcRK6bqGeFN4a29RZrNJN14oOiwYN9olSbjPsQ/Y3K1GsMHzIdKL563MMcfs4TH5js/YZTynOjRnRwaSKHPvPLGzRWFV9VuDlJKNpEGv3cJsxDuFsZW1nm3htEx/vMUQXObSjb5JXVTptWeGxT1iwEPQKJcsjvjEJrwp6vk9yRPA9nFuTjIjP6gVNSQUQ2bnezwERsn/rOM+XvvvBFIxS4KMpn7rjxBvUEJ1FXh1ku0qpSacI3BWmjWAj901OtXYe5VSjGPIx5J71O//Zz6nUZi5L6vxwaDhx5VykTIIfLZVNeaSLGkliifXyWyGcUoeWBwutCM0IoWVzCJDYnyaUiUfa4uu2sRBc8Lmy2Dyrywmd3aMDqsbL/wE06IyBa9WWTEplV5vkZKZ+jqiZZ1ZyENkfe5QaKI7KcoeTlzvb3wQ3htqdTyIw6KsyqyyromjWkVpIWwpvkPnYq+EWv/r17d5Vnj54Q8lSypUqAfP+WLhQfqBQXlmRTRT8pSIeW02L1i/+7pvNeVGpHj3XPNrRLSPoDE9rpOSY3VUpv1aS+zr3aor/sZQ+XAwf2OhM/ycxe2foH/zaGok4/SVG4A0NxHynx8sQcPB+oAK5ABNOClZ/5KFlf1BpNnzNd4+Mf+Rk18LtWjn3ji2Xi/GVNu0CRYMWkrKSxQVubNqkWqTcdC7RcCnfiYunamuLYDDkw5LQZDmdkHaSbW5EVuvX+l5XDD74ysJtDjO8suI1V9GBFXk/0znoryCknn5hyhPh69nLcH7s+XpTgKL8wz5njjAyYrs+98GWlE3OaHyD0/iEPk0PaXCdtaq1Hne9iiwoa0musmD0iiQ+Je1g1V1W8/Btrwu/Juo8lsquk70An7tTA8Wcjq55fBxWYT8lmhchG9OLGxJpx8IPEEv7NeiQhNErTLnA1DU2fqzwMz5nDEZSXNa/JGvV9XLHZgyjWnOkQzXUl6+d6pytatEo0jG8MGEr2L//8r8uxI8fCO4mAJ+lyn3q9H9y1xfWJUBB0Lk2tHsHEoN12hpXQ5oSe+zKQXVTt01PKZUThWawgeCbnCckQoBRxzUAvVLXR7oXkTItK3XMMu98jJWNkyL+ZHM1g3gRj3PfLJBZ8Vg1+mBQG+YWrI2u+TUrXY8ZYG+rjJOtTGp5AoHH7ls3OgSMdgkk/NKe8IjL9uTNnBQIUhqF3Fukc6uKgsKAV7Krut1dlMq3kJUpB9Cpxc5KJTDMTOosqwjfnCGeMxzMgENHiziaX1Lb8lttuL9956knX7F3TJCi4IDhwvCSvB4oL5SC05whw5dxaaCooJAuSbJXh8Bf6RB4VXUdbnSEvhGpFTTrGWnn5y15Tbr51n8tzOD/pehEpcn9+YgMVMJCEnnND4CNKiy+nNVegEWo0BjuIK3ogLZzQF5zhGMKWT/zcz67PqGvi81/92zIvGLvIFBRdnGm2aF9at24eEsimF7Uyy9tk8QjlEjomwzYOGQSkFtxdFCBPo9B8EPWwhx54uNx0//2+GVMm5gcoXcBiYLErl4Rr4n+HK6rMUNCA+ZuEOdPYLlDUi2R0lgPtXxkhsTBxl5xUCuw0HGqUh2k9n8aGQ8qBq8jK1+EZUBy8F8WRlINEInMAmrB+SEK/oyrY9DrfOCh2X6KwvCFsFsDGChz7n1goC+SX5oPqNfmkRLXccdUFD8nuNqFc1ypYjUpedoWyoyqAvg7PAl+QSKT3InraPFTEyC/ygQ730+SspZ7NrVpcS8j7EWBcKjuz+cMyWzEkT47M/d/93f9YLp1X14zq5tFLqke5VHfevF+F40pepFWL9Tp5f4mWuja0GhNzWzpwdDNIx04OIvLjxYtVt4DHXfIZkBewtiZlRw2s3DT+BjHzTM2+8VoMYmQIS07KAVYfApqbMumrazPL0YeYw2NuDJ4nqRO8jqTRZk/PXT6vTh83q6EfPJ32VNdSrqy6oCyUSfFYp7QWl1QY3aE1gNNrUWpBu4htuhIg3t2qCzRyYR8xKPSNv3hWClS8nulVoVR6fmltB9Rkb3F1ptyvs/X4U98qm0a2lakrqtVltiFv173RTWKd2lO17FlQRwc6fS7PqcMKLqOUFhJkcwiaVIcESwZKXwAVBEfelUgh3RsZ8yBaIaxXvr4cuvNmgxcrHxs1TgAlR/SCY11YMIuwSfSkyHD/ICz/qp5vH1C/DgNmSlTfO5qtdcZvS1jLn4RL+MH1qanpclStWueuqsE//js1VYSS9dD0hxoZUkGiXMKOOlQTjc2gVDJsE+Wj8FlKrvZFd3STD2YChjbk8EtfXfbff7cRkWloJzBibTkoIXqdHMepsDW/zqdYqTRchTVAc5DDb+QkXneIjK6sq6oXbGWTRU2iaxVwlsBlRDms+fwsahxDlB63Y+2i16IkiGxmtX1fuHZwUlhSqgLc5VQN5+TmuI5SJU3t4iOwps4E5/L1wFhhgHS82VY7uaZFBmiex75ORvIDFFpQo91oK5xQ8Lk4RDBPgBU1S+T1TCg/6xah8YvyiV67vG5jNLp/ZSxYOTCfHV/ffJ/RRvBd7jriZ86NzwWV6GcMKfmN3/h3OqjTSUpFKYmL4RP37thSbt63R1aaxn2cw6Ac8qBc7MxfUBAPhNKyrmmehz1EhlB2QQ8+BChk9po7NRqSvdehwyPhZtNZId/zZaSBUrArlLIfu7nmFXHncINitJ0D5HuJm5lWNlwrriaFw8dPnyo333irk6zZJZQ752hZ7tas2sywDlfGx8vZKfqXkzeGYgDFiJMSl0U6BnsKdubQk6M1L1J8WudyXqjJ92sOjrOoDHktSq/aPKwIpW7fMVLOK1K4pig/XTSWGDljha570f2Q09SvQut5eVOsj0t+nMLAkFvukwlBKPAoHBsJvZ5cLFxCyz7Z9PruwYdfXu6653AKoDlX3hcfFp8pGzQ4K5udBFOQksh0lUtTDpGc2PkYPVMkVlbNPlVQYlOvl338Ix9YnxqbKsce+6LaU0yodzLWSxugh6GRPnkSQ+qz7qEiNKjXonZS20UtE/lX2mDX0wm6uxe2/10PAVxCS1+555WPlF133G4B9CHlDs2BAH2dBeOzCKpwtbwFKm6OUVUTiaoPGeRQD4wVFtcMOb4BOU2cNxEMnpTDXuud9E+ilUZ61t9ZvPgZLGBQjgl0DiEWtXqpabdM1f5qmVSbjheOnywnTxCsoGsmws29caixVJSXpEJgaGCT3YRdIiu3qwNrD7k0FJLTzcE5IPZxfC9R4r4Bf67hsP15U/Le4SR9cnA5pHVNecx6Ir2Geg2pqinoRnTC91kYcvmqlHOA+QlvI2pWNYAPfu7pusKLy+gd8jMmhcGhFjSPhQ7uhx5jv/6ZfyOLn+Gg7irraBuJ1G3lpS++WSgBfomABPdCOoAUGJnjcm2IkprHwA1zwXX+EDBxLBZDZxAkOICrjDG0Ho8hs7sIlwX68oYSMYvSjuucffc1qZ3VxXBdPaABWbTxjnJ2tQKdMMigl6yHcEZkYvRekFu2S8XLQ+o2EEMTJAaiRFZmFB2clLt4RVn+l+kBpte1yh20MdU9giAp9GZQBV0zVqTYuzSAY0GlM2NCbUt0XSWlAp4Qvkfy7BF16u7Qq0jhOnwg+zBHJ9Zpl8HhjhIBpCNqlwIMrkllwANF1aT2+OylHzxnuYUGVBYbFLLOOchPKI56x1ah67JK3fBseUiTsF567216p/vf6BlQz5Evy6yVFiJbLUON9Nvt049ig2z6skd8pv8dRnfDu+Ja1VCyX+b2PvaRn1qf0Gy1Z772udKqgaYrsnCQgrhRtH3H1x3o03gih5QpaoZ4A2qzqJXXgKBzD3jkvBFsFpcCyL7y4BveUrZo3BMKy6KC4tAXXStTr4UFjYUzyjAS8vmJYIFAcIUEY+ExEE5SDqyVEVjnC3mljfDTHoa3R5snOTQHqfkyE4Xr45wsWiTHXUtDhNyHXSxbbRRKEkcZuvD0s0cFwZ8oU6NTdmXoJkDEjOm5iQJCZKb1a2WCnfMFOO5S0h732K8ykwNqO3Lo1hvVskNTteUeUTAOQskM6hxI3w1Jn6AI57eE2Pbz+lBEoSRFgmdHKHIQgeIr1X3NkyfRdCNM7E/ZsGsVedRXcsjt6kiMbAmjDLyUUZtWotkbvkVIM5yBVzDhe+bqVPnd/+f3XXWPHqe3mlvBWFDbyo17tpeDu0dE4VTSVp/jCivJGMmEGRqa9jq4L44LVGOQa2RvzJU6kRR3nPsEpujnZpejrJHN1BlWhC1u1omiboaH8cWNTIY/5LNJZql7u1+OBHJJxqg3bXmEOqyo10Wmj5UhDcYYHlQSLAoNhYpxlrUnGk6DyhlFCSc0E3Nc3sw0EVBC+dyb1nCZUXq4r+4Mqm62BBVA7ZD6et4L518QikprHkpmaMGzRiQQoKB17uwaEh+mFCQ9b2cZ0HqrnztdYSnY19rgEtMnDNBBIGx9VVFBEfDLKizG6yey6jRc5cexvuRd8dxuL+OOn2pf42FgfP5Mue8lj5SHHnqxzjzKOQbA6S0kmLIvBiwYh5zl64X01uSVk4qcOghmTtXbZ5Rs2TfCNdOqf1dPiP37lQ9/YP2quicceexLZUkLSukVyooyL3x3tN6gcl6AuW6Ap/eTB0M2LykPHFYPvDQ4gBfRZtG7iE0BYbQOlYceeXvZKoXF10brXr7HbwbiVivO/52r50ORLx9Z/4OHquH1aj2Tq82FeANbC2yt2nvD/atuKMtQD6ARFJrelgFUhPgD+1nguJDNlz0Ef+56OXl2tPzlX3xWbaPV9VEkJYNmIZmTq8RtwK8ghHwYyhqX2CdFd4rC0mtEcIY4DuwnNkL7nX37tpa77j5chrfukOXU0NacuboIhISNZ6JszLtV64VAAGzqv0PX6Y4Nvaktu/4smdXnB8q1/JysXZReyjzYPyxFVLbTYRFAugy4bzxKDAMRa5qIBgsQd7Qh6dnX5545Uv7mrz/3XfP9ajkSfKTuuUcuz/2HblFzvnx2boOADCU65G3JytONYYMvwg2THGCgjA6cdJ6vWrWQkpkYl7Q6Dqp3SxsoORSrAZh+jlvE653OoSdw5QUBgDwXnCEJndT8eJgobiCgDQTIhCh9xtjcpHtBbVc3Tx9XXid0SM4TgmGqQIhqVtOdx4WwRhUtnNdrrPy4HmVuSmnoBl3pevRr79F4PA+CQZGqw8nYpXNuGgDyIiq5joumYmn2pIMWSfoa0HVcCrrQpYaAi2VUbZgpcwKdwjlD50DyO3AiEMH73eGVyK2UMJ4OqQ1peZ58t04hty4moCsjnqAGCLNzfaIcuu+V5bWveKB0qmRmo3edo4tBsC7/sao1zLJ8OG2zejNEauPFJK7L+mcidQAGW5p8Ma5B8z7Pl7dia/mVn/up9dELl8vxb/+93EG1YlVODBdb0EILOboGC4TFA3e5XQxdEqVrtXDLkFwcPiAqUTPNcjIwrAJNaLZlfaA8/MbvLcO37gsCgphvtCpuYc3ItgW3wrK01MPE+6sbYxR1/e/1yIG1A09jrJBjhlsbcr6xAD6avN/f8IqE/h0Rqkgmcw/rAeAaXNUHYa08qQjMX6rEZEaDLZgondFRHPY8OwqFjhPWB05Ere4Eh51Kdf+tzfVQDFrPNPcXOo0nivFURLar3PvAfeXQ7YeQTis6p1F4ZYO9Kutmd8xrZRjKhrPJwZbW176f2KgmvQLFlMdF0MMhOKEPF0gvdKyHHt0+xHGp7YBVZeTuGv48Xmi4pvur61/dTq+gLM/f/u0Xync0jcnz/ZgrKHlJWkCUOjzMiw/uKZvViYEBtuBL1gPlYqSpA0L6TLhTWr3ZLnlnmtKNrEZQlrlEh+75+NAZcIpcOXujDyVl3cqf62EI0sYEwhcFz9Mue09B/fw+xsWokukx5rC0SpILGhhekSLaqR7pHbXzgIusnUyJAqA9k3p+SWFNqcnhmFokz/CzemaU4K0cx2EbMRJICWShIBYUEWRE/ICKj6dVUzh26WyqAwALSuBmLFi3FB5DfQmOEYzwTglx33DTDeWIpip3qlRpTq2/eY52hJKopp6FPMqypkRVzSZc5F6UkQ/apRbUKBUE5u69cK+a3qxUiXa1rVnUprcpcti2MlMO3/fq8vDDd6lSIekiOX8xete5WsTjutzYI6/o25UhcH9VmaUBQXMZXEJDrXhAzt/rxHIAACAASURBVOcKCjba/8SH/+X6afVuP/PUV8uaIhm4GQjrkgTLmfp6yMF+ZeHSw4fcKimlNoVTiRguz5OUFsuKgV8mLV/C0qXQZwqCEbrB8pq3vLcM3rjTKRKttQmdS1n8vrgvqSPCIgCRUAXV6tm6x3ExGrLmbZRYBNyHpnFTvGz1T0JGPsAWxoq6DMg4a6amc6AdPcuaWzhd3IsC0CI//u2nyp/9l/+qkDATRroUetaASWHwrCsLH2vicVD2VIHsrJ+sq+rAmGZNtIdWJ46ikGRozgKSlXAzf+PugFbxt0eGusr9991Xbrn1ZifwZcw3DeYw/lovgxqzLzmwfso8U54XNAZXEU7AitRoBERRneMNFJoXVKBYOYSqk7iyL5mrO7/HnFj23AoTZeHnD/HerOEf/uGfqgD4nJUR97KocFkidUlMHOzrLzu3bCmDrswN+Y4+wZoTrCF7ndQEkkBZU9bG8+24k6ocw7oBR1FY9HBjViJdRnDx1JiOxE/fUtzLRs8iy/nih+A7iOmakuGlzX2SY0YxMM+PnHPoCcCQEDp69WoZGt4iDglDDqhGCRquWx7JwKeTJ/MXr6pV8jjDfUH1XktcXlxd5TjpnybgQZ3Keve0I5Sv5z2uaTL6qKKMU34NHXl7NcR0blZzFTrWVEtuN0VUg4yhekDNS85GBgf1edM+EWuSP5scKX0a47Uig2r008osBQ0tXlGgiKiEkaarPkIRgCYJGnVo8o/eGf5MXU3pAvuiu15aHnn4AbUFSjDCXzlQ+Tc/iptRf294sLEu/C4GP3SQC53ZIYtYFJn5sBr4qRfMx3zi5z6wfur4qTL67DfUkjRcA/4+BcpLyiCFYBzoS3q+e9+QASsfGzSwOB9SHKrgnHzzi3r4g1uHyjaN1jHsMxk/WB55x/tL396tuoEgkRT3xm91Jbq5KDzkTFWJUHGweOS83q8lCEsuDgLxXVyO+yBVLR98xYJwSJpj7EetiCtV7V6MygXFxw6KSbJb/Tw9w+VLV8tv/V+/49M5tGnYlszBAoh3CS2Kw5+HMFehxRW08DpgIrhNIzKmIStCM68CXzgdPhGOCUFId4GUkvhCuN+6C6D8sD7zla+4txy86aDnwFkB2c/jg6uitxXiLhCLwJ/0F4KLaRQKTQdlJVHE1Z3jMzbQ2ncp/Y0E4PiMFiwrU/ZBnxMMRwcDCHFkhevSfiQu4QpJwdITX/zCVz3JG1SVXB1Zex0qxtBzD51YfBm5Sc3Q6xAn01NrAJO/Vh9Rz0YaBHq8kyTSDXgXw+LUtZrCgcJaZPSYFVamL6czRSXdOQxsL8pNSc9piZIV28jVqofJT04zPJrm2eUO+kTRIo8z2stZTaTZvmVAnC5pBlw76w9agauj7TO1uPQmv6qUhhn4Mj27kTCKmF5enj+gn+GS6bmJvPf1s/9KJYDb1fNOT1wqE1J4PG//UI/66C+XG284WC5dPufxXCbPzTOuaTAwg1I12VkKimLodEeN4iCnjRY96xRfyyWkVee8QIrH0OPtiKhnQZxz6IYHSbnALV6Dj1bSKFN8btLYsjc/8sra3ypejAEDC+W1bgyD1U5FqPywejh+LbwUFEHQmf9suITxasw/czFyOx0b07r8Mgrr2IkypiGpdIYM4qF5XwjmFqElapaAwXQc5YtEPlyNZVV/8/X85dlyYWax7NHm7d+p6beMbNIBJVeEAY9vec8/LX0iV51siatULTQkcjPoMzlStMLN7TvPx9Y6vJiRQQMBeEzcBktSapQidrzeS1T/HcVmsqxGI7jfJuM26ICoVRym0DuVtPZRbi+/9Tv/vlw5d6709qlol2JTBwpyI02zv3T45OSAHCpqqtNzsYpEqshOhrFCKGleNzOjiSYyEE6Y0bNSdpKcI9YshCVBZIjYNiUW7lUJxiNvfLUEdrM5Qic3NPyNv8nzm9OhWNq3aFtpIjlOCoGLWDW78VUVeb31eiwy7jGCQgIm7XCISEWxx80m7WBZSmhesjI+fk2Z2Doces2cWuyuMZzBSEqHAZcJtCz56daB8JpJ+BbUvig8WZ55Ti7VtNyldaGQER2QPspStIamB/Qetj6HGkSaOj1HofiCjtK1sq4Q/po6s77gHuDuM0XzPpSDM775TFyM6r64Lxr8lv6N1qUXv+51gzeE94HArx1M7R5Ww8T9X1ZH0E0a4zXUCyJgLyKrHqoiN2tJkVGmWs8JXeMOTul7Or/RC4qUAXOacvu6lOnuf3Po3XNeY9vV6qVd6Q6kCpFLxnSisavnRNfwDIsi93eIF1tTi5eWMgE/ptSHwBd9vsp76K6ypLmInNF5ina9ZigskL1WSykUXJtkVHhotxZCgYjToiOXqggdVOugK4tcwhZNkrYtlUy0S/4PKLr7pkff4HpEH01znvm9TWBV+o3nEQjAf5KAjcJOZ5B4UUFbFSsbTPBhkV53563eFh5ay8//wgfWTz95VMMun5IQqnCSUdzaELJ+iXwR8oR0J5/I5DGcCwdKQrWgBxxT7eHRCY0VFxp72xteVaZlCXZqQs7o2And0KwIxq7y1vf+SNm8Z0dyXIDdJkS4YdASuTS0v6WfNAcDaxxUNSOSckkcwNbtu+z+OCfJFp7rJCSaacSwHzx8XIdA7riWNo/GmuFxGp3n/BAAVXwrHxC7UQY5dAvQ1GKNsv+93/m3JiVJxlvmvuBCNlj2KNfv0hzhmyAfUbxEW0gFgRNw90zWMR0ceT6q8DESC8qxYcAmheUcRgpbgwSSRc19855uoZOX3ndXeUDjwt0XEt3oZ81mZ5+jkCr08/sbQt6KB7cVfhQ+LD6dVXNyX/RdRVCupoQHlDwgB7JA6oY5Ua5cGRevIkJXn3NNB2VRI8R1FmkQY0uMC6XSCbkfTA8X2pKMWDClnOjRDo/hNtK673khsbmFGSEG8TxCIO1CI30im/u7FClzSxiMVgqVQ0nguqS3uUWcoAWCbbmAc814LvNVzCk0twrBT2pJeD0Tt3CppN8oYktKRJYhyRiOwDlTPkrEzCheujsz1ORUuZ2jE4tl304FSKqScxCDLH+t14KKu8kon5cLOC2lMCWlsqB70U9tALo1cit7RnKxavr0eTxf/4CG+jICa1VdeZXc2SGSvEe9vsj+n5sdLzPjikqTXqSz0N+zW0M9xtUxlKCPpurMXXKgAbSEcQwuhsNDyDPMo0WGEx7KMqiHBrlOTmhaDr3ta/UJ1QLuxKLPcDoD80RpQuiIBV2GV8rOW/aXd7z5zS5NqkdrQ5mbPGeHzMum3qJJJWnOSaOoeG4CfCZUvNacZ+TOH1WpCyQRCUBe9f3H/vefWj/93NFy+YVvq3Ux48SrS4gPTUGplBSkOxDRYUt1ZEBhdWqg5QOP3Fv+22cf1zjuKR28xXKf+JbertVy8MbbytFnntJDTut2B8usIO+0NmuTmtpv3jlS9t9wQ9m1b58m8/RLQNKnqQW4qZu6pB5AX/riV8vlcxfLG970BkFflQDQP54IHNtgYikavWmZ7JnQIcRycI08qiKpYTKTz9bobCaEs+MOVeFkccMIIdAR4D/5k/9STh49JTQ048gVFr+JzkUkcjV/Jh8Pz9GoD/3b9b/6QyY0VqRDfAXdKzslEOThdOiAkyvDOKZrmhAC38F13GuAwwgxr++NtuBNXDDbUoZVMf99P/BuDXvd4fy3RluRFmF62FKkvZTyW6rpCYnKsGgJdftPRZ0h4VHwIfAt6IiJDt6clMmpU2fL+IRKTqiCEIQjPD8hTqVD0a0+7SH9yVcY5YV+VbeEHqVoMK5rVs36ZhXlUpSi9FJ6ApLQc3VqP2k+SN/yWSXZLimpkgJh165qDWjd0q3DQmM+Imnpmx+3t4nC2tVFjN1aIJvQRDhdQkJfqkreO52hTiX3nler5QaQNnxcG/qDC2FcUFZmgGz0WEeUJQfPHJYU48S15bJ7q5rYmQsjjyk95Zf0HHxPzy8qSK7OqNWx7s2tG3G9OOS6NzLOUWHUEtJGZ0H9qLokHwODmxygoQHfVVWe9PVqZLxaKK8pBWFOgGJOxH0LHJ+UzpBAw7zWfkJzDknDwACwGHRftXuK8iAhV4EHB3jgS+lSqutv3bRdY8XOi+QfETAYt0KjfzqyCmfHPbQz0LZNTQblire00SjPaYNl6w27y7vf8XYPaLUNsBdjy1Hdwoa7SsSd/fNsg0YWWVeQU3Uh+WwGsRhccEX20oXvnFn/19c3yvvYh39q/cTTT5fxF54QvIdv0IM6epeR8hCf/UJYHkPPzDeFMpeIYGzeWg6/7MXl7z//5fLsMT2woCL5NL1qBrZNr+/Va6ZF+J3VINZ15ZaQdAr52qo2sMnkFX+hxLl2uZf9fUp+G+7xgMrnNFlkk2as/fMffr/+v8kDMJw1C+lnHURMOg/l0tQKM61yzMPUBbQMx52J+mm+8JVReEEX+aqqB/LPPwcYd5VP/uqny5zIy0UdRkdP0EBGNFZR9aq5TkNWJmqS6JvrIwlhN5/B4rMphL7JjTHiIjSMy8TkEnqdzxm5kkZBTg8EPYrL3IL/lwnH/O7wHbeVV7/uVRpcACkapBCPB4K4uU+sevg6f3FPWbysCYqVo4+8VKRCdGtSz3324sUyLlRFSH1e0dFJjaECOQ6I1EXYlpktyLGWIeiSEu4Sglqk+6UOLH2pmNZMXR2EVgvj0HWYXbengwWXR1LlIj3FJReUr6yuaHIL9XtScCAltzvWTXJoupgV2amhCOqD1dVBFndWudNSjKwnRaThT+zg4laCqPwSdqbyo/oOZMZXKC2pZ9ID7BqFX0l8ND2YUAC4U5TP8L4pCG+5byP0RdernJojFIo3MK9noR6XhM9JzS6YBZjQj4q71Rqt6tq9JI3qZ5mjKJdd13Z9qbyURT07MjLQL4Wmm2PSFC3JrRMIhum6IPIOrcmAdm6RBgMikWeUuLxAdjvoGbcTpMgaOS9Qf2RoyHVEkXeLk+azMTjjOp9wso5ry5V1gwIrDrVDl/FpVS4WKRb8JB1LF8uW3bvKe9/1bnOQQbsZQBPHLmekQf6Ws3pGua9ErYksc17ZQzwCoWdrPoQwuxTQUEWW56mnqOWXP/Iv1o/947MaovqESHdQBNYiGevANSx6f3+yYXFRZhfay5mZlXL3/feWwU0D5dTxK+XSxfNamGsKtTJxRL47Wbh6yDFl0A8rZH3XPQ+oYv8L5ac/+JNlRYXTo6Nj5fTJU+XsmYtlcvSy9c+1tUnBXgYu9pSDGovUrdykWRGxI8ObyrbNO5Vkua/sA23JNXWnx4qYPO7eAkludfiJcFSNOOah41fXSJE5tHA+flmje+r3LOj5c3Pl9/79bwl10oso7mYKna8rqo2kOTYTXsYKj2u6O1k9FOGXspX8Jvfn+Wx6PcrHJTwejQb/UcoMU2+vCZnoYLsvNy4lnFiYx6RE6E+H9mNAAxre8963la1qjgfEsTWy61pDzrjgTocI4vJIdiuo64QgT2QaR3/hn06cPluuKNgwS+8m/XJCrvmMNMoWEbqaWCJLDOKTMpKAk0XNQcYVJBt7Yk65fHoOAu098J7kUdEgDmJY94eATuuQLNISGVQg0ndR0VcjJpIh6Sag63q0k/6CQltpbtc+JEJ5h95zqbz+tXeXC0efK6twZeRsye1xXysLPy4nU2Wu8yVGTxg8nBXQB8fRkVKUEz/DGKQKgqgc7UzoFkGbYLe0Yf05xEKJrYqSXda0nyEZ0171pYKDJJrHulFAPCN3eE5kN/zQNKQ3CgnFiavtbqQy0kIPbtjn38nVp4cX1AGckbZlbOqqkJU6qSo6vEpisiTHDR91/0RMSROBw6JX6/zypCLWrWXsyhW5oVKU5vQiyE70Zq+RW7I59K8OtSRm6lVfr3phMRSGtjVyY9lnDIgVI+sij8pGR+45riTDLhAQooQjSnR+77vf54CJFZTujTSIWIYq69AaiQ3q9xgS0Gq4wo0WPaw7+4U91R65hMdnNwbfJrfBEvU6LR/76I+tn/z2C+XKke+YqyAzN8MegJNsmkKt/SGEiWudHldUZ2m6vPyuB8vMqXPiM2RVyK3RBSFMuxkE2bkoayzhnZ4re0W233/4VeWv/var5Sc/+P4yuH+73Tqq9olafOajv1Y+8es/U378xz5YxiZkWVc6yy51U7xhx+7y5KkXnMPUK0tw6PA9bpj/mtc9pJa4/fo8+eFsJM5LJWH9bNZZIY4tgD6s2cK4gVEg+eL7/KzpXx7w1ia39LHy+c9+VhEnoU7vA8qK6vTA1w0uzdfBF+fjGqXYEI/JjeKanoWAm63vfUC4hiM7lO9gEOB/QFxSBLpvcr2W5VKgBOzqSrF1uygO+g8LBgoAvotfkCvz2tc8VO5+QAXmrsKvXQzy6vqc+T7Y0KbNN5bkShkZcXTnL15RVHRM9W5KjFULYzjN5ZV2Te5WwaxQAyPZmK7SwSw+K/9VuW1qoYtLpPwnXJpFWsWQ3EiHTqGDJfEx1LIhP50oTCkXautwX6h0WL6mwyeSeRFkJYRFFCrJxLiP2mMZMEpWOro2exJxW9tkefv3vqpcPP6ERq2P6/BKgUpJLOh+MzOQZ8LNw1FIImN9VB8Id3rA6Wa/dPiSnZ3cKadReEhtAgI0sAPdo1jsNhKcUbDggtZp+3a5g+q7tayZnlZWUrrzerY56gY1YGN6QS60rrnioAl0ilQ4zS8pciYLHdebuQikLsio9PcMuHdUJzMaxetOqmkfPefo5rCkteqVUqOrRQfDIPTJdD5tlTAtLU7KsGjMvBDUNc02JH+yRUrU7cv14MSAlmsbJ0elyT9TGkabvB5FFSxja/CMTmdKeZN7WJF3SXa86gmhUJiS3U5QTDK4ZcuIFNYPKis/fJXzraqcG8laWQU8sPacwSB8ONQEy8wtUk63cQaNia2wQleg/0jvyEkNCNF5+fhH/sf1o48/Xa6+8LwengME6RfEwCBIEE1PX/r8LOnvM2dnyjYRqrdsGyot6kbKqKZWRRqwLl1aVCw++TVt2phrlCQoZ+vQoQfKGS3KsDIb7njpSy3ovB6U8cd/+Bfiq46US7IQS1JW3DaZzX0aMTStXkCHb7ml3HLoUPmLf/i7ctfBF8l1mClv/d7X6fpqAldHZQW75L/4RBsdHyyg4T5C6iFAEeYkqyXC4wLmZkF8EDvKv/mt/7ucPqsqeSGKNPELusrCJTMXzsVNyQLnqkXI92FAriuoRO2S2Z9XpozBm+p/0q0S10OC7cLWdMxYENKiFS7FwcBmozPtAyDeCYc0jau2bJ+mE/3Qj/2IUZ4P50aPqhrN4QZiqC04ZGPjLl5RpcNRDSAh/L6kQ89k7qnJKa0xeUGDsHpuAzMv5EOImTIQDjT81bzuz8FAxr7jZuj+yVFqY0iC3BtSXxNkkask40ZRric/S7iWhLKWiEzBXYHolSrQusLhAB3SGobOBUI54ms6uofd/aF/cLm88vVC9/r18W9/Q4qdgAU6gC62SXYmxM/Ye7siNbXF+WooHPgSlBM0Q01bwL1zCYrWl5F2cLR2CllrOipgBOwuk8qiUpwLlzRFeYv3mORR0lUWNJEZZT0n3m5abj2DT1dd0KySK5oKgqb0nF2gKAchSBPqNnG9sAaHKTdP3/fp7MBXUgw9L27T6E6vJbLcT+6flCxGYFGoiKBCp661QAqHOo7Oejw9DQMz7MQEuHP1EHjJLoEG6hapVyRp1ZFCeRBy4VcEc4gQc2/MHIWsgju2GwzCaiYyaQ23bh0u73v3D6j6BbTEGeN8EAPV3lnuAhAMGjiZFVBYHq34EyG0S2j3KOS8/QfuU38Swa7njT2zV/D/UvUmYJueVZ3n/a3vty+1pyqVqlRCFhbZRKIoSCMKGEmLRCAJhIDa7T62PbbONXbbc/U1ai8612XT00M7beuIC4IGFERZVBBkJ0DIvlX22pdv3+f3+5/nDXZVKvXV973v+zzPfZ/7LP/zP+fwk3/3b//Zzv2f/1o7+/C9bH5SW88UPVdISEYC7kZF9PTr2ZlvV+/ag3Imy2XYYtEomYY14ndzR/bLGdqiVS0Po991tkdK/iUvbZ/+8p3tVa//J+3Ys5kiwsKcxoqPLx1sX7n/G+3zX/5Em50mu0LK+8LFlVhJm7sZxkyyWPOzY21m/xXt/vu+3nbt2tW+9YVXtxd/20t4QhdSl6WYQzW1WGKm5lMvoHCMTpUUKN6Bd32wNUWX0RiaiAKlFwmNf+Pf/18Bw/V04lb7OR4qrY89rtyYhIHWIeotRQuU8uEzzIJlso59kmyn23l1xSupzJyW3LclrNWS+z0JhNZxmeRweK2MZjCLVUo6NvBKa7y82+nPVHLch2C8WJeCPrHYfvEXfzmZU9P0uuNF/1Bxd13FDBndT7zphx493u6Hhze0M0Godi4g+RJN4Gbm56s5G/e6YUdQnl+OkM+tYdpFb3bVisx/cSgtrePZQ0VQIdgLXH4c+7gqQRGtIkap/vDu1wiX9Iz8fDEUi3VrbodeDaUj4nRmq3imUcDfwaGJrMnuPcPtu197XeraVpmm/Cie1hYhdBUyG9Yo6MXvSf1pKC0eoghIQk6vH1jQ9XNOgX2tkpHVbhhN2MKlQpcoK2XD+kIxJJ7j+BNPt93zu0IYWUNhOT/QkWVrYpAoLp+LwqKMz9qw4Z7lLSFE156NOFSWcDLXMuTkXjYw+gsoHBXvLFObx+yLhQhcXCTko+xmnN5Yy0sXq4cU+52Ovyj/6vILBuZYegzEaTo7BE7g24kMbCWUt9gzzFBUrA5DhAGYwDvdAHO8SKZX8qhDVlUw9lDPy1DiY2ZsUazWsypLwzz/3gPz7c03vjlZb7HUwpb9z0XunAcxKn8nTOyspAucm+peE0yrsoH9tkTVVLIQq/LRurf7HJxzSnN+cufeL3yxPf3oQ2lN4a7rUpvC19MaBRS31m0SjX/F+N42tU4cD/9q33OuaOdPL7cD3/WydvLrd7QZgMTPf/rzWIqT8cy8k9ANJ3ptZW6mnUPgXnLdi9vuI3vaffc+SDr1PENbmZxC18PjT/MeLRRcnCNHDrIg+9iAsXbX3ffSH2irHbnsAEI73Z4AV3ng7m+ApUy2W9/+ZjgiTvSoMEyl0ufn5BCr9QOgqtCiFbKJUU0JFUqRpeYrnBBXxwXcaffRfeH/+/0/igeQNhz+TmPC4pWrbrI54hJBq7sQr/O0KltYSq5cXG+zfObcqfF6veKZ1xTQ2PH1UztnvySLUM2gVk/tRbK4JgBsbhc2sMrN+/ARgxeRgUSAxmFAv+3H3kFzN+gg8r/0FLL5CqP45Fa7cG6h3XvvA+0cWScxSwtlnwRkdxbfvMqKM78p70pvMriDzGgwRYisW4DnkmZHSYurGgK4GutyFQK9cNUUZG9NXCTtWcRdsOZbKN11Dvcqh2SdPZfOwV0Hu9tEaQ6BsaikzHKZhRK/srZSYtAoWBgzSdvrb3wVvC9CZbwJ0+yPPfxAWzj5FP3M/TwLrCujXEemMKDsdjJ/Zh0LTys5kHqi8nId64D5qnS4iGx5XyZcxI4EpjfaI0+dbHvAVgfxmFbxdvQW5VytYrQ3yKyqfNbTkE8OoRxG+VUaJdaB627xGu3RKMogMhulI4aDcWK99KrFNfW2pBMZZtoOOUoBJbdm9QRemYXShufbzj80/ESZbLAGEnFNANgqWTE3xMs5UNkFp/PZh9vc5ET4gO69nSoig+UUxbMcsgWO+Kq1reyr5UuDNN7cffBAu/mNb6pp8J3yyXr78YlwOg8rMt/3sDwLXRykmsneGBZm8WMsKi3yj7/q7iffr6EqA79K8fM9X/hsO/XYwwiixZCl17Qk9p720ExTjLm7zbWp09gNBGR8do5LUa4zewmjsJdI3T6WSbzm/86dPRMXdThxOxfEGg/vPtDOolwWEdi5faPt2mdfDS1iGlD+PBb6IizgZZjOCDmC8crvelHrkdo9f36gfejP/7LN7hlsr/+B1+dxTpy42P7Hb/93MCyA5jfd0PbsO8xBpaLeBxbQ9eCaEo7lVACLihEFE6Xi2ijAVQXfh8flhNWaqTS22ic/8ZX2sb/5eB2w/nA3lzJgdsXl2dmUM0QbRVkU/0mlYHavUubZxM6wpISp25LgUt5Q590ljK1bqINjeBX+ln+cNefzMedRTo+z5ATs3cBoYQRJxSa25WETK0HAb73lhnbw6NVVAuL9cT335vjxJ9uDD7Pf4knssSHGKaYzD6IsnFe34v5JGDUFv0O6nVqyeJA8p16WIV8PWMDExzBkTw90atsIW9L5U12uHKGFLB1JuxIebAVMS8W7BsfIUFD2vwXk61EkTI9xRl1nEIYhQNoaZQhPbSS9xLyW5SJr7fobvrPtISSTD6YH7K9N27A89TQdNJ7E8EKn6TJeHdpc6qvDtFJ4rjLUYpvFldxkPJA2P3rh8vHYOzdMD1DPNDAJYS3e0+NQb3aTcEqvceYJ2ro43pXeeHAgQrh0+kSu7CfF/qh49MSdsSd2J4AtjosrmutZVtPz+bgfSbkrKPQeLYh6Kg3eq2FcJqExIh2CLe/hRCQxBtfLZxgldJPmuO7IeTCsdYZRnKULi7WMlbmula26SQbQTs4HNNdLPLFwNoq+mjMqsNU9Vab7ENeLYlKJKd+DK23X/v3tlhtvzhlPVwp+BxPULGbveW2igM67ipyW8XZtqpQ56aEq6zP68HzGoTBykULieSi4pJRthwv/n7/yMzt3feYz7dzjD4fFvA3IKmVe2r4zCV0ssxUj6+BSZ+nJY8qZ9TZ83CIduUVnRY1rGNYsanUKhC2bzBEXY2HXJ+bb/QCC33bdt7RXf8/3kvViQcEbtnjj06eeah/70KfbJKDlPIz6V7/hFW0L9xeqT7v9Dz/Y5g9OtH/6hhtykLUEv/5r/ykP8LpXfk+75kXPDkGwANQuNJIdnE6OCmh32PWiggqa2i0B6jBPGwAAIABJREFUr196O6XoSpWUl3b7n/xV+9KXvhIPIFOm9Tq1sn1Cpq/uMI2EhPys368+zefcNEVEpnXsiGziAt5LffU9q1JQ8QQFmvO+Uqd9tFEg3na14i7Vp6hIrIVrha5YVQh9q2YIIxaGAumhrG9882tpZ3stH8dBQTncc/997UEmMQ8IzvK6BRnrcMDGpKyAF61Z96gforJnHxM6UZYxz+BMM0oXrKe0zgyvYYXwMR0ysnyyoF3i4nnJhu83NDTYst+SGa/CfQTcDQUtWbLvFVgVAHaNeCsD47pOOGYKzzxAObKVFjzI25VXz7frvuNbwUtn8eiX0U1SKeyGWo0UbUe8QP3dMrDDNtjO4JYK3jUPpTFrNYJCzJBO11/KjqdMDyhZkgoPk1nlWdJXN90M7Pq51U5C4Nw1KbYH7EDvqdWu0Jq6GwwCmTdn/MWISuSUCqRB1KUqEm/CT6/reDPeu6LH5Wh4QsUeIHeRoAd5DjxIlIIGegLGOYcmuNYKWLNE2MlJqQ/2Yye7mwxfFW0bIno5KRCLF06HzK3CMFzO8zkAGGU6M8Y5QwmuGkV00UXOhAYf3MyWNKO0YnaQhR4OJik/2717tr3pLbcS1hoJKNGqJuEXz1LJvPcQkm4cmcQweaY6dpX4yC/lOo0xu2ikgy+6Vz5jaOu9fN6v//LP7Xz1059oiycY8aUiSrsihEqlZYdBBHOcCvHezlxbPw3OoNehwJnmCC5T4VbQ/2e8GW5wTI4JhwQr+QT3twQO8d2vvq697DtfEqFakTDIYbn7qw+0Rz7+uTYLaU1y6sve+sOEkGNYq9b++vaPgV0Ntx/64X/K7ToFeLP96m++C0FcbK944Uvay179XSFiqiyScnVhuF85OxUimflxVfSl+xNfVG4uTqW9i/ZdnQv6Av0H7/mTdh9k2nWnpoTeIVjYBwlL2YQeEOKloUPVQAbIz/Et/peZxT7gmDFoBpLpRqH+JJxKmrgfCpYwl2UHAOVgxJXXsnWe1jbrIwteLoucmyUXifsI37HzstIrXn6MZSt8OYWF/6Hvf3Xbf9mh9qW77yETiyVwnx2MgHe7iGfbY28kCWcppLQoXty/IrVFCDA9vQvMYyzDS9NCmJDEzNVoly000rDx3Ja9xLk3lbMeo4CunTK3wcAMZXfYc4fz1rxFP9ueUNZnEgYaSpped5IwN+/EYfuW20kgcm3mT9wm63iGnkxXpzB8z54DHGD7uNUghTRR5E/NfUQhMnfP0N6M5xJETAhgHLRvhmGGg/2ESjhFnadbqXUNlXssvpOWhOlwcAJaxqHLL6MuDy9FDIy1XwJHWwJjevT4vW0J1n7qZgHch7jWmhibj0ZoZUudjCUzWYIySySAIlndoCoEeXNI6pwjvyZcG7o1QOqU+T7uzEKuk0Gx/G1rGPEy63tHUISTvVmeA+WAl7fKOicBkh5iVCRcPE8frhMZZhrunHLHz6bH9zCLcLGdtiQvBGsVuOsmcRUFCswzqtFwqrbJDBSW/dV27Z5pN9+EwkqNp+fIASDKr0mBSkgl/I4nQCyjQejSfZUJdM0r+ggI4nvy/eqB5RFKoTm/49Tp6AY/5dn/3S/+Lzvf+Pxft/NPPpHhsssrAsZqyurYMA5NwZKQ3gCNwVBY2xRebm7ygGllW9hRqvX51GqbYcGoe1xFvQt4O09w6CfAH57/iqvbK2nmZznGOhnGBULB41+4sy1+/s42Rg3YBtc9/LLntdHLL4HLNdo+8zdfaKMzlPy84furbAUQ9jff/T/a8okz7Tue/fz2iuu/ByG2K5lWvsBzLYM1UIZRAaO1mhU1KfZRTP6XuqeocRVduUSxFDzD7/7eH7YH738gGy/4X7pZD6sUg83TEj503pFf5OP1pIJjFRYSV5dNTBIg3pzC0P3M70XR+/JSWvUJ9Su8f/4RlRgdZHmJilVPsoqlq7SFujMrEnTIU69YLnT6jhse89qXvug7yPRuJ1W+rGLSIIEXrnLQhzpiri78ttQAQim9JrEsMbIpvN11QtARMoIqWIGclMOIt3lAHCaipWPNzSQGvWOhlt1PvOieHgV7d462wDahC4aG7MDuw3uY4/7oGW4IIeE0CQ4+31CIUESLHWGNh6VXW2B4D4xuZPRcu/Kao8z+O9QOX35F9q0ydjXsQuZ3BkmkGV95LHWAoCx4YO3qALHzwvnTKDwL0unwmXoS8DxpDTz7OJnoCQDwCaYcTxACrvpcKL7PfPqT7QXXvRqxMyMHhkXi4cRTj7UnHnuUNUJBB1/XaOpJoQQ0QFICrHjg94jcLweV2h45fept7IguBV7RO+txViZIdI3iAUlREJdasYY1nryj7aFKJKwli8z6GwVI/xlnLf2lolpBASYL7ggx1muFZz1DdlPD4BoJok0RCi/TN0umfTKowYnqmIgdDqBce1ajiGdJ6dmxZpEOxLvIEr7lllQ0VNeLqg4JxaGDR/p06QSDnr+cL2k+ldgrtKoy7BqK6lRShq4/hco3RRWGsF0JpIF//XM/Buj+yXaO1PYWrrWJQgVxGTxLKsOkCsuJ1dz89tkevBk9LA9yldRYES+PJH5fDmkdOQ+07z+NArnAz61L+pbvuqa96vtuaEsXFih2XW0LKMmVT97Z5ghDJ3bvascpwt7oUWz9wsvb+p597fN4X2vwbl7zfRRaGhpheX7v/be3C/Tvev6RK9vLX/vK8EVGTEU7aoqF9W/5XYZOFtFaCd9FS3EvXRAPQvA1D55/QgkuHMrF/J3f/+P24L33xwsUffZwmrmsHu5urta2y7jpTcX7cmP6iquU33aXQQmNou/y9hVTQhQv6w3oKBmOlkp100O/617rd1VJJhPwPaKU5WK51cGECM36Y8meYQRrYcEPD0G4PXTpYTBBiq1t5gb2ZBH3Cul3U+dquOBSen4Axy6B465kqB+Ab7PFZKTzFtemkLj2N0aKz0ovfsXVvTcjxxdmrvJ9XiuhU2MSVjzKSMwmIRi1byPDB5A/D6vPbrhYnQUyTJWD2qOMKyGvMEXASfk7xf0aN93O9PGZ+QE8rPk2T2XEfur6puDn6WErk+mooXLO+9X8FQ7FyOoBxKhk4XMQynJ8k9gbY+I+8N548HITQ5lYbX/32U+1F33LS8HKCKdPL7QH77kb43sKr0ivpLyL7cxNlIEktaC6enoerHVdgje1CTBvOO/g1xGeNfKr58/9LuPBqpAcA+Z9p0yGTKGKyYoDe2NZ7zuJwujZ+UKZNlEjncN2Ml6XM5Gp5NZTmrlHoa+w74tM4Fm+cB68cZlzTVgL922Bs5gKDDdSGTRk9ZpcfxwPfYi/ZaPHMRhepeh7d7vplrcBFcmAF2SvbLIC/AzmFIKu91AhZhy4Dq91/ROc5X/lheW6hux+ht8tv6JTdh3+7Gt+4V/82M5dn/44YRbks64kxP0lsx/LMEWWT7kemx1o+w4/lweFEAdfKu1jrWUShPzcI230otme5KHC1XHmm9SCE4SGqzzoGJbq6AsOt+993Q1tHc9q6M7jbemOe7Cz1EQBsu9+zgvbVwC6F6lKX0KONw8daA8hwGfocHj99dfnsbb4vNs/9FEs2SPtiv2XkN7+riyu9zmBYpUpbD+hcTRsSjX0ykIDiMkopWQxlGlbeUhJwdeC1b2rJIbae/7ofe0BhHBZbARPo8+/GaIltEU7WehYlE5BdXh5HLXOiVMbVQ/uiuPz784Pq2Pe/eq0Zn2EID6bm/D1Gbewdq4DJVNTZwjrjqa3uARfLD+WWYG2hi/8IcKna65+Xhufh64AOJ2Zkqy14dOg1j7Fv9U6ZZv9kSC7QRYys+k4RKMwoXdN2wsJMigYS2Qy/DOlyLIcw0Ndo+IiCSHsuFaO5uJaS2cvpnHdNqC02caMG0cp7TCefmT4UvaGEIbPUqlYpxkmiuKPYZqQxmC4aRFx8Nni+YTky5tcAzl4Zq/3H55q87sZKsrhmZufgVwqFuYasv+sTwB1jYWdJ5JQMuxzScUz/aIqJKqBoQfDTy+50FvW88zh8flVWhzwL3/xM+2qw1e1r3/9/vbUkycJQy+mN9UEyakhZvxJt0l4zT2GYKGnxTfG8Jz0moQTNgHDU3eIErFMZpz+7QOE3ROC2GyKXDgxVBWR9X9m7UYF6PGAzeBvk71P04CNpYD7Jj+SSTSjG+cdP5k9MoSUY6btcJ6oSu3CuafICJ/IfEbc3vD9ukWJrJlJ1YtWYY2qTJ1PKAyCY7GNAzE/f6C97RaY7k7S6hv6MtFZ3+JmdcVQOV71+f0EUSIVf3WGvLRVTHXOakHF3bnJsShLHljmX6Gwvv73n2jL1IwNsqhDjnJSHUnilNcDj2rYGWU08Ttw9CXRlnYrRO4yrdbF+sIff6aNXwCg1FMJsYg/8XgG20mEf8F4FvD+yudc0q7/gTe2tQefbGsf/FSbRuvPY/0vUJ6xQQHnBhjG4nnAUopCLyK0T85NtBOEMj/8xjdUcSmCdfvtn4DQeX87ykCHV7zmO4NFuUk22dda6UpPTs0G9E+20DqsDlMKqCoBTs+ExyggVgGpxYtV5ad//oG/anfc8WUU1lLY/yqEeDuyqMXq0hKm1tH3dfXV3fcMleLb5rXhaonrxHIVaTVV9SFuRhPFO3NZM1bWm8mYcfEkD5oWmtdmTxE+v5+Nrd5iehQhdho6kFlSL4s9XHbV5ZSPHCTkORXhmZmmTxKhTwrcuaqlH9YMWrsoh07rryKS3TwKe32L7GC6YfhqrmVI48FS+cQ715vCI3MN1lRIUi1cH+7ZjJnekZ0atpKCt2TL0EWMcQ9A7iHuwDrDwpsUxOAVyFLPA8b9O1fQDhGWiqUPvAIfxaf3ZjWGylMm+Ha75NI97dIjcwlRxsEv3ZQ+tjmELAoOO1YrU3MyIssEA0+WbiiVkKkkaAHBITZ2gHEZ4ML3ZJqfOP5g+8w/fAllAjZlB1Xn+Q2vMEOQc6Jn5aRuvJEoYZpd2sPLbK94ls83rndsYiTlKjwTa3YBHMlKA5Xs5OQ0CruKvjMhh/tZtYyJJIatGiYknsryIlSzVYzZ+Sg+NJLntDBTs/SEjp33r4yF6EH4qL0+x2DWi0yLNllhH/htwuNkvH3mAhcCOehZ6ek6kVqYIKgmZ39ubr69/ea3oYA1ggL9vD0JxoJUItPxlLx7w8S+ga7vxWdAcMQ6VXJ6sNXXU8pJXK0YkWfseocrel4G/tXP3Lpz3z98gazKk7mgpS6+chPsxc8Y04q7wNzcoaMvwHWXd7IIpQFPZg/Wgs38yp/RmUEw17BBS6T7rbbHSp5ig55G8PR6rrhqf7vh9W9uj/3pR1vvG8fbpELIgVujPGAEi64NtfnYMum0Bd5+ms8/BaH0rW9/a3AMw6IPvO+j7Z777oAPNNNe9/rvZYFkEFev9yQIKKSehSs0RmGqGE61yjBL42LWwlVMXYoqsXUsbqe0+OYnPvb37ZOfYooQoa8grlOFozxiqbtQiNdVQ7x6c/4KMVG6bH9aTZXxpFBIC+5mZWNUYP3uE/03l3VJ+BmLpNJzPd089kKBErzsPEI9K8mpebaYQ4F6Ph9F/SzaK08hvBfoUSbwPanHiVI4AzHRtVFAVCrL9rLyINqe2GnC87sxUOO8T6DXshXnAU6AdxmGwMROsTqCzOF3jHqyTrzfELMsqt4o/7YhlQJp+p6790CFOMlzjE1cgYhPJQW/yQFKYz+e0b5fAsFWVsjErhZBngSMZ6y+/C7bpIglikv5PrWM9XUcdGpWj1y+Fw7fXLAQe3cFKM+ZKY6Tyl0DNmqvKYvFCZuCEQqIW3toksYJyVw698WFTRrYk/1xuHlPQhi9sHQmxcY7cBHT/QMDz8dxqFEGhqrqfRQWSBFfSP2oAuzkzvDeNKwSelUKMti9lxxafp8mVFMJT+BpjYnDcvaC3bqycqzkW+ERraI41a12tOjJmOca9rAaJBy1i4MyEQOGMrX0x/MehEr+X1fedfKp44SHklwdFOvI+jx05+xoQFkL4AOxxNFkCf2xOCmhONzJW29+e5yDkkd11D/yiHy6ZAldC+4dK5tSnLxMGc6qh+Yx4GzT7t/iytUbq/9ZRdQuwB5ysQr+l3725p37iMkXKVQ2TKgTTdV4d4NWbKe3tlwsZq7N7qYgE00Y3gntQWRBP/TZB9oYTGw9EQdHxoOz3IH3nmLhT6DBJ8AXLr9iT7v+dW9qX/yvf9gmwKFGZerGiphhrIk8SQqxCWD/7eK+mfYU3R9+5Cd+JAsjuP8XH/xY+8IX/4GDN93e/Obrk/a2s6IERTGkyQlZwVNthikmNfGDTUI4QyYVWM7iVIYiSkRwOl5Oh3XwDF/84p3tL//yIyQgOJTp2eu58bDU+ugZRO3U/pYii8NbBbabpueDfcRZirXu/wpsopwXcl2CEBdPj89nNKwqxaXCKA/N7aryGl+qQTB7NqyQGHaqWAgJdu3eR/ueAxQdk14HVDfsyHOiuE+fPg07nXIqLPMa4eMyDOqAtRyqEbytaT1Te1gZolm9T/hrGYi0kTRyVODwTnzOVTEU9xphFAvZMUPH96wnlOXt9+NlqrxUMsjExjoHcYoKiaGjISkK6pcKr1GeKWZHIY5zD+JwhRXWYAQNVTVhLGWlV1YAdPRZPFBpA8762zXfo2yGLqCEKzPTPa6vZ+BSh1pclA+9AL0eJVnw2r7xaVctHaMm3aySQNAjferRJ8B38YBIIKjEefqUIsWIoRSGRuAlykkzSkcBjqqEOHgrGOlRsnwbEn1RZHqJ62J4/F4XG+VyCRENOVVKAbjH0+lhCZzJaGeafVEJaghtTWRnCmsXBfQtUVMB6XV5FvUgNdhiobLobXoYfwaBCc6sQvZ5ecZxqBMbZEsffeQh5GABBQwNwynuoReoVYwGuC88XQep9rheZhgmTMM7n4O4/dZ34FWSPXzGDer0lqusYgk/y88pY9v/abKQnZLLLIHom+prJj5R8En/tKiwxL/qfAWC+fmfumnn+Of/lrIM3HhRxbjgZvw8wCwqFtWSCLXsMAWoF09jba0fy8ReXtANyAwK1LlydqgZYDM2WJhz3NSygsbi7qOc4x3vvK199F3vae2JJzBOa2RsfJgCJtW61RXRlD+ZjUN72gkU5Tt+9NaSTA7PX37wc+2zn/tYOChvu/UG7m8mKX7b0dozfRyFNcFGT9CeIxN/JR/G0yqtHuA9SqJAd01VKcOyxt6OpSp//AfvRXgcSGl4Y8hQY8zDeM/rCySPd9XtQc24qw1PT/jgHy501w65tqcA9k4p/U+NA31r92FpEZtQpduoqEPPbAlNKV+xFjOBtPS55FCb37cHzs40wwcW0jzOsVuWtyxiWGz9YtnPmplPWxhzV2MouR78Hr2ZaVjPKv2MlFcpIAqbCPIIAGa8GpSkBs3DbicFBVseVhS0ykel5fsDoLuO0hRKIa0TegyP7OIaVyJbTHcx1OM96T3mM6R1dkYNJ1UeWi8/z7w8mwemhMnDZ3FzhaQ2/o2Sz/oGI07DO+sAB1BShq5uhE36HGQ7xuEaYzDDBBSdCcDxUb0HJ9YIdLsanafpM0rbuEAlxpOPPE3IXKF72So/0/BMcBk1ykGcnLJUqe5tQNm1piXrJYalt5OgWv0UWdEbXBNzhERrS2J/PgruOuU+dGVAtgpKhYDj0RIrcS070fqsKEmz+BN4UuK3eil6jTFpJiVcu5q3l0ypciKFQo1g7V9anJs59EngYD16/AGqTih214Nn3TKFXBl0Qg4Gf1w2PjJUo+YwLXz0OLzKW99xU1rgPJPdNiDQxvq0PnuIo+omr9SHRdjvTB3PCyuLmdd4hiqMLIXVvSYqoRIl+eWZ/ckfv2XniS/9fVumQZttVKzaziEE+LVbg3GqrqmWY3rucn4+CQ5C6jbtk3Ud6anzBOEkVnsGbgrlgICgTAJBIB4HF/vG/XflcAsG72KZfvyX/kV7/++8p60/+igTOFjkuBu6hygp7n7LYmuuv9cFZHDFSaz6O9751myUD/NXH7mjfeKTf54Mydvf+QbCHayYwx44FGrySRaxx0EUz5DXpQCJ61iJXwWtVftUGcOIfDR3mOkeCu7/CRIQ//1d7w6uoHdhwasDQPVISu5coFrD1EG5BXF5S/n6wVWCU5hYBC6M5pDcEI5+RrGzHloQFY+KUI/EDGDAXz9OT6Y8q5QTdWVPKT2y2yWvMvV+gPS+wiVO44ThZCatxmdD5HTNMDPPtr3rVufznFOk6hVyFUuMBAK6hpIz3AlgqyLiWgN6WvjbXl+l7/UsyJXvIz1BQbfIOf3eHcueteLdWS/wFYFdhG566rl8GJ02Bb/tCqIajxdlf68aiTaINyHArBNsoa7wg21flLX0+s+G8XkZMFHYSKEiJhBIKegJpJGeChmlpdEINtXtkygFf3rI2L79JHoMH3lulaLvW6dUzJ07cfLpduYMLSexvIE48nkaIMqBIgLKjvgU5wNhlcqQW9Or0GuVsGxJTrp7kpUlJLZUaRgmvyPyVGxrrJFyI5nX4SYudg+F2ssgVutApedUj9ya3anSRNn5Ws8MXpWyPYQhiqPlWeTnYxK2kWm7OVQGtECeGG8hBtbIz/aGbVQoleKxxx6HnoYXuQTR1rVU2zrmKwbEzKs1nZ3s2oxxfHd7xzveFg+2MC/hEQ9EYb2leDrydsxPeXpdWquLJHwePXcNbhnlNFr0E7m34FWegEAjpbBSmvMTP3LzzlNf/XsKXlFYpFr7wI4euC/T4pld6NlBYAy6Ae0Thwg1gudZFImAnXr04QjV0eteioUu0NeNeuSpx9sd934j1q7HA4yxET/9Cz/R/ugPb28XH364m047QhlDFRhHeLHo+3nIK1XCV1zWTqJ03n7bzXXTCOhH6XD6t5/6i+Apt73zRuL42cTqNh9TaRgqDpnlEk+Q8Gar3PCWyhMppa17XOUBZZPU8yoYFxxKB9yO3/j1/5g0sAorAwL0ILzHLizMexPzV5Gzn1zjsviJeFf32dbROenE+w/7xFBKD1bcxM3Wzc4RMOzRSgr8usE1NCLTjTP1uKKicHr8Pv2tkaM2OTvbLr3siigeiZx28FwEc5ojHe1N+fUEGaiVZbrC8vUASmbvnktYrx2Ip4tpETIGUG1SRVqIYWmG6QaGwqqiiFRiax4SPOI1BNxfkn8NjVPGImgrNh0MC8zKw6g3wLct8ZqeOMwaXF7gLF0UbNKXMK0bjWVHy/7wziRzcwhs6icxFoVKqJOhn6UrKsPZvSaKNFAC3CkSRe6nBFdxCbfbMpjsB6+JlGlPUHYZWSsmaFZVVqQRJ0mfHfAcKzDc23TisOIDwJtgjL3FM6SbRHppgeWMJiHlz/i0fIZyVjWHwS0B3XfMpjpsQs9R6gFKi8dlne0Y5vt9tmqNI15mosEsqZ4vcRu4lHiY+gNljie6no4LKD9DXWTbuQiDFJWvkL107qB16hZVW28acY/iKnzRBhiScR2EYRWERsX9Ees79fjxdoHqADulCmGIdSVMZTbhKF0zQJcD9fg5dmN509veTiNHO3KpVsrj7rRKLET2J95lp4zce41yXqcaLr5eajYTmamRalcrT1u6ql/xUf/gJT922007p+76bFsA49hm8ESl0wVES8v1JsjECLw7Fpvszuj0/nJ5+dnC/Y+1FTIOApw0aW3fesMPZHiFh1bC5ZNPPNW+ev+d8mNRWMXZeMePvLH91cc+R9z1SBvH8lzgs86AAyxZd8UbJeztZ8GvYHNWwL3OMqfvn/3kj7IIxef5249/uX3ibz8cQuit77iRxaR9LFoyFfpswCRgfI+Q0DYnKaC1BQbLOsIgBwF6NzGDOC2L0KPJ0lS4GI0Q93W8/Ydf+/fMnKOTKpmuTAQWa1O5eGBc4AhBghoOiFapQH0PlXV4xdgtcDUHNY6Xrnop5mBU3S91YBRWFCI3yGEQYHRjx7DyhgXqC6cabnGgVGoCrocoFJ+nd9hFmgyKf1jNL06ihZ9DqBYyLdgQkPWFzWwosI+2yufP2YZkgT1ag1Mz3yahlYRk2pXA7LBOq3Yh2IAvJ3FCpRTCKGuQjBLeMJZW4qmK0jIhlZzAfrwMExUqNN7TGzvYpkaOsh42q1Pxi3Xq0Wo59XzNNCvcNsvTYpeSVvGsJiNZ66TCiIUOiCc47vp4OqUWmhVkTUm727MpeKNeu00AWa90L+0wrByWcl2LqqEzkWuKl6i3zGKVfGcPg52Z8bM9tJ6YBoW9H4XHNsV8wFCW7HAieGxzyRpcqqwMAlhnZJ68ReVI+ZaywVU0DFOEqWZgBcBKr6AO5ELCeA/07KDiuIgQZV2nwBD8CTna6gDuT74hVJJBzwcPkzbaemOuHYZ6S88o47hk1hf/0Nf3/LdtZVT43McqLa/Pw8U8c5JuD9319XhG9Npl53vP3gqneYrz9Zbb/nmbm2bPOrw2VAZPhIsq7iStJEqmwryqQ8nlu/NWistf/e6jpbDqPR2xs9xjPPW4Fp6xd779pp3Hv/yRtk3d0paj0JM2dkkNGbfIBGgV6pCNTR1mI+bb0uOPt00a9G2TjtVD2DJTh0J79vWvI8NnaxiZxJsMcXiKse7fSMZC0HsQN/m13/cKMKKn2slv3IEOIo7noVbsRsB92u9oBpd1v/wvD8yuqfYgpQS/+Ms/n7BMt/gzf39H+9hHPxiv7610bLBlcxURI2BYs2mq6McA3YNb4XFk8oipYPGBeDXJv+oe1kGI8ArieoCMHfSExttvvetddFJ9svo1OYFFHlFIpGxdvKgOGI6a8YNUTomlS7Hlc/EwWM+qlq90byklN1DLK1NcfKtLBhhKihNlc/g0FWvCmXLTE9+rz3Dvrzp2DYrZBIgN8QjLsMxLAKkqNZXQGspolbUzbAnTe3M8gnZh6WxKNVTudpXcv/9APIANCpft4LDBcxgxpKSJdQIqj2eROZKy9NkD+48fMXCvAAAgAElEQVQHIM1BrU4PaQdtURv3uml1AJQHM0wTk89T7caobMB+D77iIdErTa8p/u4wLEOlrJNKVqWlbNl9gTUJEbnDskr7i1V5Xl1f747MovfAbY9IuRCwTxhQIa7j5BQyl7BfCK6qquCdrzjgayFGliV3Py3yziRkh7OCB6qoVRp6Ozge6BlLcIQcLE7Wo7HHOW6MbY6RuUzQVknxc4F3qR2y+Qfs6iAOZ80tkIYYlD3cJWlmMg7P6hOhgxJu+9u9l7M1EE8LIB/32ixjXsl1pB8Mcn+SiNOVVPBdigj3EYWp4ufrGSb9mCFdBdbRmbfguvq/y+5niCtKeZna0nOExUsU9Bp6CzMkItGz5NqzePVveuvbaQll9lk5UKlXRUnstEdJWkRkXon/ZtbP1+W85Kj0I5Y6F+HMRddU8iovyoeqxjyj/PO2H75+5/QDjPiCfS4g5us8cCoh6+8mGXiQymnr2QDdJ6bh0JxZaicfeYQFVGFVFwFF+9vfciMZQcFWyy9W2nEe+mv33MkmVMGsMfcLrrmmjeM6P37nHW2M144hfKbn7a8ljuSMN/EUmcoLu2bafWAuv/Bvfr7jLLX2uc/e0T5MJ1DDgFve9paypqySi+NBEcOapFBXHKuUlp6hmc6Oh+NpeSYu7lY3S4iC6NKnemLv+ZP3t3vv+DoHX5KlKXVEWwzK0WQR3nJbEzoEYHLh/EYBjIKy7l7KDPSo/KvixlwnjPtgalpDjYT3Ut5Y9aYX59KiVeF0Z58C1j+XYuYZepKdIYy3CNYbsfTC0HvI+i82fMECXDZ5Cq9F1vowykP6waIDOe2hjtc1SXpab3QU72aU9fJ7epJmCe1PZdmJdW96SgpSEuzSS1yDZJT1wovXFoFFaRpCbzhGhwzZ+NQxfkYHzSgewXzVa71enlH6QVlCpXfls3cdKcRPBZ37GEzgecPv0nVlHHIqKnj0zzd5aoVDloHzkBmfedVSVDkuVizw703rUIXYNBAqQ/lWLqfrjrbQIxy2w6dlaO6EoTgK0jKaMXhXliXJ6wtPS+8ARaD3EkVnCBgvT64cjHGA9Zq6Y8BTjQWtH9QwGQpKTJiwW4O0B+8Tr6s4gma5q92NZTj277LLar9lj2GXpUTCH1tkhu2pXzuj0hBiKdLqJu+ZpMX1JOx292MThyDZZkmnYtScEZlbpdDLOK5wvm3uuEgv/0zQ5oNB0WiNPtPedtttRZfRm4pS8Y0Kb0ULFeqxR4br7tMzWG8EPK+PlHcAewx8F0LmM+qjnlGCOQkmNm77we/ZOfXwnWBY1Z42yo8dj3VSgUgaDadKEI3G91NH2jn4KBuWepD23cmIcTdvqH3bG29op7iomJJ9uZ+ileydD9yZxnM+VA+BdDTSQTCUp++4OyHhjOlSlb8Ki8Ub5cDpIlojt8TQyPs4ND/3i/8yB9U2rV+i9vADH/6wE/vazTe/KZrf8DUNyriOfJwJPCz/NsxJytqhkGSKimxZTOe+Ukh4Fhyp2O6lGgg9P/W59qmP/Q04j83hyotQOD036R3eeT7ZRWVWy6D3k4Pi2Srr7cNV+Nd9vifFjYySlURqWxPX3ZCz88BckC4UspuEVRGZuoMw79m3v11x2TEUEhQCR4Ox3hcZQLBNllTFP07bHj9rifq/cSZUF5kPjNZx6aSw9c48CONkE2cZJuHPwmOzYycHeZX70U8Qq7BnxxolPLhd8XiqsybCFw+nmvnFuKnIVEaGPc4jpPRmcuZqDh2EQzG7vtKLCBZ2KG6lEYzA2/NK3MPP6zwgn00DVPIY0a3MK16Q+1kRde2bbHSzg35ubK7erx5sjKeF0KWIVCyl8KLzUFhVimTBt3ufzKKHS1xIbtIoSn9DomZ5XVuy+dmqcbCrgeEL5QU7wy9YHErV4m1fq2fMNaUiuL7iuVXbKvveDB0+J0mhtIeRaY6HLMBuC/A17nHCUE4cTXlS6fAhTrK21Mq2Ox7NDZj/ZuzSLtsBIJJi7TXmm0yY6VUbMSFr7qP13lO0eJLMu5wSKIqfSQAI/Zs99vWOANNwjGh84nU5YINIh6EbJ08/yfuEG7YIBXe12265CeVn6xz3p++5enpc0MKuygsvbykKiOfotwrvZw+ryLzbE36eKCL/1Z7397lME7/f/obv2zn5MKzuC7Rjhb2b3s48sFZZURzHnAz7JyEVgjgB8E4GZQmlZUfOPp61g5V86etf006xgKtsnBXqT9AQ7r6HHkize5WaB24Xzfeef/Vz21P3Pgp4p2Czgfb4vuehNorWN+06RDmQNVGL/OwByG0/86//1wLMwRG+/KW72gc++KGwrm++BQ+rq4MzbNXd1sOyKeA4xFFb40DKCAY3QuN9C0dT9BwL3eEhcX1U+OUhRe8jNMePn2u/87u/nX7dlSbu2szE0veVUIVric9dbBc4wbRawA1XMHyfB7sYygkZBWZ9tTiYHtYzeFe2LgrbX2IR4XgZUrAHe/bubc++8tp2CmNxjrBuzHo7bv8iU7e3DMH42llztlCWJzSO9+QcPDNS52xwJ9Aa13uYDNnuYC2uWUE1RWexZnNtjVITlJfWWm/Kda9QV3DYpZAdTZgBGC18YFA1omdmq2xC9N74VYD5u6pvOeGMfdy3CSVMJMiL84AN4CnIxE6ozgEdlbDWPXdoD/aY6hRW2r2Ee6ZCsZNIdVWqZnGx53iVeiSFZWXGpdiNuQBpCqGk6PEWl6g8aZ7HUVKWtziLj30qIqjXkEPlQFZCtBhxqwPcJ+vVqK+dYE169qp3pBbXtU+6CoLrr8V78F7B+UhQ+B6PpGGV9X2jzCTU+PYseeO9q4RrUlcmoVtM4aGt4AktpUc8wyww1p7FMblYEjAJq+3fbxVHekcEu/JyNno0S04iwKZ+0DWeYecbphv6qTTTIFDzopNhWx/KglBics9ca8fa+xqL+22/Y43uIEpsCu7eIgNvT549xb1dxDOfbT96y49gEAsij75RYcezKkXTL88pA8S/O9A8L37ml3iiMFSYmFGSqa6oj4jK6nta4eChTAduQ2GdeviLlMSYBdJllrsk070OqIMcFSpToI2HmJ64sp2///62SQiii59MvZqYWP7af/JSWsNQAkLmVY7JU2egNTxwDwJL6YeCZesXFM+3XvPs9vSd9xEarrdplNsImzuSqnauD7N6BO6VBaILcK0egivy0//7z6W6XOP1ta/e1d7/ZygsVPVNN4FheeAFfHWN8TomZqZI2U+jsGz6r7tb/CMtWOa9Vb8Z3ld9pcM3j6tbZM8qT5A71Nqv/cff4DlpMSP+YhFvFAhv7iuSbJKP/03eSHFvKxsS5lZSsgqw7G28ElmHKXWpjRxEoL2neA/xhgwfvRd/VgxoCYn7aZp24NJDpJ5pC2NKm/c7+eTpcyfSlE+sbpxsjiHFJoZEcFfLvgnf52JaAuFtIKC+b5SsoGtkFjSK1npAy0wgR4r9+DR6yXqkcvDEZbTE29bz+axCYgi11nfDVtaGRobM6Z92BALnZbW+em0SicV9shZ+hgxv9kYqQ5e+1/hIUSiB11vHk+Xe1oIXVsO3tMdNlkmek8qj0CdDtyoJF+8rYzBk2J0e6pJ92UuVRkin7lVXYZCd0/rHPa5rCCsMLfFpTtGc4vnMfpnZFW9ESbJOo0k+ETGg0AxuTRQ40cgscpjreIvCGdITkqyMMrCPlIoTXwdDntDf/u3uUbqJGPbJEbPnmXWZ6hvWHyXlIZUyoJcqPcKki+16iq/nv9XlFR4r2e6tnRWyIiY53DkHa/B9sU5/2Y4oVB8+e5R/qLBMsqzheY0AMbgaMvKtyxzgnE3S2kY8zHKes7TosU715psYQmFpXmS4YI8iQBdelQqMzmNSh2kow7uK3HfOgq/22fXQNPVm8jvfqhwA97syuzlWfvbNr3vVzpnHvsrkXd1IPQAtNO6psTuvmggfJKuCMKKwpq5sCw8BumM9VhFwm9bH0WaRJhlhPX3kaARXvs/JM2faPY/QV8qCWxdK8imL/PxLDlLkvAycS68l/u80FTEUsaGFE+cghfYICRkaSVj3ADjNz/7Kv8Q952axxN+g4PR97/vTLPgtb/lhHlJwT6smNWWN1hdzzF2bTFsccQAVbRr5Z6ySq+XrSyHE0zJ1nUiw43HE2+Jrwplf+T9+FVzAEhSJiLzWrI3vjTUVJ9ErKy9IS6cXFvWEN7UtSzy6rTKI+gQZl94lNeLu+u+ufCT4ih+SAysIX16WS29rk6uuuiZUiGV4OIv0vZ+FqrBEuCb+oeGQlzbGIdmkhEaFN0Y4uJ7SEuYq2gkUy+3hMLU+iVLfsW98ho2S5VM780hrHFBxqxVCP/tlyU0qz9gxXSVcejP5WTwWqR0Ftm9yGAYH8G6nnsczgLOUexPlk7DLNQu1RLZ8eezDTrlAIckyzzqZLWSd18RonORitpG9SNscDs7QEDWO8rME0MWcAvIZwhp+o+QIozzAQ894fnqNThTXq3aPDFcLqwrqmjNPCYuHxIEUUCe2R+QY6lmh8AytvFflgfdrDHooq4EBh0xQUC6hUgWegaK2vlFuMPAWBQuNYATGLGfiWtb5JRvM3q7Y952f2XRQYyAMOcqzjaKw7F5qk0lDQaECjbyecaaUm3zI0JHCz4w6ltmLoYSyeiYWlleCR0hlG1rIGomXMXtpWT9kGLxFlwYpE0nEsD/y6fgtebWnkkce7H6q92eYGPa+RdDB52iKAAvfM/Xa134/CtZZD98M42rqsx68VlwuWt8D84B13ET3J8etyuVKlcWXSvRTyLC//nFoWB5cQs+bX/29Oycf+zLs9cpE5IX8wK3yoxw4kCGq2TBufGiuDa15oygZ43Ae6jwhyZknn2xjl+xrB1/womAGgqYnIKPefd+dYQ57Y4Z7lhccZpJtDwWnNp+A17VDB4hxFNYGGQ49MLN8Kyz0Ah7EfXR3/Kl/83PxkMTR7r77gfbe974/4cyb3/RDsW4B9vhtn/B5evVMEnaOUaYRLkkOqRpfRSywa+aoHrMW6ZsUg4QKRnMdH+q/vfv36QxxvFp2qHTEHGKpy+2vvKCYTsXusRzpE6bHUEC6AppXRVnV1mRLrKrPjeh5fPM+quWJXl95Pg67vOLaa1NpsICn5Fh3PSut6MIFOE25VzoFUFojsK0gOi1YNrYTbZZx4Q0xxS4mIYvOkiXqcTAMxyze9b4sFUlLFrOWiYrAwGT5kzgZJDwzCWS2yI4MSRR4e6nrcxnMwKFktqcYnnA567u7kgjJ7pV3leXWW8xeaZXNPEuk7LhJCrb4TmRPhWX7ZMtFvBktncrKg+/eyazvPNdkUjngelTej8o+uEkdGpVBvqfH1ilZsS29xAK0q2A/dp2vRwZtd+z4dUpi4uX2oQP1qvdttptZjZTnW+ydiUAxPJXVU7kLsGsMxQpj5PjZFMbDwy7x1XYwyqBZXetohRu2HFoBadUQ23On0kh5aLp+CsJ7h9Xn36yqilM8dZiQUClMDzN0lhKVoSdmEFX+4qS8RhlRca0SragohiQUJ7tL4oVzJzamjIymm6Hy6v5oDIwGwDutJ7RyhYJ4s6bOdzhy5ZF2iOoKGzu61umnFjeoaE3VqlwrrjfY6RUNXs5K/TsDYHJyvExFOJVEqbUqnVU4VrUQ5183v+rlOyeeuDO1Ux5EH9qbXQ/BEeVhzxsr8XW15X7AURraJO7FPV2l8n9TMiLCkm6lxOVXvuI6XHndTBQWLWrvZXyYRZtVi+YkFCafcJUeGzTK4ZoF3xgzdaolZWN0UUepWBcLWAEUvoOeWT/7yz+dCnfTng8wgPUP3vs+iAeD7Y10cUiGgyZ06xaF4nHs3bMHDAsPy0OdzKTKygVxw7tsXUKLcjKLAWus4F/1d2Bhvvc3n/hc+/TffSYeh1a5Pw1blGpICxWAU3ymPK5YEdFdca3sdz+bVQc9iL32MT6yn+KmqiA7z43PCLm0Ypc8mwM4du87Qrp5h+6T9ufeph3PXDt76gweFrWCPJ+dF1QOKYeTxmF9GQbjAuHstokRqxIQyksvgQ+FZbZRnXfiSCiVsEkRme3Bsgg3xJn4UcKJUFpECwwpeV3AXBGUhNTcqzVoyE1v7GqSHbvSUTRZYkOXsLkrqRJRzH7ojZTCDMkEb0Quj56EiteCaD1ysRY9Nw2OPcX1xhIusjnBpCJPYkh8jl1M4a6FVM/vImhaLiQXzEZ+tXdhssrn8st4WRoFy5KRPVjsm1sQT8HgVKghtRIBBHC3XYxjrIaWoYbYVonrCTdwD+JlG2JsiVsq7LPXu32mPE9mcUeo7TM6kRNoK2pRAfGaAVBzmeQy84vCIduePVO0sBJr4osqLleqUwIO3ZAgrK+b+kdxM0uiAgtwPqfwrocng70qk6NEJdYOrnONxYt0aMCgRvHwTL5+As9KvF6ZFM/UKbFOVePieVkmUpJ4beumsXH+qHBVJLxJSszhQ/vaDAz9hPVRkhoMdUgB8b64FJa3WpFIZQdVQp4Jvyj8q7hc9V7PYaKVGPlyJHLCbn3lt+88/sS9Ke6ssdbVIXMnbGQe3tIcNS//csLsAJ1HR0b2J8Qyzb9uOQd1V4ukP9dQas9jdPoSOMMqPdxPPv1EewAu06rz7NTbZul4qDks6y5eowt96ThMdQ8WILKbYgHnKKUmO4Dni1z7iw892H7qX/9sLIuH5AEIp+9/359ls15/w2u4JwB2yoBM21pasXc/1Au8DUPCKkfQork4xXxOgitkSDGLLqsjbJ6wsFzaYAYI9CNPnGt/8Nu/W8RIf2ORYhFYpyEIhGkLrbJRMPVKfV8OvkFPrVkFiUGiEr9bo1lFpIWh1RU1bOIlniQHTlT3CVtTf8vzX9gukK62lbH9M3oO9+QhzpEZdOCmOJWWdoNQ0DINn2h9fQRwlPownsEMmBnEafpiTdIS9+LqWS7G/fD5ad2C5XXUkwpLNRJ+lO2OxSfTscFsZo1St4VvURhUGpWx2yFOHRneR9nWNVFKUkAslcINioAZkukNBjiQ0S5mIZdIbEp56JouFrYoh0s6Bd5dhzv5basagmF6bcNEC6yVYb0C8E6xGA+AYHkNYlUhoTA5yOv8nYQC3pHeQXr0B3ep0MO9Gh5maIWGZJMMqwcsB8Y7lgxKKKViwvsZn1jjT3ftrihc5VWHT82CMuKaTo0OZYPvLy2f75Iy3q/wisJovaTZaiIMjK1T0sWRbA8Njl2H17H2mbEgJUEM1VpN5QJMlbPj3ivMQxJnUShpjij0kbZKdndAztg+CcZGAmvI+9LiKV5LpwqMhAYiFQLIm8qnzopt5w3bPfd2L02fEOSfJgcqffut8f0pIphEWyi8GZyLI5ftb7O7aDYgVUXlnfDbpSzjrO/sUwmwB8cVWI+BD44S3ZD+JlFyRVTu9FMMh05AP7M/cNPLXrJz4uR9waMMX9aQkDEtBQuvNRy3hW5whGrjMYj2HtwipJtA+E+gjKwr5EDYhXTDcA7rL35hKpSZJu0UuJEN/LxlU6Yq1UkEdg8A8Tj/mAYXGiF0QcxygF30sXnCTvo3LZP2+vz997Yf/99+JiQ3repXv3J3+/hHP5GM42tf9+r0b7fTgNbJ8oY9e+cg9YlhMdjADdSVTxhTjmjKLfQYxV90ZRUcNlevylW2cDadAlQuG2PtP/0HSnTwZOw6kJYlgTPs0FmsXlPagVQEFFWIhlb5tAL3w+mJNtRzKu9Fj6S2q0LK5BnDVzE1rQAZQjcoDPva4WPHmDW3wGdvMhp9IpjIWfp8W7aiZzuE1XbYgzVqPZT08pLZMfu9A+56VbOF7OHsNIM/8djEgPRWFBW/XqJR3Cq4lXwz3OWESDUjMTuWg5NMZZIwhWtaI+gh8pAMDc602cmjtCLZmzXZoP94imhT9lGWNBijey/YrKJSCAzX9agReq13UT/s4uCgBYmONvUzxELcCVtCkTSMU5GlbY2H2v5Z1bU0CoNrq6wMdzbw1DQwO/KSvOcCkLI/0mMM2ROWs+5jw+ey10M7NTYuIYmAdXr9yzljqKyZQxTW0CAKUNSLfRjEu2yDtFZGlsOHlUCKjEi5GcTYDMqLi7wZcVjiw5rIZ7JbL2syQm3lDnttBcJYysfE/zkD6XnFEiHjKqxRpl/72WJevjd1gjxDj2inQuFKSLhm1ZjRAmXI06yX/LwVztgilAkL/Kehs1j0LXVhE2NiVlUl4eBeYQPJrHp74yimsPX5DOEV6Rd6ba6Jimvvrt3MKyUjyeJal3rJ0b1tFx1qJ/TQVEBqJA2SMu6auvw6oWJ9fCERu87fNzPu8R/i0wrlCOJ3WXKdDGESMeebvv1bd06ceTQKRjDN+WbupSGdIVUPr6r4TE77sB2x3ItL2tzhS9tZegTtsAGLTOVYBsfyqKYtK9p4gwdf4L3nwB7kfQwqJPo2gq3czCz9hKa58d16CIQhIwxEULLstdQj07jNgq9zGL/48P3tR3/pJxBcU/CtfeQv/xam/D10fphrL/2Ol8RdlcqghbYdzL4DewDd6diAwhoJKVGhVBepsKqqvRbQjFIVD7uSaT8iLuXfEViVVq/91m/957RmyZw+s0W8Rl6LoZCnMalwPRkFM8XRHc8rnyHwXhtTY8DqwKWoKzymAv+DhsXil/DouY0RXh8+cqxAfr7noR+UTsDLnLIifqV1XiHrJBA7R9NCx0OtGx6heGQjqMDHODh79l2aARCCuWtm8/zd0RSW6JGVkM3HYX0NC6xVNB2vtyDvR+8vdYMC7TyLxFBLm5x2MzFxgNq3A1yPw6WyVuEbEjI3Ty9sSJcexaKtrvFaCLHTVcTnsPJjhohm50K0RW7st+b78YwCSDuEWPyqC+FN53vwxYR6zszjM+0Woe9bIL91pXof1Ys/bBUY9lIlQuINUC+2475o0Bx75cRp+Wt6YioAvUy8HpW3k2I28f5txjcmBUFCbiWQxPqSx01Sqt9rXc69Howel56qVAGjSj2f8ipVarbhycj5bUF+jR6KyI6/1uxyJpTbYQy2iszwLc+hYU2/ojq8Qw5j5fvh88WjRXbNCDqm3svrYPDyk2fOZj7BDJ1MnMBkDy6vb++vqq+1SwOYJljtCn/MyCbSkI5PeDtN5YThYKIH1ltOmB70Hhr5qZBtMuAsy2uf/5xwuzKeLnGjxqnvRSnHKiyVYCxMznvKctJZo7KKfr9MRqxtdEbwRqMSH/stL0ZhnX0wlHwXxXRz2M6SCRHCCVocZ4PFnzLkgDdvUEApjf/k2UxKkbOl1U2LloCcEtuIf3tb7RxKh7mZ8Y7Sr1sgkcXZzU1M8We/faVh2fdwuQdT2EToSTfRAcLCJa77lSeO07v9u9tlRy9tp84utA/c/qFc5+Uvv46hmrtjPeVdmUpWI+/btzs9sXoCnTZASwq5YuICV2ut4vqrmlKiU4onNj5a3W+p4Qfb78N4P37XPVgXwxSVGgsXxaQ7LUu9qBDVbqbCpeoUWYtuCJQuENEKbpIOegGT8bO6cCJeTLmA8TguO3J5MqfLJBLsWOIBHKc30SI99RcpwdmArmArHYVvjPT4Il6qYc46wLyXMpVuWDO/d1/CAPtViZVtyd3RY0ajmY1zLJVnwATqDocurVMoUNZjHaRXljhKuZClULSMm5uGGXjfTA+enKa0x+6g/N+uAzUWrdYylICOLqC0FbcfA+VBQck6hCE4RjbElL/F5nIAzQCWcrRCwp5Q3ZYVjUJVZhfRAPhiOHpdNcB102EWZl7DIeO+DScUdtfXPQk0wPqH82PZzIU80xZdSOIFOAGJNTKks8vn1gZN9bYXKULGU6V2Tpny1oaSn7fe0CG3qDXuXYjEgSDm8XrIte1sLHw3RExDREMhwWU3lPemuSQfk55dKkoHsBqt6DXp4VHv6d/DhHXiVpbZ6D6lyoC/7YAi/qWC1XCnsZ+KzI4MToLhzIptZUK7Cp49cN2G8ZhC6dHQ8j2Hwer5jrD/6xgjI5NAg0A5RhaGnBn5xT5MUiTv+9L4D3mbnpzFqyJ8RaEfvfxYu+LIZdAgTHB54FRCdSYi/qVKovDjJ/hVupJUgiqhffm3MR6lvIzvu8SN5+bGF71o59z5R0JSy1TcnFVd+/qA8TFDFcFJH7awmp0lh1tO0qX0DO1HLKBEINCym46d4rWZQcfnrPD603x/xQNszZXpUztKcpMHaLw3A21hlKzXCC2Shzk8pmsTYzMpepAGfBd439dOnkjHQmsal5zHh/a7+jmXtRe/6LrwiMSDTAyYCRFg3E1rm1EIqZImMzU5qVX/9tYqNu73onJhVMrxqnIgxcXL09Hzsf7sy194sH3kr25H6RLyiiHwPa18Sgp8bVzbBJTB7r1A9YpX8Ys5VGjoLEbxpGAt3ZZUuJi3JAwLLoN1ncPdPnL5FVQfUKDMQbC8YsMCWATKLOFqxmnRmQJX3FYpDld1KrPYj67HJmGV1JIRPJA5epDZNsaJOL6HyD+elrMMI4xmSTHOtnMx2CkuTU1HAWGJItbTKjDZg8dBTsO7efCLQxwMxsorUNYPCmTbioXn7yMTReUwfNPqV0JHl9/miv6JVXWt5XURohSvq5jawVaoPy1aQ4mx09QN4/w4xTuNajioztC0M8I6ytYXaWwM/dMdI/vsIfW9lU2zwNuEwtAQhNqNvVFsDg1J/Z+K2+oGQsEd+rUPDFyE14fnY3NBOYqi+5Z84UGNQEfw0JssiKLkPhzqKshvRCIvxRmOKhn3Q69ejDDH1DA1/eol7JYHPugQ0TQbYM95rgWSWslSS3cIouTJqsxwZiaGUEUmz/oEeS+j/NxxaKyd8uKaLFGONcb0I6OlHRWNMiJXzE4ieoddssZso4mtFHNnVFTVGnqbI0Av47L0uzFsVZLG/eIFzoBDr9K7fx55vPLYESaOz1YpnENGFCefNcbaUqeCQcp+q0/4WWe8s/b8KtpRguIYPDPpygFEpN0AACAASURBVIxVHwOvf+Hzdi5efDzEQlu6GvDEHcQCB0TTGCS9yTqkLgmFdI4HXTGmxqI6EioultRArV94eLGSZvouotGhLQaMG2GzDzLmep7yknMPPZmatkkWbspQwRviAA0jbMMwaYdoRrdEWPQk+NHp1TMpQtbAXHH50XbVFcewQijCjD6nXo6Uq0rE+9tDHG19XM9+WKEx6OVYTlyCXjPTdLNKyQhya+TTGkVZUKqlJOgdcD8nTy62/+e3340nIsBs+YU1Zr5M4FpLWPV0WosoqhS2qLTy4VxH/M5Utw2gy+tys5TlArrdzNo8s1MzzHw7RmdXM6vreFPBPbi3Mayeylqumd0Xpun62IOlrLO3xOipZfhWIV8aVpMQMETeA8VDS1u1ilhByzLkyHEA4g1zwDbJ9sqlK2USm5duFJZaaWLE9GLtzQJvm0ZnsWxF3TtESny/RycGyy4DZiB98KLHRE65hgdC7NPsZZFFrbmzvCb7w2vTusYJ0PK5+By9NMOZTZWaHme8MNfNw849pn+W645ik9NkBtM0tfAd5Ni0k3bpcyrs7qlnIrO7M1p6We6FmnroNErmYO2lXrfcqtRUwnRXvncIB3tkB2ml4lTszOHVy4SwOkhG275rhrAe3rRZDoWGPV01kVMlTa67srQWuAHlhNdlOeqOYaZEz9S9Iod8jh6QZ9t9cFlkglhbqRemfEzYUI/vrdN4ACZdAP3MYmT9RtTiHm6U3XCmI20yRJWe/lyvNzqbekEV1qYX5/lte20yxWSExNBB5GmIahaxAes6bd6Y7qx6oGR9/VpCrFUFhvleW0U6zj6l8SL7LI512aV0EcFQisGpmpMIFDLJ4FrPQIV4jiZLZ46IS4V/VZdYkVH9Ss4+ht2KkYHXvOA5O0sXmUlIvZjx+qCkRz+EF6QaPAVL4hUsZlKdaH5Z8WTk2LW4wbLd3ZwNNsDQzPIFaRF5oCR3usnFjJWf3LeL8enPamfu45rc9CSfOY63FeodB3RI5rfcjvlJujhstkuJiwcACmXXyV2xBETlZhmIwLIbNclGqHCmZil8njLeplMiALSHxMPjwahBkcnNVMahW5D+YoU5Wf+IxatD7oDMrfaff/O3Al6uJ8skvmLYg4VNKloszI3wa7lMsnPUeWUJ+90S9e3SZkNlldDUNS68zBuSftGjJcxVz76adaVEg/AqyjGta+VeTbenaYg44PBMVmt2lrCXUPgCPDU7im6rMAz1VMo87yzJj2nesya+LaWDrK+kxJV0ii2W3TrzJTU2ZoQ9vAKu0qztH6XQUKkVI+ZhTq+0bTAQFE1vbC8kVULNAdng1nIaOiH4HEp1ROr5JOx29AAP7TAg9YhdDjIt2JbCURk5wO7hGgrdsGrL7LQ8pCRMUMqGb66t2Tw3Ljl+S0yq1tCwxXAr7VTEvizL8R7EWztvRA8vyZf0ipdMagLIg0H/qUFraIEW9BIJUd1bWNGszSLPRRKCv4emLFFjHTryq6GYWJutvB346nr7mRMmB4BQxNWWUrZmJhzuIWVVtk32nlcNW8Ed4/Wyplvcwwj1nwL122BtAvAmTwzP9bA8dz28GPuXRZY9g5o59nAEIyQOpqyaZEiYTeiWMWApuZAPuRraz5RDaTnLF2llXjWgdpO1/U2x8G3spxFxhJpdKwwv49VKjEUGnY8oG34kWRT2ziEXEmnp3roBnSidVbmnKTiAR45cCoRzGCVPAbwgvOsTKKsy5LFlcRxq6Ed0iE+VsDAaOgY0Bt5eeVZQuG8qtVddc9XO2vLJUjRafGN3Ny/3ZcqXN6VEQJBPagKezQUOKITPmpJSnoVArSbMC+sxZ7nEPMJ9qsJmsZ41+FFXXkWJyXGtF0ePxZpy6GSElz9YC/tjWy/FFPN22Uuf34g9cqBj+Qw7eN8aQr6K96XrPUFHCc/WOOUmE3hnY/Gw7ONe/a/iWqZvkmCQB7imjThRpbwBlUf1MAouYaSXuymv87/937/bnjr1WK5ZHS1lFxc724r3pP8RkP4kaMHAML2jjLie5987jKLs2OKC0Xo0YlrczzRJhsuOHgETwmtCU5yBUexaqgiGuYaTZxwasQ2g3kPA55jFt8AQzEXHQbEOlnGkOh8rO0N/q3hfCMKijd1Ms/N9PZFNAUWUdYyJ7V7E3pQmDntRCYoNrdZxfqPAtAmHkAnBeeK9jl3CtcCxDLtUWGAgySX4K7JWGJ2grtcJg5+9EGBPOj2YiHKlF2G63J5V1YTR0F7/x/KdURI8hqx6XmZaM7g1/j/s9Iy75289KO49GGHIkFVuFHyr3JMIe2AAqSSBBdw719UCZnFXIAjoCxZuhx6zwfeNHLbOZMDrKLWD01QHyItTGaddj/w2JUT9n7PBeDKyeWtkESfAFkdISKw6Hi0kVjzSrjf7dkArlS1vDrlUBclzO6jDkJ3hHopKGikiY9bD2q005Uzp024HXMmyekAowXh2DjtB2QCxqKc2MGrLF8ED7S6LoZ/bRQ87jaVZbu5p3EEbJo+US5SYnvQo8pJ1Yo3lNHp/C2ClAvAjUhggexvBTDLoYkReFw8+aGsnlGkgVj17qRHiVOzFpQcOtAOUk+nlj5oxjfdk+OvQC5VbRYuuYRcIlkfsvytdWIo1+y5OXMI18MpnXbJTgwM8iF1s6Qsi/LLEO1DamNyMIR+6vsiWa5xcZNrLpMBVD8vYk99ugg9gaLGuckBwVvm8cENY9KsOHmxjixa4cnjBzsYt6yGzN9gV6+rPCzBuTzFU4LlH8LCgUZjiTSq9asK0IvKj9BS0ft6nCmuKouceHlray6RVjQegSGke1ADwWupYj2I5l14RQyiFVf219LQqtPjABz7S7vzGXdWGOWOpZJTrcaiMC6/JyvM93VYtW/G1ittULl0pJ7fnmS4OWgzuxx5FR8kIalFN+VhgbPG4r10Dr5rg+SxOXbWWjJbHM/MeiGEUFsMkxEt4X1jKGBNHmvdQ2l57fRklAIeGbEayTrWTYh/Ol5MwqkdkUEp470CQMKwddFDPpzxsyPwOUG6Lnmm4XHDw6PKasCvrY7re/uZFxKzlLLJg+igFJ1KOnBLsPhX/J6/q2NbrKp18zT24W042tiCaQ+q6yWxXsvI117G/kzwrM3+uc/q864UFO6zM3WgyZYUj5Rm5h+ocoGeVi7NGGGrQn+Hh+RjlLdZ8E4OwsS0jHG8fMMNbHZ/pYQSr64cdDTx4tmfxEAnyy7RfkXKAVyWON4oy9yLF/ROA5xrsodFJajDBeiMbeD4qgVSCOTvQPeD6Kxjm9ByLSNUUJtfSIv4QTE2IeXxVDuzNmJxDlEqf8uDjrcLTWyOkHQH8nyAB5X6m33wyvdXbzdF7euQOrfBcmIlNKyHLpxT8FKRXZneK5zf5cp4J3mYap/HYxHgHaIy5o2FCliTxTnNW1Tc99vCSS/a3w4cvySQrZaDG2XU4abwob8sTqEV0n8p4P1NN0YGOKVjXCBoSvuzwnJAf64vQ5BxLoKtDKPg3gjub86ty8cO01DTm31nhgjLYwZISKhlieIZ5DaIESEw4hRtp70R3vawun8dDXUUvp3FG1WcRiaNHEahpelhJDnTMuKOkenuxCoSFvYMzbYSfxSqKp6gwBDkdwWUNHA+ppbGlTPhXDhtAYanwFPiUCBQAwp8KEUPaZCxTlFV6I/m3IVzJcv6v4Gu5efjP3XFn+/iH/jqZwgDLWglfouyntq0WWkApRIZ4XfV5uriGRMUbSGI4GxNvlw2YnJkOfcF1cwz6BETYi9AzwtXhIIiljPcANen+aVi2DlazV3yPENV2xWbI9CIsSLUG07q/YazhugbEzKb8G0Fu2ewpWK5BEnLi/DqApzweveF4zOVbyuFxxovwpNnCkQFqFcf2EwrOq/ICPLsGmVOYkK2etY816e5zxEK5cD/F0BTi6p5Zma7QBlA8ekUmAOJxoRiDk6Sjg6VCdTg9uBnI6nj4KCuUVjzCYr93ly5dlGyc3rWcoGrfEw9LoqV0Bg9tsoZPcjv2tgcDjadHSGpHVFnqtATWYx2njGlyprBc4xpLe+yGENoP37IoPt1teUaTPosaf7fEtZdyInHWDDsGtEjLyoltgeSP1aAHfQJLilT+PqtQsddKiZvZWv7pANxgsEIytA5as3ZTabJLMKVL1i/aItl1VdTX8I7s+jqMUuw7H6xq6giNVmwbJbasII6hsJYhbxu6hnNlQ07das+bHjYKY5r3baBoF9Yl2dK0YHJfjIhKz/3c4n7k0E2SGZUIq7c0CdB/lOz+pYf3ph6xDwKEupMoRsPlHyk+7lvnc6WRn3JZRiqJvr6xv+7wNEeJg+wHmLHQSnWZECethJcn6MahzPABFvY8YB49/OIRBEyzxo4LRADjqZXnkRFZAdBq1pxAt+7lFVjbvSySlnNn9QJYEDY+YK3aGo0PaXTy4CGyjFtt9/MOt8FJiKT2ahLjkAyosBmKdofV1jE98JppOiCOsODjgPAWcFYdlmBrTl00TL+C3Ni4RlEVgbTIkdExEeZSMnyD6zzy+Nn23t9nig5pZj0seVjhJfU762mttQL2zOoKOMs70zJ0n9nhDv1/+X2F45JLLm3Ts3PtzEWa8XGPpvGXHC+2LskTsB2XXBLsOThWtpDojRnusQe0A7I/uoDrKLSGKZW0CQ4A9fnZA1h8Qm5n59kLXQVtkS+vXV6lS6bkUct34ABVfWOFcBtgFVHi2Qt4OfKlAnhTwjFKRrJ3SaGAGcwh50lPobyqyvYlwxGoQO5Wmnc6fUVh9YCGc9VVFWS9atLOph09uY91jJ/dDkJsNGUfXFHPSW9Pz0pFXorFsiH3Z1PM04RPFKFWWiAaRQNgnJDCbJqhjt6CyT0jsDjZkkif5j4Bh+2VrneVJoP2P8OzCvCPKpt0MIZeqt64ZcwbuT896WG0ucRds27bPG9VhDhlivvVuCFbPWRxZclOo2SZVbB6pq4vQjfCPo7yWWZCM3iCtZFsu6MGszQJVruek1OtM4eA65n/MiJa43VONVoXRx7AG/Qc4g1bzB1Khw5SQmu9QqdeGfLSgdYi6Ii4BNUC7cVHQ23RbxHdsHOpoal0JkeUpUTLLhROSoL1TvZ0enwfoR6hrl0gOIcq2yGeyUzvsMMrUJ4WR88A5xy78vJ2ELpRz6SAhr3uoPCxYMv+UgpLoec7HY7VL5Cue+Y11x2Z35F8lrp032HoZoaMLx3SOJqeNy4G1snUKwt3keD3kbP27akOlRn26SH3/aaHk3KVNKgbpyuqmOuSG+sPtqMI74H0xsaCwxEZRhilpcU6apFxK6cuYQIPvd73P/dQ25kF4JWFr3BbSJ3Nkhxo62JAexi3Au2ThIRmQuwdpRWUOBoMLiuRhwsA+M2hqh2ZLcoqGjs6qt+bPR4IO794YaP99rv/a7tI+BrMwlDEEEisiucl4jIwKVBRL1M3vlNUhsViBKFLaOVdD4Mwavvm9uxt+/aA59kPjHVIczospSUwthh2+MO4REI8pyXqCD2cs4CaCwiscwc15R6SSUJKf1mDp8qZok+WYKyDYLWukg+3sI4qmM0YEgSR+9Gr0WvZToa4OFbhIpl40TfBq1LRjCPkw6PsAcogsIFLZbcEuUNiZxoon8tW16xEinQRei2v4YNedWo50z2jaBfxUsWhLA0K/lftRdLWulNYPlMm1oi9xbMSwyyKRcBi7ZDW2S0m3DTUFR+r0pfOOHn43XOPZgBf6xVtS03iZgdKAz2vlKGBeHqV6RwYwCv1MLFHzjfsQRgdJvSxKLvWqugLZj3TRcKhp4ZIPHtoO2nAh5wmC1pNAyTxZq25A3vhh7hZDWoiM3LThpmfUL26NKaG5nxE7r/AdqEEExF6ndMYKSkLZprTeod1taf9qaeZzSA3Cy9IQ9ejVlEOn+s2AMamI2F1xrbT0q1i4X6dTh0dgIJ01EomJ+G5WdazZTZUFj7XNGHgyoZxz/o4l1APUWUH+JBQ3iEnGjMVtWVLDoTdQ33vNdde2XZNUUVsKVOHTbm/VpvKrCgYRhy2soP989MvcYunb4T3sivmOHda0YqVHcxosekqiuU0Mwhtt+s4n0m5N/FVd9J58MEzsK0XO08kdVq2JwHtCFho+KjrLYmtUKIAh3xtp4Erpw61qbNnAIDLYkrvr3E/CCtgeereAfhXOBnPfe3LG+SqKIQVUvoZiYTAyRPRw/L4awVtBjhOvK41sbODvBG5ICYiDAc8QJUY7HOyXLiKp8P9VpKSci0CbEAubYtZNDyp//Jf3kXx8QJlRnqUKJfIVVlKv7TWK19VtBd3NqU4/m1ZgaYxGS9Twz3Gq1/a9szuATSnnQsCfH7hTBqmOdR0Q5InWJU61ALgJAn4xwZ7NItSvkA/fT1NAdhpMjGTKCjHNdFwI3gXoGQRKcUSXQMVMgfG9ZchuoWx0Cs2DAqlIyUfcp841hnB5UQXQzLJilMhiAqyb6nIQozUK1Nh6WXVmqVVi4ZOL0esUJWBwnLit5hPeiTx/KF/JJy0vIl/MSjDSsYqX6rhGhnKoPILj8qJx4S+tmPpOF7KIA/EZ7r+ToEwE6z3psV235CjZF75madBw2MW04PaYY7DHO7VjYfYo1k1dHqIbUOJCO/H8pTcL9UYM/YOU4Yq/Z5oTfqNiAjexjrQhod80EwgwLVPoXE1+rXoOVUFhGZVelT96bFKlAPJNjdpJBwhv9C9hqRqcor9jh+yDRYLtUd8sL5vUFeTyMMZ4x57oWzY3YJzeQF6C4RiLUqP5x4hjFNhWTbnAXU/B/H+3B9L2vQ8hTkyDQhZszA61CU+VyNlUmMbTWaHh574XyIPFLeF1XpfaeyJd4itTo2k0ASfvcJzTZOlNvIxknYY88HDh9rllx0NVh1+Wp6vknmBNNmvUKo1dglL9IzV1cgu14rH6P5+x7UHkDEtBGUWkyqs6dQLwTPEAoNjcDPLNNPbsvBVtrX8GT7oCWLCJbwAMZWqA+y7dhGn3IyrHnIeF5+l3Obqa64CXL68nX6Qflqwx3dMsQuw86A23xN3Ms3uDETlbpnswovecH0bObgn7TOWHZmOp6C1tf7NkNIjMAdHZgyFNQyJ0UzFMJmMHkIhEB9qhp6Q1jDKqvhOOWFBy/2ld6cFTuCMYOpFeCiLpY4Zar/17nfTtfNs9Ro3nFAIDXl9VK1xzkUJZvhcst/5HcBZZY+1m98NFwYA1NSvae5FBH4V0uw5GqOpJCfwFMV5lln0NWfkwbAW/xmwRs/wF4VmyGknA638GNmoecbL652tsTbOjxrj0Njdc5meWauhGtiITyvsGHMr8cuaSQWQP+ReBWezsJu92KSWkWAV4bAxna1HGJJgHyo9KddGYNQl8em6RIICGIKsQs06pDmfLG6Nn2PWJCNyEBSRugYK0vS+7XA8BMYaKhjkTo9G2oPQgOO1NEomHNIixlFuevMqTPdRMD3Is+GnYLj8HvmDrnnH1VKtyxzPZvu0GlG8mmXLlB7leejKmpIeQkFHfBkh2MFB/ArGdm/MpE4ZNwfcKNM2fdCLEt6o57E4WSNq6h9WvKrXg8xaydPSeKtw0xaG57KraAaTQKYeRbEoI8sqcTFGm0WS5YtUckp9PBMWRkBGD0YzCpv4Voihhg8YiVUSMPKqAkN4fRWazRfDNheD1PvkGcSlOSfibe7Vhq2FUNQDUFZ8Bp0B98p79TgU616ZVpZLIXku0kVXGUxrGnuL2caGrh3Ia6AiXjM9i6HjPThxqTd8zrdcSznPbLWzjqOg0s0Jyt6YqU+Xh9JgWeyEhF1WKwmjV7z8OpScDrLxJcgAr10luxSGsq5gVxtkxLMRnIEme+Ap585cwMMC2NM1xuMwFvY6CpPXkDPjhlgjdvDQVPvBH7wxJQYXec+TX7+vbX+ZtjOk5RNiuOZmPrieYZgLZri7jLf14jf+QBu/DCYyC2LzsHUIedZNyVPagMui9zGVLI6lOB4MMRPLiPSwxAVYYOe3yeLXi+xqC8tKFx+qVJZnRwXlQuZU57sbyTyNtv/3997TTjz+RBR0mtIpGLKo48JXoWZq57Lw5V25LzbSu+TSI20WQp3u8JlzZ4InCX5KyzjvAFsOjMM3JkgX+/wX4EcNZyqP+2CCQb7RepT+MgI2gDWxTGTv/oMYk5V25gJD1sS3ADn1jtfJHC4vc18KPNQF1zcutd6fpFjv0mf1b3vyxyvWS0SpbMnGroZtI3hWNs0TI0pvJ55LcTUdntKU1CU61kplYS8mn1kBhXetEmTtTePr9aaJnh6jnhyHTTwyhcxaIrwdFYRZ3dQH8vUaBmHVRoIJW80KGp7r/RhyumPunbVwwmRl3ZNpMmiJwvLxC8OKtesMahrioQi3AYlXtx7hawvnEzcURmJ9n62tef/4tAcLowFVYcCMc+r6qvmgJSx2NZFoaqhi6K7uWOaw1hRlFI8Z2nhH1azQPddrzpQiR6SRwR4SMIcCMYpyNMu2AqcpVGHxNDBIydmZn2jnBifuGLvJt8IwSWXZVLkRIS2DOQWXUkFxn2nG6S/Wa4KzYe1jKJHKAnvQ43tjKK51BmHIt9OorOME+FwZ0GpbJrO8hJsa5kEb7qWRYU2NrtIpFJMhMM6OCpybTULEpI7wzQT0moD+7PUU4eBVVxxqxy47kgnUKu7q7utmilvV113ysG5dQxR4qs5ZDNWLr/u2HfESCXjLZiJw0Q0LNzOaWq8Et54wztHvU9T3ycrd5PursMxPnTqFZafHDtYj2Sqn1mDFd1nGQFj2xJlFwpfVtv/AbHvnO9+ZtPziwsn22FceQGE9RDdPgeMiWFaWDoEJZ6gKPldQli++8XvbxLEDLNgII6qWsD72EkfYOOx2KZCwOQvrW88ipRx4VDYdtDe5ll4rE8A0+okliVUuDlSEPuiZ2ZAq3JZwVwrLEMDwzwM93P7ovX/aHnro/rJIDhrNQgo02h462i5nIl0NfBIsmZ7UsaOXJcM2QImT+a6NRYWKCgCKji02tUvkMqzlKhhlco3tUIzszYaaYUbpO+xSJTg7RRaK99k/f37XPp6Xz6HX9iqemiOiTLvHiqNklsSGCKFVTFG6Zn1sEWJYojfkTWqsxeJ8HljsG2bVLLolHBwdw6UfJN0v/mYmVEOEgrIH1AZhpeFEUtJJZPgeBdhaO5vH1eQXZTFr7hbA2XEtHZ6gIg2ILnUj9sKDz4EmfAnYLomUw552PmInqcrmZdaaqgDjNRjrS0DtY2Zer7rlqnZScqQR6ZIDMcAJF/W4AO3FlPCwBlDQKl4Lk/Ks0kqQBXu1T0woA4Zp1T7ZqUIawUkSH1E4fhpGVTijx/dHQPQlkqoM3S9pJ2tk1eoweuU6TzLdt20jxHPKdDfcNirIlGueN/SJmD6Hq1ZVQtVpVlZW+EFcUuKnfDYN9xIeYrhyPMcwWJV1mSr+EagojoNTHofM5qpIAeuNOOTrlSBko4I52yV1RS6knhM/MaLa5FnDp+OPik34hF632eNhgPdBiN89GPKZuA0dxLpHO27oHEzRfkbPdBgm/IH5Xe3aK5/V5naTRNMZMjL7nzhX8Xj+ERDPDZjoS7TjWWNvL7viGB5dgcX5gD4hku9F58XjlAYACK/VBYSdCKPcMIwsAxdcx5Kte0BQdit4TaseKizERcYDrfBnF7MCf+Kf/xj8kiWyYefaU197tLUv3inZKN6KfCw9ibizARjtwdWjH9Zo+7YbX9Mmjx5gI2EP0zExVe7y9uguIQdJUHIOvpahll/73h6u84gcEzEMMRWfOxwcpUaLVi1JdHmTMo3DXa50GAeGPmp0w7ouzXf7Bz/S7oGLJVdnI+xBnhlqhJbP8FGr2qFh8ehm5/fSJ+jyol+wLipQrVK6mXKdFZSUOESa9xU/IErUQvi1FCTLbVmiYBUQ3kwg6XWxRu9Lo7DD+qxtLoRMOmGGkPVb5vPtwd8b3s0EaPqSg48VoubDFo1ki3sWdN6xq4NZWp7fyMxau23r7czSjczzZy5rk2QBaxA1LEHSiTKOwDLQj4dTbGUPmOlsM5UqIQ94jI/ukLKU0I9nlV6RzKD4lHLHz9LkjnBwkIoGriEvK4YBz132fLw/nyTougB+lYGk7i3YTHXEMAzsuZZ6OKVOQrHRAOh56G1LR3DYrN7KdnuUtcejLFZifglg+3ucTNf0jHxEFFlmYEg0RjlYshPKiVqYz+FM6DH0gC9MGOys2c0A5eKBJNzbwUjrNa+HnmHnU57BCgNra7mWRfqDht4So82A2syS9ZDtXthCFUTbTijdQFyvJLVkRzjrMaJY/d+NbOiaandYPRU9drPkPouAuCU7q2b/hC/43CXmD1rfOGYypFRCQs7QbjhHKdhW3doeyk4T/GyEVuXjyN6yg4hNXnCbGbaKotZYLmFAc3+s6TJOzbTtykmiSZ2YAXI6dvTytv8QPExD0tCdytuPAawNYJ0syvbSJbsZymJUo3E8euzycBKiLdH8m/JzCEHUjumPrSMWFryWUv6MQswC2ToZrS31YTdtJsr7sp2GnR7koCAOjzzWTj5+HM9grP3kT/1kDumFixfbk3c+0Ha+clcbpte4FjcWPCOJtHQOPjX+5noHd7fn2aSP1hXuhn2p9Kp0UVcJhZZRBirTGYDntHJWYelhsUEjEvUEe43bDRXiCVSoVnPX+iJa8XPKceJZ1WQZD1IYzZ51Xv8XH/xYuw+FtY4L7lgxUzgcq6xLNtVopWu+N4LVedaRZ3UHxvQ9rjXvs9RGrM1fpuVVPmZkw963O2c8KQ6Z6Xs9kh3d/eoPP4UHtYwXO4pwbMHJUljDgeL5TOFvA6TL7J6DWbyColrGcKQLbFwTPSx5bFW2YmwYqkDKp8yQae1UWHhWZLuGmHgjwz9cMM9/gNfOu3Gasg9gEsWGdFEE8pQ8FNIgPGfV6SOMiDD7lRnLS5xq7DNZWGxaqjAauTNmFwZHIwAAIABJREFU2gwrJDRuEgqK2clxslTLKTnFWzJxI29JIqu3UBUAes9ph61vLF7HTYuFegSsUww0IHm5q1PUgzOi2N56ipvFI9Jby3RkvWwtN1it9JgJi8ov5t5sUZ3iZzwOvZClBdopiTlpsPQKbb6HkhndmQsGMyjuJT9R6gYLYb99vcptoplFMGG9XntMpbxGwJrnGOM8OZHGAytMmbbcBh85mypsaSphX6VUbY3oZRkjbmua9J9iT00SpcTG8jaLszNFySw/65N6TpwKDGiGuqJ8rQF24K12zeTLcCgkGnphBLmKdV6cayku1uO5Jkam4ZtpCJQPEj/2xbI/mNfitUtgqk7qdg+X8f5m5qd5/knO6XjbNTvVjjKfYDdUCuEJy/gqJucGxJVj9gsmSvdePeqEjC4IPz12DA8r8aSG1NXhPVo+sxK+sXRcbkRvKh0sWcgNQT+JG3kgFXLF4BP0ZXL6shbz8RMn20N33UUfnrH24z/z4wDJ6+30+TPt7KNPtqWv3NcGzzOeKmOxvZYuvPfAElEKMXNkbzv20pdAbziEd2EZCBwiylAsYdBiLaO81nCTxStsSmaLFT1+BVMcxLFGFc+rnDwVFcYkG5p0YWLELEWUUnf9GGhj9WBZATdCivzQh/+u3f31r+HVgBV0ZNGAkf5WEC1l6RZ6NyUJs6yBJNg1XquBWIfDJZCtFfJedXUXyDr6awPFK6bjuHnZ5+JRGg1lcNxeX/KM5MGRlfE+120jbMsQDwKCKaAq6XOUrIyteM+dOWkSLQrJOkd/i1OmlMon13sM4KhwoiRoF2N93hAZwTH4VmxAPE0tvB5WFABrpZJIaYkZQPEskzVSEcAmR/gTIbPMhleoxJSe8vg9DQDS4n+Ok0q3zCInS5NRGXiYTCTE+zJriRDbMXTATKHWHQwz49nDWK/QTmWnsk+tYOgM3pN4h6FklSAZ6jslWWrEarJyGgUrM+RbneSazmbk3uUwyRFzHiEfNTZulwUAdLpsbHcZ8nFTf1zDEqYRvVGNFo9iTasH1PBUTtcwIRJAY4ynuSeVfSgQLIYdE+RQSTlx4IcVBsm8sh9m7iKn0onAuzJlpguHvOYm3tlYN6VnXZ4XymB5GQxUUZaPpmGyXhNaiGV04keScDUOdgY2y29Ca0PjZQE84duGJVHs/TgTqG3PXMM0BNz5LKdcsa8J+81w28RTSMVsMvelR2tiZJxQXp6YY+EUgsBIyLJ7YR+uyqOTcaUKZRfdVI5edWW7dO/ufG72MeG7X3YKKz5A6ZXIULh0En/5+7JjR+T4Qd60QFhcIlIXGatQCtcw8aLAMkoqLTTAuOKF6N5aoS7elbOHMOnpMO8XwtgCKd/HH3mUEGWw3fqjt2Y6zkWA89OnzunPtpOPMaKKw2Vxo8pjlPfso0f0wcMH2/gsI7XhVnkgbdPsAbqAwgqjlhu3WZ31ZAKec4DRAu2mzS39sA4xKVVT3QHZfXLVM9fhy7RIFkz0spoSn9VwNMCe4aBhkGtmCOOt7bQPfvjj7d47GQqbjVbJqIg8yCo1CaKRmhy8Q0euSvFssl6ECkukmg0nPCyO4pKbYkCyjNJZsTbRan6+o1C4FmsIEj15Cmy1D7gV/bxP82Daekkh4TM2AN+HFaJk52oIre1jlukvtok7nnvyifK51Tgx1lnnRuxOK0WhtXMCBwfJHE0gRFq8vpepfeXZIw68dsPOEwpL+DKKBAJtx1BHqfGhYaV34VV1sqzMYTp/qoT1bMK5KvZ2oZYytC0F0ZiSSOFwrfC3wGBq9JL8MQtIyRXYnFifB9AOEdGdouPunyLqb2+W+4CpFs/HsXHCDpsCyrbdEWcBYLdmcGjwLO8Qx4H93Zd7jbYeyqSH6GleT+tpWzuLl+FdSNcwgWOrpShasRKuebGbQbiKkXKNRu2IYLdW9tCeBSnOc83Ekvws/mFBsxDDtspL7FLqjUoXeTdCMKngIR2zXUw88dqPhLbOLaTV0NoGzPNkST3QxUkbR9mN4PXU6HexcLx3O43oT2OUAnPY697wGDl2LZQzwXKZ+elLZQIL5aYH6DQdQ9RNrt3j/le4bpBePmcdL03s0XpXMTCrYAzrx4GL3B4NHdqZe2R6D7SjOTKHB2ipfORy+maZ1RdPVs76ykolEkcgwhEFWPSgOqMDR64+Gj5dTyxDC6zx4uVmQgwFTeHuMOm2J+M11TtVFR4vTjKp/cSteo/HphCZLoWJq9DAiLf1iSm/K5/zvDbjiCmMiFXtekXqCi1HlapgYXAr5WnEQsjJ4lBqIfSYdOEFMVPLx0Z72E0V68lN4WaOUQCtlydomz7nVtJrmU11+7CdRu3/XfGzi2AYETMYlzohkCFeyo3MmsmyGWh/+ucfaQ/dfXcOnx6A+I64RHUplQek3nKu22g7dtWzUMwLbQo3eCUseISWkG3ZkUu61GzwBtZeQojhk9Z2RVoC16wMi6Awh1pOlcXMPL9CKZlPTpKeit5jBmYmjCmcx37cCohtaOxhHgIrfyyU3TC8DF7n9vK6Ne0ehxkFZS3ZCPV0I1b0d3yb8kIr6VCtduRdlbMUlpXKAGWVcpvMoHIyi4bLnxb1RdzEtXQ0mUkEMZGM3UrcqEHoOg+EK+eZrnH26TygbVEJuYeEIOOWezgHwAPYTcAJ+9szGShBRRWKcxSnXnK6dZBA0Hu1/GcLzNMSNL22dDQdgOnPPMAdWiMLh1ijJ+YpQXqUJMkEzf28J4c2RLptC4Py6RGejxle+Xx6J1zfZ9QrcfJyriWfTQxOgBxjkyGy6UuvD4P35lANHsZMYxoAGuIj40MorcUdBtmqgPTskMEJvBWfxwhFv1V2kyHdGtHGBmct+GzXKWM4DR0xIvxJKKeXhzId5JzakXeV57G8SsKrZW66ZxaQO0lH+oRJFZ9Lb8pwLdxGvWtD2jglVktUKZUQRuSL+1RGq8KFcxU9aWIB706s0HInFPcEcuZZnt8z3y6/4krY78gc6/dMOyLjB5V6otsqp6qpS56zats0cPTqZxn05LCmSVYAU0NEb0TrYVjFRRNiVro0rfiScbAswAcvnCTkwGSOdJNhwttNwc3jQXpododyKgzetJjXOHjOHG6iAyXDV8EbEY+yAb78GmNxPRSp/qbfL4Jb2VvI4jFJpOG24ElFYdnGIp9vYzUZuADRySbxsJ1XYJwfIlpfo0erq2g6YDpP0Wn4AJ7yk1ys7fZHf/phMLlH6lChsPS8ZJ57mGWnz8zuTshn5f0UWMcCwuVGJp2NYIZfw1qMWuRtJkttKc/NcBDW+pocI203VnXVkhvWTws0QXO0IcITBTq1gxBKBzlMhgZmKQ0npRXooqs8LNWwkr5q7QRKPciGRnhcPJMJkkGJo5bd7CDUeC3DKNDxITwNYYDQUVwF7lH2tB6gYYA9kGwXHHKgmSE92Roqofyk0wJ7pLdnJslGhArjFtZVHEnsLyGmKiz3oPRVllEjLHcsgypMNrtHZri0rOxrD4VlWKcCTgE5oZjWXLqAkievZ11PrGsZoUExZHMt9VaVwSQ/wtD2j2VmyjmePlm0gR1CGnGyZItZ2x5ezTSvmUBR2U7LJ+e9y4LpCUEdVycJGrxKNoP9qhK6Fb5nob5j6uzGuyE/SksfA2xYy4WhK1iwjH+TpIpKb4z3rJEZXYSXZxYw3SJYK1Y4QmnFQk0Q5562GImnl8n30wLLyIAGeip3vZgxsCQNnEZfBoA15HpK9lJbRIaUM4eZWNkSOIjspsC83qE4ku1zvM8UoNNRNMRVscRg/jV01WaWRjBDTibCqxkWjAd/05sVIhESMLrJoJr/v6c7243zyq4AXBQpzhpIa3B7pMZ2grxBXiHPGCDIRZDhIi8RIBdJAwEC5KKBCLHTDrpjy1KLZLE4SFnf2sWom7ZMFqv+/z/n7GHttddWdKJHhrSa9z46erT4Io3R3734qtjz7TiwcuWaxjuh/vinAsOQVqvB/+rXr8vIqT6TPLseNc+UM4jl365QP4cov88Dq1439UskOCzbadBl/kYymAETBeYgGrktDM8b0vlpu0E8gqWtxG1bf1J1hOvk7w8Czr169bzlVqx3UR0ypdFfwmfEUZEdo7FMvs0ISBEOM2gU0N5x4KIs/VetEtJ0rwmaBwAfa5oMW+HCh11rl5WlvW6p4eVtSuoFXYw8l7/+239c/Pj9m46xklZgibcylYP5dQTL9tEqcrAVBlRKT3Otu3oak8q4l5sqEmSDJiqyAc6zkdqvmCtgnBxEBx7/ZeVw5xnupYIk3f0QnI+hhondKpCq7gDsKzVig9V3O+h7NeY34dfAZXTst0+t91KTmM+FQTE2Bm8mutpGXxDFDaZwW52pOSiTfw6A34ZbtWFXSNRoZzSoakyyd0wV3tkKNRxhV7QnuqneFYM8LUDNzDnIgqqTOmqc1TZUf7o+SHFXwfBgIdJXpFCRkWZrES1cZfThDccAtsNxAMbSE/LDnu8qMy87MENLj7RLRN/oMQZvS/9maAXBsSjJtpqYB2lY6t2dCCLiSOXQ7dC1V4TJK5awo+CYHxOZ4Da1Gg0akGaTotFKJUWWKucZvcs0qNNENqZjCweRo+11JF9WcwjX5gPmQNP3An0EbxrCcPYaSkE5T7NXVHiTp1QChhNzVQ783SiNahjfeRDHk33NWA8WKAvK/ec9UTy2Y9Aw0as9hSbgwqXXcY66BRgVLV+H0Vrb3olOl33WkWE+PzLMWc+z/D48VGW4woXZW8tEzgcJQnQU4Coy5IIQyC4HSozSWdlOJnQ/LHjFoVcvv1k8DT1HPDGSioNh3WJZ/t690iPqZ7nel89fBBPMSyvapP/PuGt5esBB1UKbndUTQsMzlF4FpjyxN1Eq15ojCCwmlN/nYRJhODhIjD7UsEYHrgHM2IgxIAiD+bdFFL6SwjgMZYJy6MNY4uNM0DmO9hMcphIosCA4RzyFZl7g+sPQLJATYTE9UCpOZGZrsJTh3ZoQdzqTZsOugbw+igky58nYBIySWxtFUa//y3/4+8Uf3nxfg2WoAbUCC/zo6aMYleP2dTmYH2KwEPO830bSv3pVOGDS42XSuYOUeM+CL61Czq12Ux+JAzXtTXS8CuDHED9M685FDjK1VbgP7s940WFn39Fmk2c6GA8bQdo6VZqA+XCeDi0QuTBQpHfz/iqc8BjyxxXIS+QLdMbmL7LlOasS1Y3B8sTdfgJTY9xQCeBYFnvY8dNX6ZGOdlIxn0Q9UrMqXHTPAMI5qyIB3QD1n7lpz7oYYnk51pERUN0iZiedUqVkkAaglviZLDOIo8XNeoViIF1vTx4Zlrw/cvFNKo4F+CthTAJ4DHJvYfFLXv+oRQtRAaciTbvb3kHFoBiuNRm5CBkmcJ4fjtNpZKmb6ou/NJOaVaCyDsdUqSb/LL3J67HQOSH7tqRoVWNk0mQHIJTCcIwKo6etChQCU2oTctA4FWbnzN7kKEtDGkyqe42TyGfeS9vWVuSFnBHPDA1IJA7LqjorAcxEX/ZTCxqiVGZCNEtfP0Zf4afqo3GyHKb1NMB3L+ncVWgQoB6cKpLavZ9sqpukpkus9953RB27N9mUkZSCJdm7zZiCrx1GoYQKzNdffbk4ydceoYL/b8lZBxT2lwh80PhJR933y9ciLHrdyug2DWq+8gtjNBtKZUbp1FrT31FuVr0wMHW2MqM4nrPhnUpEHuRZOEJXuVkMZixvhRvMd4ZvS6WiXlEmMtNP/LcwlQFDzrMp7z/MAwxN4EEimM9Sgbwf0hmAXYkfFUDv3GHUHfQPdqMzfELZlsldMEDZTU+4OQYLv0aoOb2RIxLGQ9ae9lDNIInxqqz/X/3N3y1+/2P0k+gg6YbnqbNdX7846Rjw8yyaP5fhh+mVuzZdJRvhXsrBcDL8F0J3B4mYLuJxV9cRKNTknL/rupcGSO2qQ59NR9tL/5Zn6LCuTF/B7dGPB7TtOjqg9UONVA6ywU4/UJUUVcy0bV96ACvCl/v1bDeCqdxJKqhh966KVn5e89Hnw8+JYibSqYcrxqiR3DxB6aFnRrNicKPuKU21RnJhyZP4IMVMY13UA78SYa11wqv+2g05z7uDS21Gnj7X0iZaSrRmSmY96dUXtLbfmiGJbtY2s2A51wlDErTk4CkB5PVnKZBc30Qqpi1AUkFOhpa7hmNr+7/hfh1FCslUGlOgsyfyYDd3815RIjX2TBuLqh0FkMKgBbdhtQaPJiZrtW86PVo15SizJ+1HIo+qYzPTR5k//xR9NBqDLbqPXGtlkBIlo5mImJN1tA2KSB4DF0cLC7pIlHQZLmObm1Xq8lrnjurCbqhDpjgrnihwtO/Wdeaa9dUagvwxgQWC653ABnTWzoOxOerbwO+cqQ4iqZJo3k8vYa4XjqTDpSm79BI+rIewVWh6dww9n0Am+yyGLU3g2aN6gktjhbfmjZsV5foPQ2fYjUrFQbIoUM6vn71aPDkKaI/S0r3AodgL9hXIYKhIDXAEGc9fvaxagz3ZHLmImRBwutuHcWujTLpXgXgpQkmVrD4w0n6YUUGMnv4xRuind+GbZNPsxoubZNupOMHDyK4h3qGq8QTD9zIBeC7Lx2Ead0IyyxvMRl1FdQ2g+Oj4eHE/gxqiC7Z4mIhlL2OIeP5tE0qKE8z4omnkBOrxgjhTUohhVY8iaMVm+4FNZZsWjnErKpdTvkqrBNGyf/nNvy9+/J/vFxd/pJ8O14kBz32fPDvJxWaTIIViOAfLwdH5kHLzAY3sGIQC9/ncuyESliuUZ/1hGcMtBejv0SGfaiPs4DDTgESk50knqEP4KqaQDemwI89uoTFonfCOeV+9gLxn5wyeD/As4b0TQ4fD/fEilaMAzMBW4f/mZnoEgcGGlBa3cvAHU5Jm1gi0nDzUllYSSx9wmUT78hkxUqpmDkUljUEKiQzsg6oseH4jBl9PO5NrhgA4xQrRkd1kaAKvrtLEKM8A0I7EIovT61k7T1EyTKO4V66rRRFUFb1uJukEtzIJWTU3GOflnUQn2XHJrWrYS2Eom1/x5H2iseOa9TtGx+MViWwORGJaY1A0pNS4SlQkUnnLtV4larvMM9COg2N3FRB6WWKutDKRRqKIys/ooxSh4S9yijA9Srmi5kAa2/BRTjtRiXXdzb0zQlsm99yY1rxs8/NO1utjDv4yo/AoKSCm1myjQ+Sqd3MQ4L4deQbiy1mE+3pA1E2k8ozStb5FTogsTozIJVb6phmj1jXvFBxIpAXTIp10EewJP9bpTLLQCjxjRd5nmT3Wga2KG7DObDJrZRISDEq2hE92nWzkUyJz6qtI6fC9PMoMoLm3OIqK65dffbP4+vMv+qyq8lGvsLYDaySri90ZDNnrLyKRfAealhvvIIZsVCnJiKON8qcDpgm6c+nWvJwO/cyFlTWdxbAvLZiU5jD6TssoCrx9/3YWzz1LXXj5VB8I/RUorDhGFqiR2tAPOuG5m3i4PtyaHrVWHfJvdZ9dY5gSqu6mWvMgVvrLrz/L2OzHEXVIWX5NHJUWNCIo1maVDIHI0VCGLkGNlR6WdoFcBhj4DtcSc2Yz/O7H3y3+880Pi7e/JFIMMH6T0riXnhltpscrn3WwH/XNGjk9dfut8J2HzY8ka1rKVrxlP8dXjLXo9Fq0VQ81kVpTm4K2abhNIeLo3pPqDi2jXXXBgQA9zcHLtdlwO2vcx8FzQVVI8DRhGlnXy3jXK3MBVTHXjkgLyp1MOkLw3ArgmqaJrKcp0wie2m5gRPGm5THNV7HLUguGHoKkqdF9OFRrdnnt/UCkdK9aYZJMdXz6DLAAOjeowkmrG53oTXWWweusJrgiTCrf2yP4V0KhiGScmjuciu9tZOZ3JiSu7prVFV3lAyjRwvpMz7kxk7DYpM8GQeiZ1WKUwoajKAK3AnrgEm5kuyYoj856IiQbFjv/Is4lYVQOuagdXJJo0TPJc79LEy3XAX/DjVrlkG/E4YvyqDeIXHb031HQ5SZj7La2MsIu3SCXoSTQnhqpRKl2PcNcq/tvLV/2MweZE1ieoY7EEZhslPthAHSdLGL0RP+kj6jVqmSqOLZlzlAJzihO0HUJT++lbUwXgQwklnMqhrhoOYv6GjnAC/pvrWymTSnvX6kmeyWBB7z1Imu8TLM3CWRHSgXyMHwuJGF/dqTQnk3uvAUQUbJqoVa/pIGHmWHw1a8eL7755lUxPPitP43yrXmLf/Net05u4/mffZf+xmwgeFU8hmEFFcdb15WRzZAZVQVKc8hmvYl1BkfZjEZSPXv6eegLyzRDZyBEPMKb3/624Pi3L0+CB+wsfnn3U1KVKGaSNG5UlsXJQe1Gqk2aqpn+L1uwnh1O5odNR3h/bSVaQxgZh8nxBq6HtJiKy36+Hh7u5AF8ntz46eL4ycPKzvaAOvTrR9HO8qZRo39YcixvzV3773ycqOddhjv80z//JkMoo+utoVU6SyROapRIBnOZeN4qhqwkvLznQSoqZ8nVl6fvFn+MAgOS3n60SQDtUSHMvZ4vTkVNHUQwdAfphhBGpz/i4P0QTj9FvO8ikRKzYHDEdaPFHCal44Tze/FyZcAjNYpQyxvLmgBH8wwvzvJ90iAytqwnnSlR5nYOimbmjbTAtK/tdvSWjdimZFUdTwR4ja0gfaySWdMhhMfOm+vBrwlpSlJznRdUKTTGUMEFo/1W/77tRzUqMU/ytvz/hi6SqMNBrYrBGKl6cdWk6qvj1MB2hm5iH9gj3mDm3anqrdOrODDhwI1ZesUT8/k8JLWKGkjgs303mOSnpIMbkZZRsr9CFoU3ZV8fhN2+sTGyL0a617h6xlqyUE3y9+pH2Vt5f9nC/BnIoQJ9IIEcZtErQ2WqjD4+HDlctBn9pnIeY5jWNSnvrTHnCFrlNIuxZNj1XnfunMM6JXyySQXv6ZyojJLqI6PBkYJ0sr/7DO1NEZOJPIEAzBeME0V/aBcE7E4vqPUNBUkxQUoLM71I4UaGogJeki6mO9pNzoNI9gYua/xd8EOVSUHLPvJr1soMT0khmZtmK7YoLCvrsJ9Cylae9XFkkY6SGp58e5KqYeYEVCvLnnL+B4JvLNO/gXDy89eJsKglNoXw7GuRxVLlfjdPHUB1WgJ8OYgkX2Fd794FL0nE4XBctnE4zaHJU5+E7U0qZNnKh0VPhcXABLgGfR4yLdWQ4jkQLxlf0Q3PPdriBfnHvM61yZXzxXCjSlTfSdoTD8b6a2PDED6I98CqfZjq4ePHjxdPnzwOzhXLn2s4DSgOCD8KUF/55Lr+Iaex6rhCjO+//tt/LP7rhx/KDQNQuu8P8YpNiHmDhNjCmbOf35XNa+QTCoPDt4oXPUvqKACiX7WlWqjPLO/yPu8BKzhNBFpGU+9Rg8wi3LRsjPyOxmiTpcuA1hGfTQZUbRuNg1dcA8DOQEnFIlmSzYaCsRd1Vu0aK6oWskzLiReVMU9bm8EXpMiiIH14aBdZe3wm+Eq3hlSt9AWefvDE2TDWY23kmzrCFjwV/WtK03ktSZUSRZOGxogrcQOdL2Eppc1MNF5FLUCvYkFwKiRFvC7v30EGedOqWKo/5kA0Mq6WGJtVPkLXoYNSOZxyp/J8TK029iu/g+9VEJ3RvY3ec43iGeD99cdUCDfSL6lNCawh5YnC7f5eIqAYkrK5GfF8ViVvcl0dekH6OI63JEsk0kx22knPHnzIZhX5m5Z9lgh5lX3xyWtFwFnXGobsvTpt1edc/U6eAabOVfBMwHuJwyIlZ8Bk7BgA9+mrZ1FvJewqv7y/cxxMSNTJeSbaSWVaDy4N+Vtn0fmCgqqsyz2zCRNlScWpTKxChbhKasppkDDayGeqPKr40vf6lDXZDmxgvF4Z+b4/yVidluesORu+qeFZ+LyfKmTNRddnhC6l0rUluUYKrSR1cD5NLn8YuZlnJ88yaefLVvqtlk1VImkPvfVaZ1i+9eL1nyQadBQmDdLjZHYZ+EdKQyudzo3x5CuNzTgt0kApAytVr2FTZ/kCju8kRdpKWHggClG2LYZkFJHNCn7EY8qnBYw/R56UtrS7Xd/SPIuJsnjVW+LYfFbLsF6DUGYT2rvVYZp2G/Ixql1SNWCmCgm9HhOUjz57FG+UjZToQy/Vd99+vjh5cZKfIUUKb6MsGoD7fVi8v2QM/Pf//SYbh5oE5r6Nu24ElhpT7XTfIqz3RpFDLnLIgbmxOPrhllGlQOs4TFpwN1rz27hl2RBt48gmorqwFUOL38Jw7qzF1miPbeQQe8baJpBC2/bSFJ3XzfXmegpsM16eSYzB+0R1HWWVTYbPs0QMzYyvjnAyaCE8q4203HgN0iki4agb2EpjsA0hQE24pCRa6yW60nK1jna7UXkNGNIYq75GqsQAGaSAPpCNuaIyYHdnn3RPtTo5hqDpf8H73Lf3pvOkUZriAY0n1UUsbLhSAVd4UD5nnbIzeaXitP2GnE1ED/X1daAqUHqMFRDfhHKR+PQ0qm/bXxGPNKYrKgydS3knApG5jv2Modvc+rmYLA7YdSKv7agNiGwOksIMWD69nhfRTJ/+PE3Ood/s57nnszc4Bnsyv3969jbQWbIKjif32Gg6xqFigg5irn9fRV5hoiZ4Im+VXkWCMiNzfxzSBeY/QF6kpccye1o7zU4gFoWxVTog7BcYUrEga6yB2bOnSZXq3/1U+jrhXNSYpcGnck+b2reEQETw6gAMnFHwgCNrvkbJ0bKDSDwVX2dxmahTkeXOutBRyDkGey9ZFt1E2QHZ52v0GVmEqla+hwLUsWzZgtr4vnj6q8Xzk5NEW0mhpf31jyV9zXlqjD+8yI0//fO/iOy3bD5VhYu3eTDx7qHX980T2gJ4lcIbW4lAcmNBbhIehlJQvlMOY3Low8wD3Iu1x+BVIYIh6bq/xcRswqY3ys9GFDW9ygXktctEA28v0gYRjAhuUeMKec3rLlDtMcubb892a/QFwGwtpAltAAACKUlEQVRP2WSMfnI756zEV5GTTvocDNHUfsJguj2fgiNdKOsmX//6i+OSTx29S1NhlLcZoXjp96c/ZwNH7iWLZJbftjJ9D3CiEeOT3Es2GvL0htlyopZwesr2TbS3Ov8pEdn7tq7sZIbg7nZ6tfwvB/kqnhC/rbPasggiPjLPNqvKk3scLpjcf1LG6oCLqkQJJKA5ImuRg6HZ1LPdjXNxkBjg87ywbUX5+WaMFXC1utzZXAQTCcx1kGUjDM4xkUFJieHarLGrznPkVWNYTcADjHsxA2LbQhrvaqmqsXI/qqHB+eBo5Utpx1mPdeKw2g4wctl1TpjYWR+9egzSBnnr5udZo7TEUDYo3cvn5jeKNfnspoq1niNqF0zFXMPqpscQST0avYvAYZhSjLSGfEzFcDME2psII1YxNcYso3fzHAgWxuMLmu9GpDGFlhJvYwxMXzLiihGmwll6RT4afrMKXYG8d8UJk8buHoaHt5qqNIFHHCeR4ypigfDLOmH3IIPJ2mkcZ3RBINJtaf8mTxjD4vWrzgNMdKWtiICe9FijswJA1m9XZElDLg7QANnr6pjZF7Nue+FF7ZcLOE9OMQzBVVfLKaXXGITNTmdyPziXnspwrrbiQDdUHcFACVYq09QyYtaTtM5V9gksz9rnXna0jsHNUgBo+sjAOZdZ38vYERGYSB/NZXdviMEsyVEoQZ892F+cRIbpyWPFM03uNjejrqILEloTR3N1/wd1LIoAsXhnygAAAABJRU5ErkJggg=="
-    //       }, function(err) {
-    //         assert(!err);
-    //         var ut = uploadTask.newInstance(sub);
-    //         ut.uploadForm(function(err) {
-    //           assert(!err);
-
-    //           ut.uploadFile(function(err) {
-    //             assert(!err);
-    //             assert(ut.get("currentTask") == 1);
-    //             done();
-    //           });
-    //         });
-    //       });
-    //     });
-    //   });
-    // });
-
-    // it("how to download a submission definition", function(done){
-    //   var sub = submission.newInstance(null ,{submissionId: "submissionData"});
-
-    //   sub.changeStatus("pending", function(err){
-    //     assert.ok(!err);
-
-    //     sub.changeStatus("inprogress", function(err){
-    //       assert.ok(!err);
-
-    //       var downloadTask = uploadTask.newInstance(sub);
-    //       //First download tick will download the json definition of the submission
-    //       downloadTask.uploadTick(function(err){
-    //         assert.ok(!err);
-
-    //         console.log(downloadTask.getProgress());
-    //         assert.ok(downloadTask.getProgress());
-    //         assert.ok(sub.getStatus() === "inprogress");
-
-    //         //Second download tick will download the file from the server
-    //         downloadTask.uploadTick(function(err){
-    //           assert.ok(!err);
-    //           assert.ok(sub.getStatus() === "inprogress");
-
-    //           //Third download tick will mark the submission as downloaded
-    //           downloadTask.uploadTick(function(err){
-    //             assert.ok(!err);
-
-    //             assert.ok(sub.getStatus() === "downloaded");
-    //             //It should have downloaded a file
-    //             done();
-    //           });
-    //         });
-    //       });
-    //     });
-    //   });
-    // });
-});
-},{"../../src/config.js":48,"../../src/fileSystem.js":60,"../../src/form.js":61,"../../src/forms.js":66,"../../src/submission.js":74,"../../src/submissions.js":75,"../../src/uploadManager.js":76,"../../src/uploadTask.js":77,"chai":12,"underscore":47}],93:[function(require,module,exports){
-/*jshint expr: true*/
-var chai = require('chai');
-var expect = chai.expect;
-var assert = chai.assert;
-
-var Model = require("../../src/model.js");
-var utils = require("../../src/utils");
-
-describe("Form Utils", function() {
-    it("should extend a function", function() {
-        var func1 = function() {};
-        func1.prototype.function1 = function() {};
-
-        var func2 = function() {};
-        func2.prototype.function2 = function() {};
-
-        utils.extend(func1, func2);
-
-        expect(func1.prototype).to.have.property("function2");
-    });
-
-    it("how to generate a local id from a model", function() {
-        var model = new Model();
-        var localId = utils.localId(model);
-        assert(localId.indexOf('model') > -1, "Expected model based local id");
-        assert.ok(model.getLocalId().indexOf('model') > -1, "Expected model based local id");
-        assert.ok(model.getLocalId() === model.getLocalId(), "Expected local model id to be constant");
-    });
-
-    it("how to generate a local id from a custom model", function() {
-        var model = new Model({
-            "_type": "someNewModel"
-        });
-        var localId = utils.localId(model);
-        assert(localId.indexOf('someNewModel') > -1, "Expected custom model based local id");
-        assert.ok(model.getLocalId().indexOf('someNewModel') > -1, "Expected model based local id");
-    });
-
-    it("how to generate a local id from a custom model and a Remote Id", function() {
-        var model = new Model({
-            "_type": "someRNewModel",
-            "_id": "someRemoteID"
-        });
-        var localId = utils.localId(model);
-        assert(localId.indexOf('someRNewModel') > -1, "Expected custom model based local id");
-        assert.ok(model.getLocalId().indexOf('someRNewModel') > -1, "Expected model based local id");
-        assert.ok(model.getLocalId().indexOf('someRemoteID') > -1, "Expected model based local id to contain remote id");
-    });
-});
-
-},{"../../src/model.js":69,"../../src/utils":78,"chai":12}]},{},[86,87,88,89,90,91,92,93]);
+},{"../../src/config.js":77,"chai":15,"sinon":51,"underscore":76}]},{},[93]);

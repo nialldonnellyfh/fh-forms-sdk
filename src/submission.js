@@ -623,7 +623,7 @@ Submission.prototype.clearLocalSubmissionFiles = function(cb) {
 
     //Should probably be emitting events..
     async.eachSeries(filesInSubmission, function(fileMetaObject, cb) {
-        localStorage.removeEntry(filesInSubmission[fileMetaObject], function(err) {
+        localStorage.removeEntry(fileMetaObject, function(err) {
             if (err) {
                 log.e("Error removing files from " + err);
             }

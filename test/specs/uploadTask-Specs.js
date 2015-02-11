@@ -10,6 +10,7 @@ var config = require('../../src/config.js');
 var uploadManager = require('../../src/uploadManager.js');
 var uploadTask = require('../../src/uploadTask.js');
 var fileSystem = require('../../src/fileSystem.js');
+var aync = require('async');
 var testData = {
     formId: "54d4cd220a9b02c67e9c3f0c",
     fieldId: "54d4cd220a9b02c67e9c3efa",
@@ -96,120 +97,120 @@ describe("UploadTask model", function() {
       });
     });
 
-    // it("how to upload by tick", function(done) {
-    //   var sub = form.newSubmission();
-    //   sub.changeStatus("pending", function(err) {
-    //     assert(!err);
+    it("how to upload by tick", function(done) {
+      var sub = form.newSubmission();
+      sub.changeStatus("pending", function(err) {
+        assert(!err);
 
-    //     sub.changeStatus("inprogress", function(err) {
-    //       assert(!err);
+        sub.changeStatus("inprogress", function(err) {
+          assert(!err);
 
-    //       fileSystem.save("testfile.txt", "content of the file", function(err) {
-    //         assert(!err);
-    //         fileSystem.readAsFile("testfile.txt", function(err, file) {
-    //           sub.addInputValue({
-    //             fieldId: testData.fieldIdFile,
-    //             value: file
-    //           }, function(err) {
-    //             assert(!err);
-    //             var ut = uploadTask.newInstance(sub);
-    //             var sending = false;
-    //             var timer = setInterval(function() {
-    //               if (ut.isCompleted()) {
-    //                 clearInterval(timer);
-    //                 assert(ut.isFormCompleted());
-    //                 assert(ut.isFileCompleted());
-    //                 assert(ut.isMBaaSCompleted());
-    //                 assert(!ut.isError());
-    //                 done();
-    //               }
+          fileSystem.save("testfile.txt", "content of the file", function(err) {
+            assert(!err);
+            fileSystem.readAsFile("testfile.txt", function(err, file) {
+              sub.addInputValue({
+                fieldId: testData.fieldIdFile,
+                value: file
+              }, function(err) {
+                assert(!err);
+                var ut = uploadTask.newInstance(sub);
+                var sending = false;
+                var timer = setInterval(function() {
+                  if (ut.isCompleted()) {
+                    clearInterval(timer);
+                    assert(ut.isFormCompleted());
+                    assert(ut.isFileCompleted());
+                    assert(ut.isMBaaSCompleted());
+                    assert(!ut.isError());
+                    done();
+                  }
 
-    //               if (!sending) {
-    //                 sending = true;
-    //                 ut.uploadTick(function(err) {
-    //                   if (err) {
-    //                     console.error(err);
-    //                     clearInterval(timer);
-    //                   }
-    //                   sending = false;
-    //                   assert(!err);
-    //                 });
-    //               }
-    //             }, 500);
-    //           });
-    //         });
-    //       });
-    //     });
-    //   });
-    // });
-    // it("how to check for failed file upload", function(done) {
-    //   config.set("max_retries", 2);
-    //   var sub = form.newSubmission();
-    //   sub.changeStatus("pending", function(err) {
-    //     assert(!err);
+                  if (!sending) {
+                    sending = true;
+                    ut.uploadTick(function(err) {
+                      if (err) {
+                        console.error(err);
+                        clearInterval(timer);
+                      }
+                      sending = false;
+                      assert(!err);
+                    });
+                  }
+                }, 500);
+              });
+            });
+          });
+        });
+      });
+    });
+    it("how to check for failed file upload", function(done) {
+      config.set("max_retries", 2);
+      var sub = form.newSubmission();
+      sub.changeStatus("pending", function(err) {
+        assert(!err);
 
-    //     sub.changeStatus("inprogress", function(err) {
-    //       assert(!err);
+        sub.changeStatus("inprogress", function(err) {
+          assert(!err);
 
-    //       fileSystem.save("testfile.txt", "content of the file", function(err) {
-    //         assert(!err);
-    //         fileSystem.readAsFile("testfile.txt", function(err, file) {
-    //           sub.addInputValue({
-    //             fieldId: testData.fieldIdFile,
-    //             value: file
-    //           }, function(err) {
-    //             assert(!err);
-    //             sub.set("testText", "failedFileUpload");
-    //             var ut = uploadTask.newInstance(sub);
-    //             ut.uploadTick(function(err) { //form upload
-    //               assert(!err);
+          fileSystem.save("testfile.txt", "content of the file", function(err) {
+            assert(!err);
+            fileSystem.readAsFile("testfile.txt", function(err, file) {
+              sub.addInputValue({
+                fieldId: testData.fieldIdFile,
+                value: file
+              }, function(err) {
+                assert(!err);
+                sub.set("testText", "failedFileUpload");
+                var ut = uploadTask.newInstance(sub);
+                ut.uploadTick(function(err) { //form upload
+                  assert(!err);
 
-    //               ut.uploadTick(function(err) { //First upload fails -- upload task should be set to try again.
-    //                 assert(!err);
-    //                 assert(ut.getCurrentTask() === 0);
-    //                 assert(sub.getStatus() === "queued");
-    //                 assert.ok(sub.getRemoteSubmissionId());
-    //                 assert(ut.get("retryNeeded") === true);
-    //                 assert(ut.get("retryAttempts") === 1);
+                  ut.uploadTick(function(err) { //First upload fails -- upload task should be set to try again.
+                    assert(!err);
+                    assert(ut.getCurrentTask() === 0);
+                    assert(sub.getStatus() === "queued");
+                    assert.ok(sub.getRemoteSubmissionId());
+                    assert(ut.get("retryNeeded") === true);
+                    assert(ut.get("retryAttempts") === 1);
 
-    //                 ut.uploadTick(function(err){// Next upload tick should reset the uploadTask
-    //                   assert(!err);
-    //                   assert(sub.getStatus() === "queued");
-    //                   assert(ut.get("retryNeeded") === false);
-    //                   assert(ut.get("retryAttempts") === 1);
+                    ut.uploadTick(function(err){// Next upload tick should reset the uploadTask
+                      assert(!err);
+                      assert(sub.getStatus() === "queued");
+                      assert(ut.get("retryNeeded") === false);
+                      assert(ut.get("retryAttempts") === 1);
 
-    //                   ut.uploadTick(function(err){ //Next upload fails again
-    //                     assert(!err);
-    //                     assert(ut.getCurrentTask() === 0);
-    //                     assert(sub.getStatus() === "queued");
-    //                     assert(ut.get("retryNeeded") === true);
-    //                     assert(ut.get("retryAttempts") === 2);
+                      ut.uploadTick(function(err){ //Next upload fails again
+                        assert(!err);
+                        assert(ut.getCurrentTask() === 0);
+                        assert(sub.getStatus() === "queued");
+                        assert(ut.get("retryNeeded") === true);
+                        assert(ut.get("retryAttempts") === 2);
 
-    //                     ut.uploadTick(function(err){// Next upload tick should reset the uploadTask again
-    //                       assert(!err);
-    //                       assert(ut.getCurrentTask() === 0);
-    //                       assert(sub.getStatus() === "queued");
-    //                       assert(ut.get("retryNeeded") === false);
-    //                       assert(ut.get("retryAttempts") === 2);
+                        ut.uploadTick(function(err){// Next upload tick should reset the uploadTask again
+                          assert(!err);
+                          assert(ut.getCurrentTask() === 0);
+                          assert(sub.getStatus() === "queued");
+                          assert(ut.get("retryNeeded") === false);
+                          assert(ut.get("retryAttempts") === 2);
 
-    //                       ut.uploadTick(function(err){// Upload fails again. Exceeded max number of retry attempts. Upload task is now in error state
-    //                         assert(err);
-    //                         assert(sub.getStatus() === "error");
-    //                         assert(ut.isError() === true);
+                          ut.uploadTick(function(err){// Upload fails again. Exceeded max number of retry attempts. Upload task is now in error state
+                            assert(err);
+                            assert(sub.getStatus() === "error");
+                            assert(ut.isError() === true);
 
-    //                         done();
-    //                       });
-    //                     });
-    //                   });
-    //                 });
-    //               });
-    //             });
-    //           });
-    //         });
-    //       });
-    //     });
-    //   });
-    // });
+                            done();
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
 
     // it("how to check for failed submissionCompletion", function(done) {
     //   var sub = form.newSubmission();

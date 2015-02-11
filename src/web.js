@@ -11,10 +11,12 @@ function get(url, cb) {
         dataType: 'json',
         timeout: require("./config").get("timeout"),
         success: function(data, text) {
+            debugger;
             log.d("Ajax get", url, "Success");
             cb(null, data);
         },
         error: function(xhr, status, err) {
+            debugger;
             log.e("Ajax get", url, "Fail", xhr, status, err);
             cb(err);
         }
