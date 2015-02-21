@@ -28,7 +28,7 @@ Config.prototype.init = function(config, cb) {
         self.set("studioMode", false);
         //load hard coded static config first
         self.staticConfig(config);
-        //attempt to load config from mbaas then local storage.
+        //attempt to load config from local storage.
         self.refresh(false, cb);
     }
 };
@@ -41,47 +41,21 @@ Config.prototype.getStorageStrategy = function(){
 };
 Config.prototype.refresh = function(fromRemote, cb) {
     var self = this;
-    if (typeof cb === 'undefined') {
+    if (typeof cb === 'undefined' && typeof fromRemote === 'function') {
         cb = fromRemote;
         fromRemote = false;
     }
 
-    function _handler(err, res) {
-        var configObj = {};
-
-        if (!err && res) {
-            if (typeof(res) === "string") {
-                try {
-                    configObj = JSON.parse(res);
-                } catch (error) {
-                    log.e("Invalid json config defintion from remote", error);
-                    configObj = {};
-                    return cb(error, null);
-                }
-            } else {
-                configObj = res;
-            }
-
-            self.fromJSON(_.extend(self.getProps(), configObj));
-
-            self.saveLocal(function(err, updatedConfigJSON) {
-                cb(err, self);
-            });
-        } else {
-            cb(err, self);
-        }
-    }
     self.loadLocal(function(err, localConfig) {
         if (err) {
             log.e("Config loadLocal ", err);
         }
 
         if(fromRemote){
-            dataAgent.refreshRead(self, _handler);
+             dataAgent.refreshRead(self, cb);
         } else {
             cb(err, self);
         }
-        
     });
 };
 Config.prototype.getCloudHost = function() {

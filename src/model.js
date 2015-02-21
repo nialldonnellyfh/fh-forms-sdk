@@ -87,7 +87,7 @@ Model.prototype.getLocalUpdateTimeStamp = function() {
 
 Model.prototype.refresh = function(fromRemote, cb) {
     var that = this;
-    if (typeof cb === 'undefined') {
+    if (typeof cb === 'undefined' && typeof fromRemote === "function") {
         cb = fromRemote;
         fromRemote = false;
     }

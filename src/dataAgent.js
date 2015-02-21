@@ -26,7 +26,7 @@ DataAgent.read = function(model, cb) {
         if (err || !locRes) {
             //local loading failed
 
-            log.d("Error reading model from localStore ", model, err);
+            log.d("Error reading model from localStore, Attempting Refresh ", model, err);
 
             that.refreshRead(model, cb);
         } else {

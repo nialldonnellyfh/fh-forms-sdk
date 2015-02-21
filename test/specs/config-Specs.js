@@ -11,8 +11,8 @@ var requests = [];
 describe("Config module", function() {
 
   beforeEach(function(done) {
-    this.request = sinon.useFakeXMLHttpRequest();
-    var requests = this.requests = [];
+    this.server = sinon.fakeServer.create();
+    this.server.autoRespond = true;
 
     this.config = config;
     config.init({}, function(err, returnedConfig) {
@@ -25,87 +25,85 @@ describe("Config module", function() {
   });
 
   afterEach(function() {
-    this.request.restore();
+    this.server.restore();
   });
 
-  // it("config should be initialised before usage. config should get data from local storage.", function(done) {
-  //   assert.equal(config.get("log_email"), "test@example.com");
-  //   done();
-  // });
+  it("config should be initialised before usage. config should get data from local storage.", function(done) {
+    assert.equal(config.get("log_email"), "test@example.com");
+    done();
+  });
 
-  // it("config should be able to be saved to local storage ", function(done) {
-  //   this.config.init({}, function(err, returnedConfig) {
-  //     assert(!err, "Unexpected Error When Returning Config Data.");
-  //     assert.equal(config.get("log_email"), "test@example.com");
+  it("config should be able to be saved to local storage ", function(done) {
+    this.config.init({}, function(err, returnedConfig) {
+      assert(!err, "Unexpected Error When Returning Config Data.");
+      assert.equal(config.get("log_email"), "test@example.com");
 
-  //     config.set('log_email', 'someOtherValue@example.com');
+      config.set('log_email', 'someOtherValue@example.com');
 
-  //     config.saveLocal(function(err) {
-  //       assert(!err, "Expected No Error When Saving Config");
+      config.saveLocal(function(err) {
+        assert(!err, "Expected No Error When Saving Config");
 
-  //       assert.equal(config.get("log_email"), "someOtherValue@example.com");
+        assert.equal(config.get("log_email"), "someOtherValue@example.com");
 
-  //       config.refresh(false, function(err) {
-  //         assert(!err, "Expected No Error When Loading From Local");
-  //         assert.equal(config.get("log_email"), "someOtherValue@example.com");
-  //         done();
-  //       });
-  //     });
+        config.refresh(false, function(err) {
+          assert(!err, "Expected No Error When Loading From Local");
+          assert.equal(config.get("log_email"), "someOtherValue@example.com");
+          done();
+        });
+      });
 
-  //   });
-  // });
+    });
+  });
 
-  // it("config should be able to be loaded from local storage ", function(done) {
-  //   this.config.init({}, function(err, returnedConfig) {
-  //     assert(!err, "Unexpected Error When Returning Config Data.");
-  //     assert.equal(config.get("log_email"), "test@example.com");
+  it("config should be able to be loaded from local storage ", function(done) {
+    this.config.init({}, function(err, returnedConfig) {
+      assert(!err, "Unexpected Error When Returning Config Data.");
+      assert.equal(config.get("log_email"), "test@example.com");
 
-  //     config.set('log_email', 'someOtherValue@example.com');
+      config.set('log_email', 'someOtherValue@example.com');
 
-  //     assert.equal(config.get("log_email"), "someOtherValue@example.com");
+      assert.equal(config.get("log_email"), "someOtherValue@example.com");
 
-  //     config.refresh(false, function(err) {
-  //       assert(!err, "Expected No Error When Loading From Local");
-  //       assert.equal(config.get("log_email"), "someOtherValue@example.com");
-  //       done();
-  //     });
-  //   });
-  // });
+      config.refresh(false, function(err) {
+        assert(!err, "Expected No Error When Loading From Local");
+        assert.equal(config.get("log_email"), "someOtherValue@example.com");
+        done();
+      });
+    });
+  });
 
 
 
-  // it("how to get config properties", function() {
-  //   assert(this.config.getAppId(), "Expected appId To Be set");
-  //   assert(this.config.get("mbaasBaseUrl"), "Expected mbaasBaseUrl To Be set");
-  //   assert(this.config.get("formUrls"), "Expected formUrls To Be set");
-  //   assert(this.config.get("env"), "Expected env To Be set");
-  //   assert(this.config.get("userConfigValues"), "Expected userConfigValues To Be set");
-  //   assert.ok(this.config.get("sent_save_min") === 10, "Expected sent_save_min To Be set");
-  // });
+  it("how to get config properties", function() {
+    assert(this.config.getAppId(), "Expected appId To Be set");
+    assert(this.config.get("mbaasBaseUrl"), "Expected mbaasBaseUrl To Be set");
+    assert(this.config.get("formUrls"), "Expected formUrls To Be set");
+    assert(this.config.get("env"), "Expected env To Be set");
+    assert(this.config.get("userConfigValues"), "Expected userConfigValues To Be set");
+    assert.ok(this.config.get("sent_save_min") === 10, "Expected sent_save_min To Be set");
+  });
 
-  // it("Should Only Be One Config Module", function() {
-  //   var sameConfig = require('../../src/config.js');
+  it("Should Only Be One Config Module", function() {
+    var sameConfig = require('../../src/config.js');
 
-  //   assert.ok(sameConfig.get("sent_save_min") === config.get("sent_save_min"));
-  // });
+    assert.ok(sameConfig.get("sent_save_min") === config.get("sent_save_min"));
+  });
 
   it("how to get config properties From Remote", function(done) {
-
-    var callback = sinon.spy();
-    this.request.onCreate = function(request) {
-      debugger;
-      request.respond(200, {
+    this.server.respondWith(function(xhr, id) {
+      xhr.respond(200, {
           "Content-Type": "application/json"
         },
         '{"randomRemoteConfig": 12}'
       );
 
-      assert(callback.called, "Expected The Callback To Be Called Once");
+      console.log("Response sent");
+
+    });
+
+    config.refresh(true, function(err){
+      assert.equal(config.get('randomRemoteConfig'), 12 , "Expected Remote Config To Return");
       done();
-    };
-
-    config.refresh(true, callback);
+    });
   });
-
-
 });

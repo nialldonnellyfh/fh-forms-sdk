@@ -447,33 +447,27 @@ Submission.prototype.addComment = function(msg, user) {
     return ts;
 };
 Submission.prototype.getComments = function() {
-    return this.get('comments');
+    return this.get('comments', []);
 };
 Submission.prototype.removeComment = function(timeStamp) {
     var comments = this.getComments();
-    for (var i = 0; i < comments.length; i++) {
-        var comment = comments[i];
-        if (comment.timeStamp === timeStamp) {
-            comments.splice(i, 1);
-            return;
-        }
-    }
+
+    comments = _.filter(comments, function(comment){
+        return comment.timeStamp === timeStamp;   
+    });
+
+    this.set('comments', comments);
 };
 
 Submission.prototype.populateFilesInSubmission = function() {
     var self = this;
-    var tmpFileNames = [];
+    var tmpFileNames = _.map(self.getSubmissionFiles(), function(submissionFile){
+        return submissionFile.fileName || submissionFile.hashName;
+    });
 
-    var submissionFiles = self.getSubmissionFiles();
-    for (var fieldValIndex = 0; fieldValIndex < submissionFiles.length; fieldValIndex++) {
-        if (submissionFiles[fieldValIndex].fileName) {
-            tmpFileNames.push(submissionFiles[fieldValIndex].fileName);
-        } else if (submissionFiles[fieldValIndex].hashName) {
-            tmpFileNames.push(submissionFiles[fieldValIndex].hashName);
-        }
-    }
+    tmpFileNames = _.compact(tmpFileNames);
 
-    self.set("filesInSubmission", submissionFiles);
+    self.set("filesInSubmission", tmpFileNames);
 };
 
 Submission.prototype.getSubmissionFiles = function() {
@@ -481,19 +475,12 @@ Submission.prototype.getSubmissionFiles = function() {
     log.d("In getSubmissionFiles: " + self.getLocalId());
     var submissionFiles = [];
 
-    var formFields = self.getFormFields();
-
-    for (var formFieldIndex = 0; formFieldIndex < formFields.length; formFieldIndex++) {
-        var tmpFieldValues = formFields[formFieldIndex].fieldValues || [];
-        for (var fieldValIndex = 0; fieldValIndex < tmpFieldValues.length; fieldValIndex++) {
-            if (tmpFieldValues[fieldValIndex].fileName) {
-                submissionFiles.push(tmpFieldValues[fieldValIndex]);
-            } else if (tmpFieldValues[fieldValIndex].hashName) {
-                submissionFiles.push(tmpFieldValues[fieldValIndex]);
-            }
-        }
-
-    }
+    var formFields = _.map(self.getFormFields(), function(formField){
+        return _.filter(formField.fieldValues || [], function(fieldValue){
+            return fieldValue.fileName || fieldValue.hashName;    
+        });    
+    });
+    submissionFiles = _.flatten(formFields);
 
     return submissionFiles;
 };
