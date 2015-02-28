@@ -27,6 +27,7 @@ describe("forms model", function() {
   beforeEach(function(done) {
     this.server = sinon.fakeServer.create();
     this.server.autoRespond = true;
+    this.server.autoRespondAfter = 500;
     config.init({}, function(err, returnedConfig) {
       assert.ok(!err, "Expected No Error");
       forms.clearLocal(function(err, model) {

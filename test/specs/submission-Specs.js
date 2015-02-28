@@ -8,6 +8,7 @@ var submission = require('../../src/submission.js');
 var submissions = require('../../src/submissions.js');
 var config = require('../../src/config.js');
 var uploadManager = require('../../src/uploadManager.js');
+var sinon = require('sinon');
 var testData = {
   formId: "54d4cd220a9b02c67e9c3f0d",
   fieldId: "52dfd93ee02b762d3f000001"
@@ -85,15 +86,15 @@ describe("Submission model", function() {
   });
   it("how to create new submission from a form", function(done) {
     var form = new Form({
-      formId: testData.formId
+      formId: testData.formId,
       rawMode: true,
-      rawData: testForm
+      rawData: testForm,
       fromRemote: false
     }, function(err, form) {
       assert(!err);
       var newSub = submission.newInstance(form);
       var localId = newSub.getLocalId();
-      assert(newSub.getStatus() == "new");
+      assert.equal(newSub.getStatus(), "new");
       assert(newSub);
       assert(localId);
       done();
@@ -103,9 +104,9 @@ describe("Submission model", function() {
   it("how to load a submission from local storage without a form", function(done) {
     //load form
     var form = new Form({
-      formId: testData.formId
+      formId: testData.formId,
       rawMode: true,
-      rawData: testForm
+      rawData: testForm,
       fromRemote: false
     }, function(err, form) {
       assert(!err);
@@ -116,7 +117,7 @@ describe("Submission model", function() {
         submission.fromLocal(localId, function(err, submission1) {
           assert(!err);
           assert.equal(submission1.get("formId"), newSub.get("formId"));
-          assert.equal(submission1.getStatus(), "draft");
+          assert.equal(submission1.getStatus(), "draft"); 
 
           submission1.clearLocal(function(err) {
             assert(!err);
@@ -131,9 +132,9 @@ describe("Submission model", function() {
     var error = false;
     //load form
     var form = new Form({
-      formId: testData.formId
+      formId: testData.formId,
       rawMode: true,
-      rawData: testForm
+      rawData: testForm,
       fromRemote: false
     }, function(err, form) {
       assert(!err);
@@ -155,9 +156,9 @@ describe("Submission model", function() {
 
   it("how to store a draft,and find it from submissions list", function(done) {
     var form = new Form({
-      formId: testData.formId
+      formId: testData.formId,
       rawMode: true,
-      rawData: testForm
+      rawData: testForm,
       fromRemote: false
     }, function(err, form) {
       assert(!err);
@@ -183,9 +184,9 @@ describe("Submission model", function() {
   it("submission model loaded from local should have only 1 reference", function(done) {
 
     var form = new Form({
-      formId: testData.formId
+      formId: testData.formId,
       rawMode: true,
-      rawData: testForm
+      rawData: testForm,
       fromRemote: false
     }, function(err, form) {
       assert(!err);
@@ -218,9 +219,9 @@ describe("Submission model", function() {
     });
     it("how to add a comment to a submission with or without a user", function(done) {
       var form = new Form({
-        formId: testData.formId
+        formId: testData.formId,
         rawMode: true,
-        rawData: testForm
+        rawData: testForm,
         fromRemote: false
       }, function(err, form) {
         assert(!err);
@@ -248,9 +249,9 @@ describe("Submission model", function() {
 
     it("how to remove a comment from submission", function(done) {
       var form = new Form({
-        formId: testData.formId
+        formId: testData.formId,
         rawMode: true,
-        rawData: testForm
+        rawData: testForm,
         fromRemote: false
       }, function(err, form) {
         assert(!err);
@@ -282,9 +283,9 @@ describe("Submission model", function() {
       config.init({}, function(err) {
         assert(!err);
         var form = new Form({
-          formId: testData.formId
+          formId: testData.formId,
           rawMode: true,
-          rawData: testForm
+          rawData: testForm,
           fromRemote: false
         }, function(err, form) {
           assert(!err);
@@ -424,15 +425,43 @@ describe("Submission model", function() {
   describe("upload submission with upload manager", function() {
     var form = null;
     beforeEach(function(done) {
-      var form = new Form({
-        formId: testData.formId
+      this.server = sinon.fakeServer.create();
+      this.server.autoRespond = true;
+      this.server.autoRespondAfter = 50;
+
+
+      //Server Ping
+      this.server.respondWith('GET', '/sys/info/ping', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({"status": "ok"})
+      ]);
+
+      //Submission Data
+      this.server.respondWith('POST', '/forms/appId1234/' + testData.formId + '/submitFormData', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({"submissionid": "aSubmissionID"})
+      ]);
+
+      //CompleteSubmission
+      this.server.respondWith('POST', '/forms/appId1234/aSubmissionID/completeSubmission', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({"status": "complete"})
+      ]);
+      form = new Form({
+        formId: testData.formId,
         rawMode: true,
-        rawData: testForm
+        rawData: testForm,
         fromRemote: false
       }, function(err, _form) {
         form = _form;
         done();
       });
+    });
+    afterEach(function(done) {
+      this.server.restore();
     });
     it("how to queue a submission", function(done) {
       var newSub1 = form.newSubmission();

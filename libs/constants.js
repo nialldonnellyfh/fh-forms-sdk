@@ -24,7 +24,7 @@ module.exports = {
     "encodingType": "jpeg",
     "sent_items_to_keep_list": [5, 10, 20, 30, 40, 50, 100],
     "storageStrategy": "html5-filesystem",
-    "statusUrl": "ping",
+    "statusUrl": "/sys/info/ping",
     "userConfigValues": {
 
     },

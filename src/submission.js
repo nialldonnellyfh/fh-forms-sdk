@@ -452,8 +452,8 @@ Submission.prototype.getComments = function() {
 Submission.prototype.removeComment = function(timeStamp) {
     var comments = this.getComments();
 
-    comments = _.filter(comments, function(comment){
-        return comment.timeStamp === timeStamp;   
+    comments = _.reject(comments, function(comment){
+        return _.isEqual(comment.timeStamp, timeStamp);   
     });
 
     this.set('comments', comments);
@@ -928,9 +928,7 @@ function newInstance(form, params) {
     params = params ? params : {};
     var sub = new Submission(form, params);
 
-    if (params.submissionId) {
-        submissions.updateSubmissionWithoutSaving(sub);
-    }
+    submissions.updateSubmissionWithoutSaving(sub);
     return sub;
 }
 

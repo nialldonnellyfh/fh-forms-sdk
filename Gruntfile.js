@@ -14,7 +14,7 @@ module.exports = function(grunt) {
                 transform: ["browserify-shim"]
             },
             specs: {
-                src: ['test/specs/**/forms-Specs.js'],
+                src: ['test/specs/**/submission-Specs.js'],
                 dest: 'test/public/build/specs.js',
                 options: {
                     debug: true

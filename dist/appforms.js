@@ -42,7 +42,7 @@ module.exports = {
     "encodingType": "jpeg",
     "sent_items_to_keep_list": [5, 10, 20, 30, 40, 50, 100],
     "storageStrategy": "html5-filesystem",
-    "statusUrl": "ping",
+    "statusUrl": "/sys/info/ping",
     "userConfigValues": {
 
     },
@@ -20101,33 +20101,27 @@ Submission.prototype.addComment = function(msg, user) {
     return ts;
 };
 Submission.prototype.getComments = function() {
-    return this.get('comments');
+    return this.get('comments', []);
 };
 Submission.prototype.removeComment = function(timeStamp) {
     var comments = this.getComments();
-    for (var i = 0; i < comments.length; i++) {
-        var comment = comments[i];
-        if (comment.timeStamp === timeStamp) {
-            comments.splice(i, 1);
-            return;
-        }
-    }
+
+    comments = _.reject(comments, function(comment){
+        return _.isEqual(comment.timeStamp, timeStamp);   
+    });
+
+    this.set('comments', comments);
 };
 
 Submission.prototype.populateFilesInSubmission = function() {
     var self = this;
-    var tmpFileNames = [];
+    var tmpFileNames = _.map(self.getSubmissionFiles(), function(submissionFile){
+        return submissionFile.fileName || submissionFile.hashName;
+    });
 
-    var submissionFiles = self.getSubmissionFiles();
-    for (var fieldValIndex = 0; fieldValIndex < submissionFiles.length; fieldValIndex++) {
-        if (submissionFiles[fieldValIndex].fileName) {
-            tmpFileNames.push(submissionFiles[fieldValIndex].fileName);
-        } else if (submissionFiles[fieldValIndex].hashName) {
-            tmpFileNames.push(submissionFiles[fieldValIndex].hashName);
-        }
-    }
+    tmpFileNames = _.compact(tmpFileNames);
 
-    self.set("filesInSubmission", submissionFiles);
+    self.set("filesInSubmission", tmpFileNames);
 };
 
 Submission.prototype.getSubmissionFiles = function() {
@@ -20135,19 +20129,12 @@ Submission.prototype.getSubmissionFiles = function() {
     log.d("In getSubmissionFiles: " + self.getLocalId());
     var submissionFiles = [];
 
-    var formFields = self.getFormFields();
-
-    for (var formFieldIndex = 0; formFieldIndex < formFields.length; formFieldIndex++) {
-        var tmpFieldValues = formFields[formFieldIndex].fieldValues || [];
-        for (var fieldValIndex = 0; fieldValIndex < tmpFieldValues.length; fieldValIndex++) {
-            if (tmpFieldValues[fieldValIndex].fileName) {
-                submissionFiles.push(tmpFieldValues[fieldValIndex]);
-            } else if (tmpFieldValues[fieldValIndex].hashName) {
-                submissionFiles.push(tmpFieldValues[fieldValIndex]);
-            }
-        }
-
-    }
+    var formFields = _.map(self.getFormFields(), function(formField){
+        return _.filter(formField.fieldValues || [], function(fieldValue){
+            return fieldValue.fileName || fieldValue.hashName;    
+        });    
+    });
+    submissionFiles = _.flatten(formFields);
 
     return submissionFiles;
 };
@@ -20595,9 +20582,7 @@ function newInstance(form, params) {
     params = params ? params : {};
     var sub = new Submission(form, params);
 
-    if (params.submissionId) {
-        submissions.updateSubmissionWithoutSaving(sub);
-    }
+    submissions.updateSubmissionWithoutSaving(sub);
     return sub;
 }
 
@@ -20683,16 +20668,18 @@ Submissions.prototype.updateSubmissionWithoutSaving = function(submission) {
     var pruneData = this.pruneSubmission(submission);
     var localId = pruneData._ludid;
     if (localId) {
-        var meta = this.findMetaByLocalId(localId);
-        var submissions = this.get('submissions');
-        if (meta) {
-            //existed, remove the old meta and save the new one.
-            submissions.splice(submissions.indexOf(meta), 1);
-            submissions.push(pruneData);
+        var meta = this.findMetaByLocalId(localId) || pruneData;
+        var submissions = this.getSubmissions();
+
+        var currentMeta = _.findWhere(submissions, {_ludid: localId});
+
+        if(currentMeta){
+            _.extend(currentMeta, meta);
         } else {
-            // not existed, insert to the tail.
-            submissions.push(pruneData);
+            submissions.push(meta);
         }
+
+        this.updateSubmissionCache(submissions);
     } else {
         // invalid local id.
         log.e('Invalid submission for localId:', localId, JSON.stringify(submission));
@@ -20702,7 +20689,7 @@ Submissions.prototype.clearSentSubmission = function(cb) {
     log.d("Submissions clearSentSubmission");
     var self = this;
     var maxSent = config.get("max_sent_saved") ? config.get("max_sent_saved") : config.get("sent_save_min");
-    var submissions = self.get("submissions");
+    var submissions = self.getSubmissions();
     var sentSubmissions = this.getSubmitted();
     var toBeRemoved = [];
 
@@ -20743,32 +20730,22 @@ Submissions.prototype.clearSentSubmission = function(cb) {
 Submissions.prototype.findByFormId = function(formId) {
     log.d("Submissions findByFormId", formId);
     var rtn = [];
-    var submissions = this.get('submissions');
-    for (var i = 0; i < submissions.length; i++) {
-        var obj = submissions[i];
-        if (submissions[i].formId === formId) {
-            rtn.push(obj);
-        }
-    }
-    return rtn;
+    var submissions = this.getSubmissions();
+
+    return _.filter(submissions, function(submission){
+        return _.isEqual(submission.formId, formId);   
+    });
 };
 Submissions.prototype.getSubmissions = function() {
-    return this.get('submissions');
+    return _.compact(this.get('submissions', []));
 };
 Submissions.prototype.getSubmissionMetaList = Submissions.prototype.getSubmissions;
 //function alias
 Submissions.prototype.findMetaByLocalId = function(localId) {
     log.d("Submissions findMetaByLocalId", localId);
-    var submissions = this.get('submissions');
-    for (var i = 0; i < submissions.length; i++) {
-        var obj = submissions[i];
-        if (submissions[i]._ludid === localId) {
-            return obj;
-        }
-    }
+    var submissions = this.getSubmissions();
 
-    //log.e("Submissions findMetaByLocalId: No submissions for localId: ", localId);
-    return null;
+    return _.findWhere(submissions, {_ludid: localId});
 };
 
 /**
@@ -20777,20 +20754,14 @@ Submissions.prototype.findMetaByLocalId = function(localId) {
  * @returns {*}
  */
 Submissions.prototype.findMetaByRemoteId = function(remoteId) {
-    remoteId = remoteId || "";
-
-    log.d("Submissions findMetaByRemoteId: " + remoteId);
-    var submissions = this.get('submissions');
-    for (var i = 0; i < submissions.length; i++) {
-        var obj = submissions[i];
-        if (submissions[i].submissionId) {
-            if (submissions[i].submissionId === remoteId) {
-                return obj;
-            }
-        }
+    if(!remoteId){
+        return undefined;
     }
 
-    return null;
+    log.d("Submissions findMetaByRemoteId: " + remoteId);
+    var submissions = this.getSubmissions();
+
+    return _.findWhere(submissions, {submissionId: remoteId});
 };
 Submissions.prototype.pruneSubmission = function(submission) {
     log.d("Submissions pruneSubmission");
@@ -20812,12 +20783,7 @@ Submissions.prototype.pruneSubmission = function(submission) {
         'uploadStartDate'
     ];
     var data = submission.getProps();
-    var rtn = {};
-    for (var i = 0; i < fields.length; i++) {
-        var key = fields[i];
-        rtn[key] = data[key];
-    }
-    return rtn;
+    return _.pick(data, fields);
 };
 
 Submissions.prototype.clear = function(cb) {
@@ -20828,10 +20794,17 @@ Submissions.prototype.clear = function(cb) {
             log.e(err);
             cb(err);
         } else {
+            that.resetSubmissionCache();
             that.set("submissions", []);
             cb(null, null);
         }
     });
+};
+Submissions.prototype.resetSubmissionCache = function(){
+    this.set('submissions', []);
+};
+Submissions.prototype.updateSubmissionCache = function(updatedSubmissions){
+    this.set('submissions', updatedSubmissions || []);
 };
 Submissions.prototype.getDrafts = function(params) {
     log.d("Submissions getDrafts: ", params);
@@ -20899,7 +20872,7 @@ Submissions.prototype.findByStatus = function(params) {
     var formId = params.formId;
     var sortField = params.sortField || "createDate";
 
-    var submissions = this.get("submissions", []);
+    var submissions = this.getSubmissions();
     var rtn = _.filter(submissions, function(submission) {
         if (status === submission.status) {
             if (formId) {
@@ -20936,22 +20909,24 @@ Submissions.prototype.getSubmissionByMeta = function(meta, cb) {
 };
 Submissions.prototype.removeSubmission = function(localId, cb) {
     log.d("Submissions removeSubmission: ", localId);
-    var index = this.indexOf(localId);
-    if (index > -1) {
-        this.get('submissions').splice(index, 1);
+    if(!localId){
+        return cb("Local ID Needed To Remove A Submission");
     }
+
+    var filteredSubmissions = _.filter(this.getSubmissions(), function(submission){
+        return submission._ludid !== localId;
+    });
+
+    this.updateSubmissionCache();
     this.saveLocal(cb);
 };
-Submissions.prototype.indexOf = function(localId, cb) {
+Submissions.prototype.indexOf = function(localId) {
     log.d("Submissions indexOf: ", localId);
-    var submissions = this.get('submissions');
-    for (var i = 0; i < submissions.length; i++) {
-        var obj = submissions[i];
-        if (submissions[i]._ludid === localId) {
-            return i;
-        }
-    }
-    return -1;
+    var submissions = this.getSubmissions();
+
+    return _.findIndex(submissions, function(submission){
+        return _.isEqual(submissions[i]._ludid, localId);
+    });
 };
 var submissionsModel;
 
@@ -22140,14 +22115,12 @@ function get(url, cb) {
         dataType: 'json',
         timeout: require("./config").get("timeout"),
         success: function(data, text) {
-            debugger;
             log.d("Ajax get", url, "Success");
             cb(null, data);
         },
         error: function(xhr, status, err) {
-            debugger;
             log.e("Ajax get", url, "Fail", xhr, status, err);
-            cb(err);
+            cb(err || xhr);
         }
     });
 }

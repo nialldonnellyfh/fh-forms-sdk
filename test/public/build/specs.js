@@ -41,7 +41,7 @@ module.exports = {
     "encodingType": "jpeg",
     "sent_items_to_keep_list": [5, 10, 20, 30, 40, 50, 100],
     "storageStrategy": "html5-filesystem",
-    "statusUrl": "ping",
+    "statusUrl": "/sys/info/ping",
     "userConfigValues": {
 
     },
@@ -31920,33 +31920,27 @@ Submission.prototype.addComment = function(msg, user) {
     return ts;
 };
 Submission.prototype.getComments = function() {
-    return this.get('comments');
+    return this.get('comments', []);
 };
 Submission.prototype.removeComment = function(timeStamp) {
     var comments = this.getComments();
-    for (var i = 0; i < comments.length; i++) {
-        var comment = comments[i];
-        if (comment.timeStamp === timeStamp) {
-            comments.splice(i, 1);
-            return;
-        }
-    }
+
+    comments = _.reject(comments, function(comment){
+        return _.isEqual(comment.timeStamp, timeStamp);   
+    });
+
+    this.set('comments', comments);
 };
 
 Submission.prototype.populateFilesInSubmission = function() {
     var self = this;
-    var tmpFileNames = [];
+    var tmpFileNames = _.map(self.getSubmissionFiles(), function(submissionFile){
+        return submissionFile.fileName || submissionFile.hashName;
+    });
 
-    var submissionFiles = self.getSubmissionFiles();
-    for (var fieldValIndex = 0; fieldValIndex < submissionFiles.length; fieldValIndex++) {
-        if (submissionFiles[fieldValIndex].fileName) {
-            tmpFileNames.push(submissionFiles[fieldValIndex].fileName);
-        } else if (submissionFiles[fieldValIndex].hashName) {
-            tmpFileNames.push(submissionFiles[fieldValIndex].hashName);
-        }
-    }
+    tmpFileNames = _.compact(tmpFileNames);
 
-    self.set("filesInSubmission", submissionFiles);
+    self.set("filesInSubmission", tmpFileNames);
 };
 
 Submission.prototype.getSubmissionFiles = function() {
@@ -31954,19 +31948,12 @@ Submission.prototype.getSubmissionFiles = function() {
     log.d("In getSubmissionFiles: " + self.getLocalId());
     var submissionFiles = [];
 
-    var formFields = self.getFormFields();
-
-    for (var formFieldIndex = 0; formFieldIndex < formFields.length; formFieldIndex++) {
-        var tmpFieldValues = formFields[formFieldIndex].fieldValues || [];
-        for (var fieldValIndex = 0; fieldValIndex < tmpFieldValues.length; fieldValIndex++) {
-            if (tmpFieldValues[fieldValIndex].fileName) {
-                submissionFiles.push(tmpFieldValues[fieldValIndex]);
-            } else if (tmpFieldValues[fieldValIndex].hashName) {
-                submissionFiles.push(tmpFieldValues[fieldValIndex]);
-            }
-        }
-
-    }
+    var formFields = _.map(self.getFormFields(), function(formField){
+        return _.filter(formField.fieldValues || [], function(fieldValue){
+            return fieldValue.fileName || fieldValue.hashName;    
+        });    
+    });
+    submissionFiles = _.flatten(formFields);
 
     return submissionFiles;
 };
@@ -32414,9 +32401,7 @@ function newInstance(form, params) {
     params = params ? params : {};
     var sub = new Submission(form, params);
 
-    if (params.submissionId) {
-        submissions.updateSubmissionWithoutSaving(sub);
-    }
+    submissions.updateSubmissionWithoutSaving(sub);
     return sub;
 }
 
@@ -32502,16 +32487,18 @@ Submissions.prototype.updateSubmissionWithoutSaving = function(submission) {
     var pruneData = this.pruneSubmission(submission);
     var localId = pruneData._ludid;
     if (localId) {
-        var meta = this.findMetaByLocalId(localId);
-        var submissions = this.get('submissions');
-        if (meta) {
-            //existed, remove the old meta and save the new one.
-            submissions.splice(submissions.indexOf(meta), 1);
-            submissions.push(pruneData);
+        var meta = this.findMetaByLocalId(localId) || pruneData;
+        var submissions = this.getSubmissions();
+
+        var currentMeta = _.findWhere(submissions, {_ludid: localId});
+
+        if(currentMeta){
+            _.extend(currentMeta, meta);
         } else {
-            // not existed, insert to the tail.
-            submissions.push(pruneData);
+            submissions.push(meta);
         }
+
+        this.updateSubmissionCache(submissions);
     } else {
         // invalid local id.
         log.e('Invalid submission for localId:', localId, JSON.stringify(submission));
@@ -32521,7 +32508,7 @@ Submissions.prototype.clearSentSubmission = function(cb) {
     log.d("Submissions clearSentSubmission");
     var self = this;
     var maxSent = config.get("max_sent_saved") ? config.get("max_sent_saved") : config.get("sent_save_min");
-    var submissions = self.get("submissions");
+    var submissions = self.getSubmissions();
     var sentSubmissions = this.getSubmitted();
     var toBeRemoved = [];
 
@@ -32562,32 +32549,22 @@ Submissions.prototype.clearSentSubmission = function(cb) {
 Submissions.prototype.findByFormId = function(formId) {
     log.d("Submissions findByFormId", formId);
     var rtn = [];
-    var submissions = this.get('submissions');
-    for (var i = 0; i < submissions.length; i++) {
-        var obj = submissions[i];
-        if (submissions[i].formId === formId) {
-            rtn.push(obj);
-        }
-    }
-    return rtn;
+    var submissions = this.getSubmissions();
+
+    return _.filter(submissions, function(submission){
+        return _.isEqual(submission.formId, formId);   
+    });
 };
 Submissions.prototype.getSubmissions = function() {
-    return this.get('submissions');
+    return _.compact(this.get('submissions', []));
 };
 Submissions.prototype.getSubmissionMetaList = Submissions.prototype.getSubmissions;
 //function alias
 Submissions.prototype.findMetaByLocalId = function(localId) {
     log.d("Submissions findMetaByLocalId", localId);
-    var submissions = this.get('submissions');
-    for (var i = 0; i < submissions.length; i++) {
-        var obj = submissions[i];
-        if (submissions[i]._ludid === localId) {
-            return obj;
-        }
-    }
+    var submissions = this.getSubmissions();
 
-    //log.e("Submissions findMetaByLocalId: No submissions for localId: ", localId);
-    return null;
+    return _.findWhere(submissions, {_ludid: localId});
 };
 
 /**
@@ -32596,20 +32573,14 @@ Submissions.prototype.findMetaByLocalId = function(localId) {
  * @returns {*}
  */
 Submissions.prototype.findMetaByRemoteId = function(remoteId) {
-    remoteId = remoteId || "";
-
-    log.d("Submissions findMetaByRemoteId: " + remoteId);
-    var submissions = this.get('submissions');
-    for (var i = 0; i < submissions.length; i++) {
-        var obj = submissions[i];
-        if (submissions[i].submissionId) {
-            if (submissions[i].submissionId === remoteId) {
-                return obj;
-            }
-        }
+    if(!remoteId){
+        return undefined;
     }
 
-    return null;
+    log.d("Submissions findMetaByRemoteId: " + remoteId);
+    var submissions = this.getSubmissions();
+
+    return _.findWhere(submissions, {submissionId: remoteId});
 };
 Submissions.prototype.pruneSubmission = function(submission) {
     log.d("Submissions pruneSubmission");
@@ -32631,12 +32602,7 @@ Submissions.prototype.pruneSubmission = function(submission) {
         'uploadStartDate'
     ];
     var data = submission.getProps();
-    var rtn = {};
-    for (var i = 0; i < fields.length; i++) {
-        var key = fields[i];
-        rtn[key] = data[key];
-    }
-    return rtn;
+    return _.pick(data, fields);
 };
 
 Submissions.prototype.clear = function(cb) {
@@ -32647,10 +32613,17 @@ Submissions.prototype.clear = function(cb) {
             log.e(err);
             cb(err);
         } else {
+            that.resetSubmissionCache();
             that.set("submissions", []);
             cb(null, null);
         }
     });
+};
+Submissions.prototype.resetSubmissionCache = function(){
+    this.set('submissions', []);
+};
+Submissions.prototype.updateSubmissionCache = function(updatedSubmissions){
+    this.set('submissions', updatedSubmissions || []);
 };
 Submissions.prototype.getDrafts = function(params) {
     log.d("Submissions getDrafts: ", params);
@@ -32718,7 +32691,7 @@ Submissions.prototype.findByStatus = function(params) {
     var formId = params.formId;
     var sortField = params.sortField || "createDate";
 
-    var submissions = this.get("submissions", []);
+    var submissions = this.getSubmissions();
     var rtn = _.filter(submissions, function(submission) {
         if (status === submission.status) {
             if (formId) {
@@ -32755,22 +32728,24 @@ Submissions.prototype.getSubmissionByMeta = function(meta, cb) {
 };
 Submissions.prototype.removeSubmission = function(localId, cb) {
     log.d("Submissions removeSubmission: ", localId);
-    var index = this.indexOf(localId);
-    if (index > -1) {
-        this.get('submissions').splice(index, 1);
+    if(!localId){
+        return cb("Local ID Needed To Remove A Submission");
     }
+
+    var filteredSubmissions = _.filter(this.getSubmissions(), function(submission){
+        return submission._ludid !== localId;
+    });
+
+    this.updateSubmissionCache();
     this.saveLocal(cb);
 };
-Submissions.prototype.indexOf = function(localId, cb) {
+Submissions.prototype.indexOf = function(localId) {
     log.d("Submissions indexOf: ", localId);
-    var submissions = this.get('submissions');
-    for (var i = 0; i < submissions.length; i++) {
-        var obj = submissions[i];
-        if (submissions[i]._ludid === localId) {
-            return i;
-        }
-    }
-    return -1;
+    var submissions = this.getSubmissions();
+
+    return _.findIndex(submissions, function(submission){
+        return _.isEqual(submissions[i]._ludid, localId);
+    });
 };
 var submissionsModel;
 
@@ -33941,14 +33916,12 @@ function get(url, cb) {
         dataType: 'json',
         timeout: require("./config").get("timeout"),
         success: function(data, text) {
-            debugger;
             log.d("Ajax get", url, "Success");
             cb(null, data);
         },
         error: function(xhr, status, err) {
-            debugger;
             log.e("Ajax get", url, "Fail", xhr, status, err);
-            cb(err);
+            cb(err || xhr);
         }
     });
 }
@@ -34088,26 +34061,68 @@ var assert = chai.assert;
 var _ = require('underscore');
 var forms = require('../../src/forms.js');
 var Form = require('../../src/form.js');
+var submission = require('../../src/submission.js');
+var submissions = require('../../src/submissions.js');
 var config = require('../../src/config.js');
+var uploadManager = require('../../src/uploadManager.js');
 var sinon = require('sinon');
-
-var testResponse = {
-  "forms": [{
-    "_id": "54d4cd220a9b02c67e9c3f0c",
-    "name": "Test All Form Things",
-    "description": "Testing all field types",
-    "lastUpdated": "2015-02-06T14:31:07.566Z",
-    "lastUpdatedTimestamp": 1423233067566
-  }]
-};
-
 var testData = {
-  formId: "54d4cd220a9b02c67e9c3f0c"
+  formId: "54d4cd220a9b02c67e9c3f0d",
+  fieldId: "52dfd93ee02b762d3f000001"
 };
 
+var testForm = {
+  "_id": "54d4cd220a9b02c67e9c3f0d",
+  "description": "Small Form",
+  "name": "Small Form",
+  "updatedBy": "testingform@example.com",
+  "lastUpdatedTimestamp": 1390409513725,
+  "pageRules": [
 
+  ],
+  "fieldRules": [
 
-describe("forms model", function() {
+  ],
+  "pages": [{
+    "_id": "52dfd909a926eb2e3f000001",
+    "name": "A Page",
+    "fields": [{
+      "fieldOptions": {
+        "definition": {
+          "defaultValue": ""
+        }
+      },
+      "required": false,
+      "type": "text",
+      "name": "Text",
+      "helpText": "Text",
+      "_id": "52dfd93ee02b762d3f000001",
+      "repeating": false
+    }, {
+      "required": false,
+      "type": "file",
+      "name": "File",
+      "helpText": "File",
+      "_id": "52dfd93ee02b762d3f000002",
+      "repeating": false
+    }]
+  }, {
+    "name": "Page 2",
+    "_id": "52dff729e02b762d3f000004",
+    "fields": [{
+      "required": false,
+      "type": "text",
+      "name": "Page 2 Text",
+      "helpText": "Page 2 Text",
+      "_id": "52dff729e02b762d3f000003",
+      "repeating": false
+    }]
+  }],
+  "lastUpdated": "2014-01-22T16:51:53.725Z",
+  "dateCreated": "2014-01-22T14:43:21.806Z"
+};
+
+describe("Submission model", function() {
   beforeEach(function(done) {
     this.server = sinon.fakeServer.create();
     this.server.autoRespond = true;
@@ -34115,7 +34130,10 @@ describe("forms model", function() {
       assert.ok(!err, "Expected No Error");
       forms.clearLocal(function(err, model) {
         assert.ok(!err, "Expected No Error");
-        done();
+        submissions.clearLocal(function(err) {
+          assert.ok(!err, "Expected No Error");
+          done();
+        });
       });
     });
   });
@@ -34123,180 +34141,490 @@ describe("forms model", function() {
   afterEach(function() {
     this.server.restore();
   });
-  it("How to load form list from local storage-> mBaaS / can load forms and refresh the model ", function(done) {
-    var timeStamp1 = forms.getLocalUpdateTimeStamp();
-    var response = {
-      forms: [{
-        "_id": "54d4cd220a9b02c67e9c3f0c",
-        "name": "Test A Form",
-        "description": "Testing all field types",
-        "lastUpdated": "2015-02-06T14:31:07.566Z",
-        "lastUpdatedTimestamp": 1423233067567
-      }]
-    };
-
-    this.server.respondWith('GET', 'hostmbaas/forms/appId1234', [200, {
-        "Content-Type": "application/json"
-      },
-      JSON.stringify(response)
-    ]);
-
-    forms.refresh(function(err, model) {
-      assert(!err);
-      var timeStamp2 = model.getLocalUpdateTimeStamp();
-
-      assert.equal(forms.getFormsList().length, 1);
-      var formMeta = forms.getFormsList()[0];
-
-      assert.equal(formMeta._id, "54d4cd220a9b02c67e9c3f0c");
-      assert.equal(formMeta.name, "Test A Form");
-
-      assert(timeStamp1 != timeStamp2);
-      done();
-    });
-  });
-  it("how to forcely load form list from mBaaS and store it locally / can load forms and refresh the model forcely from remote", function(done) {
-    var timeStamp1 = forms.getLocalUpdateTimeStamp();
-
-    var response = {
-      forms: [{
-        "_id": "54d4cd220a9b02c67e9c3f0c",
-        "name": "Test A Form",
-        "description": "Testing all field types",
-        "lastUpdated": "2015-02-06T14:31:07.566Z",
-        "lastUpdatedTimestamp": 1423233067567
-      }]
-    };
-
-    this.server.respondWith('GET', 'hostmbaas/forms/appId1234', [200, {
-        "Content-Type": "application/json"
-      },
-      JSON.stringify(response)
-    ]);
-
-    forms.refresh(true, function(err, forms) {
-      assert(!err);
-      var timeStamp2 = forms.getLocalUpdateTimeStamp();
-      assert(timeStamp1 != timeStamp2);
-
-      assert.equal(forms.getFormsList().length, 1);
-      var formMeta = forms.getFormsList()[0];
-
-      assert.equal(formMeta._id, "54d4cd220a9b02c67e9c3f0c");
-      assert.equal(formMeta.name, "Test A Form");
-
-      done();
-    });
-  });
-
-  it("how to test if a form model object is up to date / should check if a form is up to date", function(done) {
-    var response = {
-      forms: [{
-        "_id": "54d4cd220a9b02c67e9c3f0c",
-        "name": "Test A Form",
-        "description": "Testing all field types",
-        "lastUpdated": "2015-02-06T14:31:07.566Z",
-        "lastUpdatedTimestamp": 1423233067567
-      }]
-    };
-
-    this.server.respondWith('GET', 'hostmbaas/forms/appId1234', [200, {
-        "Content-Type": "application/json"
-      },
-      JSON.stringify(response)
-    ]);
-
-    var testFormOutOfDate = {
-      "_id": "54d4cd220a9b02c67e9c3f0c",
-      "description": "Test Form Out Of Date",
-      "name": "Test Form Out Of Date",
-      "updatedBy": "testingform@example.com",
-      "lastUpdatedTimestamp": 1423233067565,
-      "lastUpdated": "2014-01-22T16:51:53.725Z",
-      "dateCreated": "2014-01-22T14:43:21.806Z",
-      "pageRules": [
-
-      ],
-      "fieldRules": [
-
-      ],
-      "pages": [{
-        "_id": "52dfd909a926eb2e3f000001",
-        "name": "A Page",
-        "fields": [{
-          "fieldOptions": {
-            "definition": {
-              "defaultValue": ""
-            }
-          },
-          "required": false,
-          "type": "text",
-          "name": "Text",
-          "helpText": "Text",
-          "_id": "52dfd93ee02b762d3f000001",
-          "repeating": false
-        }]
-      }]
-    };
-
-    var testFormUpToDate = {
-      "_id": "54d4cd220a9b02c67e9c3f0c",
-      "description": "Test Form Up To Date",
-      "name": "Test Form Up To Date",
-      "updatedBy": "testingform@example.com",
-      "lastUpdatedTimestamp": 1423233067567,
-      "lastUpdated": "2014-01-22T16:51:53.725Z",
-      "dateCreated": "2014-01-22T14:43:21.806Z",
-      "pageRules": [
-
-      ],
-      "fieldRules": [
-
-      ],
-      "pages": [{
-        "_id": "52dfd909a926eb2e3f000001",
-        "name": "A Page",
-        "fields": [{
-          "fieldOptions": {
-            "definition": {
-              "defaultValue": ""
-            }
-          },
-          "required": false,
-          "type": "text",
-          "name": "Text",
-          "helpText": "Text",
-          "_id": "52dfd93ee02b762d3f000001",
-          "repeating": false
-        }]
-      }]
-    };
-
-    this.server.respondWith('GET', 'hostmbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c', [200, {
-        "Content-Type": "application/json"
-      },
-      JSON.stringify(testFormUpToDate)
-    ]);
-
-    new Form({
+  it("how to create new submission from a form", function(done) {
+    var form = new Form({
       formId: testData.formId,
-      fromRemote: false,
       rawMode: true,
-      rawData: testFormOutOfDate
+      rawData: testForm,
+      fromRemote: false
     }, function(err, form) {
       assert(!err);
+      var newSub = submission.newInstance(form);
+      var localId = newSub.getLocalId();
+      assert.equal(newSub.getStatus(), "new");
+      assert(newSub);
+      assert(localId);
+      done();
+    });
+  });
 
-      assert.equal(form.getName(), "Test Form Out Of Date");
-      assert(forms.isFormUpdated(form), "Form Should Be Marked as Up To Date");
-
-      //Now Get The Up To Date Form
-      form.refresh(true, function(err, form) {
+  it("how to load a submission from local storage without a form", function(done) {
+    //load form
+    var form = new Form({
+      formId: testData.formId,
+      rawMode: true,
+      rawData: testForm,
+      fromRemote: false
+    }, function(err, form) {
+      assert(!err);
+      var newSub = submission.newInstance(form);
+      var localId = newSub.getLocalId();
+      newSub.saveDraft(function(err) {
         assert(!err);
-        assert.equal(form.getName(), "Test Form Up To Date");
-        assert(!forms.isFormUpdated(form), "Form Should Not Be Marked as Updated");
+        submission.fromLocal(localId, function(err, submission1) {
+          assert(!err);
+          assert.equal(submission1.get("formId"), newSub.get("formId"));
+          assert.equal(submission1.getStatus(), "draft"); 
+
+          submission1.clearLocal(function(err) {
+            assert(!err);
+            done();
+          });
+        });
+      });
+    });
+  });
+
+  it("will throw error if status is in wrong order", function(done) {
+    var error = false;
+    //load form
+    var form = new Form({
+      formId: testData.formId,
+      rawMode: true,
+      rawData: testForm,
+      fromRemote: false
+    }, function(err, form) {
+      assert(!err);
+      var newSub = submission.newInstance(form);
+      var localId = newSub.getLocalId();
+      newSub.saveDraft(function(err) {
+        assert(!err);
+
+        newSub.submitted(function(err) {
+          assert(err, "Expected An Error When Trying To Change To An Invalid State");
+          newSub.clearLocal(function(err) {
+            assert(!err);
+            done();
+          });
+        });
+      });
+    });
+  });
+
+  it("how to store a draft,and find it from submissions list", function(done) {
+    var form = new Form({
+      formId: testData.formId,
+      rawMode: true,
+      rawData: testForm,
+      fromRemote: false
+    }, function(err, form) {
+      assert(!err);
+      var newSub = submission.newInstance(form);
+      var localId = newSub.getLocalId();
+
+      newSub.saveDraft(function(err) {
+        assert(!err);
+        var localId = newSub.getLocalId();
+        var meta = submissions.findMetaByLocalId(localId);
+        assert(meta._ludid == localId);
+        assert(meta.formId == newSub.get("formId"));
+        submissions.getSubmissionByMeta(meta, function(err, sub1) {
+          assert(newSub === sub1);
+          newSub.clearLocal(function(err) {
+            assert(!err);
+            done();
+          });
+        });
+      });
+    });
+  });
+  it("submission model loaded from local should have only 1 reference", function(done) {
+
+    var form = new Form({
+      formId: testData.formId,
+      rawMode: true,
+      rawData: testForm,
+      fromRemote: false
+    }, function(err, form) {
+      assert(!err);
+      var newSub = submission.newInstance(form);
+      var localId = newSub.getLocalId();
+
+      assert(localId, "Expected A Local ID To Be Set");
+
+      var meta = submissions.findByFormId(testData.formId)[0];
+
+      assert.equal(meta._ludid, localId);
+
+      submission.fromLocal(localId, function(err, submission1) {
+        submission.fromLocal(localId, function(err, submission2) {
+          assert(submission1 === submission2);
+          submission1.clearLocal(function(err) {
+            assert(!err);
+            done();
+          });
+        });
+      });
+    });
+  });
+  describe("comment", function() {
+    beforeEach(function(done) {
+      config.init({}, function(err) {
+        assert(!err);
         done();
+      });
+    });
+    it("how to add a comment to a submission with or without a user", function(done) {
+      var form = new Form({
+        formId: testData.formId,
+        rawMode: true,
+        rawData: testForm,
+        fromRemote: false
+      }, function(err, form) {
+        assert(!err);
+        var newSub = submission.newInstance(form);
+        var localId = newSub.getLocalId();
+
+        assert(localId, "Expected A Local ID To Be Set");
+        submission.fromLocal(localId, function(err, submission) {
+          assert(!err);
+          var ts1 = submission.addComment("hello world");
+          var ts2 = submission.addComment("test", "testerName");
+          var comments = submission.getComments();
+          assert(comments.length > 0);
+          var str = JSON.stringify(comments);
+          assert(str.indexOf("hello world") > -1);
+          assert(str.indexOf("testerName") > -1);
+          submission.clearLocal(function(err) {
+            assert(!err);
+            done();
+          });
+        });
+      });
+
+    });
+
+    it("how to remove a comment from submission", function(done) {
+      var form = new Form({
+        formId: testData.formId,
+        rawMode: true,
+        rawData: testForm,
+        fromRemote: false
+      }, function(err, form) {
+        assert(!err);
+        var newSub = submission.newInstance(form);
+        var localId = newSub.getLocalId();
+
+        assert(localId, "Expected A Local ID To Be Set");
+        submission.fromLocal(localId, function(err, submission) {
+          assert(!err, "unexpected error: " + err);
+          var ts1 = submission.addComment("hello world2");
+          submission.removeComment(ts1);
+          var comments = submission.getComments();
+
+          var str = JSON.stringify(comments);
+          assert(str.indexOf(ts1.toString()) == -1, "comment still in submission: " + str);
+          submission.clearLocal(function(err) {
+            assert(!err);
+            done();
+          });
+        });
+      });
+    });
+
+  });
+
+  describe("User input", function() {
+    var newSub = null;
+    beforeEach(function(done) {
+      config.init({}, function(err) {
+        assert(!err);
+        var form = new Form({
+          formId: testData.formId,
+          rawMode: true,
+          rawData: testForm,
+          fromRemote: false
+        }, function(err, form) {
+          assert(!err);
+          newSub = submission.newInstance(form);
+          var localId = newSub.getLocalId();
+          assert(newSub.getStatus() == "new");
+          assert(newSub);
+          assert(localId);
+          done();
+        });
+      });
+
+    });
+    it("how to add user input value to submission model", function() {
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 40
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[0] == 40);
+      });
+    });
+    it("how to reset a submission to clear all user input", function() {
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 40
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.reset();
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(!err);
+        assert(res.length === 0);
+      });
+    });
+
+    it("how to handle a null user input", function() {
+      newSub.reset();
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: null
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(!err);
+        assert(res.length === 0);
+      });
+    });
+
+    it("how to use transaction to input a series of user values to submission model", function() {
+      newSub.reset();
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 40
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.startInputTransaction();
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 50
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 60
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 35
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.endInputTransaction(true);
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[0] == 40);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[1] == 50);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[2] == 60);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[3] == 35);
+      });
+    });
+    it("how to use transaction for user input and roll back", function() {
+      newSub.reset();
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 40
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.startInputTransaction();
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 50
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 60
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 35
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.endInputTransaction(false);
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[0] === 40);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[1] === undefined);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[2] === undefined);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[3] === undefined);
+      });
+    });
+  });
+
+  describe("upload submission with upload manager", function() {
+    var form = null;
+    beforeEach(function(done) {
+      this.server = sinon.fakeServer.create();
+      this.server.autoRespond = true;
+      this.server.autoRespondAfter = 50;
+
+
+      //Server Ping
+      this.server.respondWith('GET', '/sys/info/ping', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({"status": "ok"})
+      ]);
+
+      //Submission Data
+      this.server.respondWith('POST', '/forms/appId1234/' + testData.formId + '/submitFormData', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({"submissionid": "aSubmissionID"})
+      ]);
+
+      //CompleteSubmission
+      this.server.respondWith('POST', '/forms/appId1234/aSubmissionID/completeSubmission', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({"status": "complete"})
+      ]);
+      form = new Form({
+        formId: testData.formId,
+        rawMode: true,
+        rawData: testForm,
+        fromRemote: false
+      }, function(err, _form) {
+        form = _form;
+        done();
+      });
+    });
+    afterEach(function(done) {
+      this.server.restore();
+    });
+    it("how to queue a submission", function(done) {
+      var newSub1 = form.newSubmission();
+      newSub1.on("submit", function(err) {
+        assert(!err);
+
+        newSub1.upload(function(err, uploadTask) {
+          assert(!err);
+          assert(uploadTask);
+          assert(uploadManager.timer);
+          assert(uploadManager.hasTask());
+
+          newSub1.getUploadTask(function(err, task) {
+            assert(!err);
+            assert(task);
+            newSub1.clearLocal(function(err) {
+              assert(!err);
+              done();
+            });
+          });
+        });
+      });
+
+      newSub1.submit(function(err) {
+        if (err) console.log(err);
+        assert(!err);
+      });
+    });
+    it("how to monitor if a submission is submitted", function(done) {
+      var newSub1 = form.newSubmission();
+
+      newSub1.on("submit", function() {
+        newSub1.upload(function(err, uploadTask) {
+          assert(!err);
+          assert(uploadTask);
+        });
+      });
+      newSub1.on("progress", function(progress) {
+        console.log("PROGRESS: ", progress);
+      });
+      newSub1.on("error", function(err, progress) {
+        assert.ok(!err);
+        console.log("ERROR: ", err, progress);
+      });
+      newSub1.on("submitted", function(submissionId) {
+        assert.ok(submissionId);
+        assert.ok(newSub1.getLocalId());
+        assert.ok(newSub1.getRemoteSubmissionId());
+        newSub1.clearLocal(function(err) {
+          assert(!err);
+          done();
+        });
+      });
+      newSub1.submit(function(err) {
+        assert(!err);
+      });
+    });
+  });
+
+  describe("download a submission using a submission Id", function() {
+    beforeEach(function(done) {
+      config.init({}, function(err) {
+        assert(!err);
+        done();
+      });
+    });
+    it("how to queue a submission for download", function(done) {
+      var submissionToDownload = null;
+      submissionToDownload = submission.newInstance(null, {
+        "submissionId": "testSubmissionId"
+      });
+
+      submissionToDownload.on("progress", function(progress) {
+
+        console.log("DOWNLOAD PROGRESS: ", progress);
+        assert.ok(progress);
+      });
+
+      submissionToDownload.on("downloaded", function() {
+
+        console.log("downloaded event called");
+        done();
+      });
+
+      submissionToDownload.on("error", function(err, progress) {
+
+        console.error("error event called");
+        assert.ok(!err);
+        assert.ok(progress);
+        done();
+      });
+
+      submissionToDownload.download(function(err, downloadTask) {
+
+        console.log(err, downloadTask);
+        assert.ok(!err);
+        assert.ok(downloadTask);
+
+        submissionToDownload.getDownloadTask(function(err, downloadTask) {
+
+          console.log(err, downloadTask);
+          assert.ok(!err);
+          assert.ok(downloadTask);
+        });
       });
     });
   });
 });
-},{"../../src/config.js":77,"../../src/form.js":90,"../../src/forms.js":95,"chai":15,"sinon":51,"underscore":76}]},{},[109]);
+},{"../../src/config.js":77,"../../src/form.js":90,"../../src/forms.js":95,"../../src/submission.js":103,"../../src/submissions.js":104,"../../src/uploadManager.js":105,"chai":15,"sinon":51,"underscore":76}]},{},[109]);
