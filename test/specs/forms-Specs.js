@@ -25,11 +25,19 @@ var testData = {
 
 describe("forms model", function() {
   beforeEach(function(done) {
+    var self = this;
     this.server = sinon.fakeServer.create();
     this.server.autoRespond = true;
     this.server.autoRespondAfter = 500;
     config.init({}, function(err, returnedConfig) {
       assert.ok(!err, "Expected No Error");
+      self.server.respondWith('GET', config.getCloudHost() + '/sys/info/ping', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({
+          "status": "ok"
+        })
+      ]);
       forms.clearLocal(function(err, model) {
         assert.ok(!err, "Expected No Error");
         done();
@@ -37,8 +45,12 @@ describe("forms model", function() {
     });
   });
 
-  afterEach(function() {
+  afterEach(function(done) {
     this.server.restore();
+    forms.clearAllForms(function(err, model) {
+      assert.ok(!err, "Expected No Error");
+      done();
+    });
   });
   it("How to load form list from local storage-> mBaaS / can load forms and refresh the model ", function(done) {
     var timeStamp1 = forms.getLocalUpdateTimeStamp();
@@ -52,7 +64,7 @@ describe("forms model", function() {
       }]
     };
 
-    this.server.respondWith('GET', 'hostmbaas/forms/appId1234', [200, {
+    this.server.respondWith('GET', 'host/mbaas/forms/appId1234', [200, {
         "Content-Type": "application/json"
       },
       JSON.stringify(response)
@@ -85,7 +97,7 @@ describe("forms model", function() {
       }]
     };
 
-    this.server.respondWith('GET', 'hostmbaas/forms/appId1234', [200, {
+    this.server.respondWith('GET', 'host/mbaas/forms/appId1234', [200, {
         "Content-Type": "application/json"
       },
       JSON.stringify(response)
@@ -117,7 +129,7 @@ describe("forms model", function() {
       }]
     };
 
-    this.server.respondWith('GET', 'hostmbaas/forms/appId1234', [200, {
+    this.server.respondWith('GET', 'host/mbaas/forms/appId1234', [200, {
         "Content-Type": "application/json"
       },
       JSON.stringify(response)
@@ -189,7 +201,7 @@ describe("forms model", function() {
       }]
     };
 
-    this.server.respondWith('GET', 'hostmbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c', [200, {
+    this.server.respondWith('GET', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c', [200, {
         "Content-Type": "application/json"
       },
       JSON.stringify(testFormUpToDate)

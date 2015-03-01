@@ -14,6 +14,7 @@ var testData = {
   fieldId: "52dfd93ee02b762d3f000001"
 };
 
+//TODO Move To File
 var testForm = {
   "_id": "54d4cd220a9b02c67e9c3f0d",
   "description": "Small Form",
@@ -67,22 +68,20 @@ var testForm = {
 
 describe("Submission model", function() {
   beforeEach(function(done) {
-    this.server = sinon.fakeServer.create();
-    this.server.autoRespond = true;
     config.init({}, function(err, returnedConfig) {
       assert.ok(!err, "Expected No Error");
-      forms.clearLocal(function(err, model) {
-        assert.ok(!err, "Expected No Error");
-        submissions.clearLocal(function(err) {
-          assert.ok(!err, "Expected No Error");
-          done();
-        });
-      });
+      done();
     });
   });
 
-  afterEach(function() {
-    this.server.restore();
+  afterEach(function(done) {
+    forms.clearAllForms(function(err, model) {
+      assert.ok(!err, "Expected No Error");
+      submissions.clear(function(err) {
+        assert.ok(!err, "Expected No Error");
+        done();
+      });
+    });
   });
   it("how to create new submission from a form", function(done) {
     var form = new Form({
@@ -117,7 +116,7 @@ describe("Submission model", function() {
         submission.fromLocal(localId, function(err, submission1) {
           assert(!err);
           assert.equal(submission1.get("formId"), newSub.get("formId"));
-          assert.equal(submission1.getStatus(), "draft"); 
+          assert.equal(submission1.getStatus(), "draft");
 
           submission1.clearLocal(function(err) {
             assert(!err);
@@ -431,24 +430,30 @@ describe("Submission model", function() {
 
 
       //Server Ping
-      this.server.respondWith('GET', '/sys/info/ping', [200, {
+      this.server.respondWith('GET', config.getCloudHost() + '/sys/info/ping', [200, {
           "Content-Type": "application/json"
         },
-        JSON.stringify({"status": "ok"})
+        JSON.stringify({
+          "status": "ok"
+        })
       ]);
 
       //Submission Data
-      this.server.respondWith('POST', '/forms/appId1234/' + testData.formId + '/submitFormData', [200, {
+      this.server.respondWith('POST', config.getCloudHost() + config.get('mbaasBaseUrl') + '/forms/appId1234/' + testData.formId + '/submitFormData', [200, {
           "Content-Type": "application/json"
         },
-        JSON.stringify({"submissionid": "aSubmissionID"})
+        JSON.stringify({
+          "submissionId": "aSubmissionID"
+        })
       ]);
 
       //CompleteSubmission
-      this.server.respondWith('POST', '/forms/appId1234/aSubmissionID/completeSubmission', [200, {
+      this.server.respondWith('POST', config.getCloudHost() + config.get('mbaasBaseUrl') + '/forms/appId1234/aSubmissionID/completeSubmission', [200, {
           "Content-Type": "application/json"
         },
-        JSON.stringify({"status": "complete"})
+        JSON.stringify({
+          "status": "complete"
+        })
       ]);
       form = new Form({
         formId: testData.formId,
@@ -462,32 +467,12 @@ describe("Submission model", function() {
     });
     afterEach(function(done) {
       this.server.restore();
-    });
-    it("how to queue a submission", function(done) {
-      var newSub1 = form.newSubmission();
-      newSub1.on("submit", function(err) {
-        assert(!err);
-
-        newSub1.upload(function(err, uploadTask) {
-          assert(!err);
-          assert(uploadTask);
-          assert(uploadManager.timer);
-          assert(uploadManager.hasTask());
-
-          newSub1.getUploadTask(function(err, task) {
-            assert(!err);
-            assert(task);
-            newSub1.clearLocal(function(err) {
-              assert(!err);
-              done();
-            });
-          });
+      forms.clearAllForms(function(err, model) {
+        assert.ok(!err, "Expected No Error");
+        submissions.clear(function(err) {
+          assert.ok(!err, "Expected No Error");
+          done();
         });
-      });
-
-      newSub1.submit(function(err) {
-        if (err) console.log(err);
-        assert(!err);
       });
     });
     it("how to monitor if a submission is submitted", function(done) {
@@ -505,11 +490,12 @@ describe("Submission model", function() {
       newSub1.on("error", function(err, progress) {
         assert.ok(!err);
         console.log("ERROR: ", err, progress);
+        done();
       });
       newSub1.on("submitted", function(submissionId) {
         assert.ok(submissionId);
         assert.ok(newSub1.getLocalId());
-        assert.ok(newSub1.getRemoteSubmissionId());
+        assert.equal(newSub1.getRemoteSubmissionId(), "aSubmissionID");
         newSub1.clearLocal(function(err) {
           assert(!err);
           done();
@@ -523,25 +509,87 @@ describe("Submission model", function() {
 
   describe("download a submission using a submission Id", function() {
     beforeEach(function(done) {
-      config.init({}, function(err) {
-        assert(!err);
-        done();
+      this.server = sinon.fakeServer.create();
+      this.server.autoRespond = true;
+      this.server.autoRespondAfter = 50;
+
+      this.server.respondWith('GET', config.getCloudHost() + '/sys/info/ping', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({
+          "status": "ok"
+        })
+      ]);
+
+      done();
+    });
+
+    afterEach(function(done) {
+      this.server.restore();
+
+      forms.clearAllForms(function(err, model) {
+        assert.ok(!err, "Expected No Error");
+        submissions.clear(function(err) {
+          assert.ok(!err, "Expected No Error");
+          done();
+        });
       });
     });
+
     it("how to queue a submission for download", function(done) {
+
+      var testSubmission = {
+        "_id": "somesubmissionid",
+        "appClientId": "iKfLUbYOx_PEkTRzrwE4z_5o",
+        "appCloudName": "testing-ikfl12346ylkvrb93dte1zsc-dev",
+        "appEnvironment": "dev",
+        "appId": "iKfLUVriLnH49pTCPkhgN-9-",
+        "deviceFormTimestamp": "2014-04-07T15:22:42.262Z",
+        "deviceIPAddress": "217.114.169.246,10.25.2.39,10.25.2.12",
+        "deviceId": "666c991129b82259",
+        "formId": "5335a02fbfe537474a91325b",
+        "masterFormTimestamp": "2014-04-07T15:22:42.262Z",
+        "timezoneOffset": -60,
+        "userId": null,
+        "formFields": [{
+          "fieldId": {
+            "fieldOptions": {
+              "validation": {
+                "validateImmediately": true
+              }
+            },
+            "required": true,
+            "type": "text",
+            "name": "text field",
+            "_id": "5335b83b0b4ee17a4f4c096d",
+            "repeating": false
+          },
+          "fieldValues": ["text1", null]
+        }],
+        "comments": [],
+        "status": "complete",
+        "submissionStartedTimestamp": "2014-04-09T17:11:22.832Z",
+        "updatedTimestamp": "2014-04-09T17:11:24.689Z",
+        "submissionCompletedTimestamp": "2014-04-09T17:11:24.688Z"
+      };
+
+      this.server.respondWith('GET', config.getCloudHost() + config.get('mbaasBaseUrl') + '/forms/appId1234/submission/somesubmissionid', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify(testSubmission)
+      ]);
+
       var submissionToDownload = null;
       submissionToDownload = submission.newInstance(null, {
-        "submissionId": "testSubmissionId"
+        "submissionId": "somesubmissionid"
       });
 
       submissionToDownload.on("progress", function(progress) {
-
         console.log("DOWNLOAD PROGRESS: ", progress);
         assert.ok(progress);
       });
 
       submissionToDownload.on("downloaded", function() {
-
         console.log("downloaded event called");
         done();
       });

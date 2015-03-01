@@ -3,6 +3,7 @@ var expect = chai.expect;
 var assert = chai.assert;
 var _ = require('underscore');
 var Form = require('../../src/form.js');
+var forms = require('../../src/forms.js');
 var config = require('../../src/config.js');
 var sinon = require('sinon');
 
@@ -59,16 +60,29 @@ var testForm = {
 
 describe("Form model", function() {
   beforeEach(function(done) {
+    var self = this;
     this.server = sinon.fakeServer.create();
     this.server.autoRespond = true;
     config.init({}, function(err, returnedConfig) {
+      self.server.respondWith('GET', config.getCloudHost() + '/sys/info/ping', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({
+          "status": "ok"
+        })
+      ]);
       assert.ok(!err, "Expected No Error");
       done();
     });
   });
 
-  afterEach(function() {
+  afterEach(function(done) {
     this.server.restore();
+    forms.clearAllForms(function(err, model) {
+      assert.ok(!err, "Expected No Error");
+      done();
+    });
+
   });
 
   it("how to initialise a form with a JSON object representing a form", function(done) {

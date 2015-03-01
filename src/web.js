@@ -47,6 +47,7 @@ function post(url, body, cb) {
             cb(null, data);
         },
         error: function(xhr, status, err) {
+            debugger;
             log.e("Ajax post ", url, " Fail ", xhr, status, err);
             cb(xhr);
         }

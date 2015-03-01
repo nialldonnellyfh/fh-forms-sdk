@@ -90,6 +90,14 @@ describe("Config module", function() {
   });
 
   it("how to get config properties From Remote", function(done) {
+
+    this.server.respondWith('GET', config.getCloudHost() + '/sys/info/ping', [200, {
+        "Content-Type": "application/json"
+      },
+      JSON.stringify({
+        "status": "ok"
+      })
+    ]);
     this.server.respondWith(function(xhr, id) {
       xhr.respond(200, {
           "Content-Type": "application/json"
@@ -101,8 +109,8 @@ describe("Config module", function() {
 
     });
 
-    config.refresh(true, function(err){
-      assert.equal(config.get('randomRemoteConfig'), 12 , "Expected Remote Config To Return");
+    config.refresh(true, function(err) {
+      assert.equal(config.get('randomRemoteConfig'), 12, "Expected Remote Config To Return");
       done();
     });
   });

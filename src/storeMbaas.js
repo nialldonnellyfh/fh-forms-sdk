@@ -110,7 +110,6 @@ function _getUrl(model) {
     //Theme and forms do not require any parameters that are not in _fh
     switch (type) {
         case 'config':
-            props.appid = model.get("appId");
             props.deviceId = model.get("deviceId");
             break;
         case 'form':
@@ -148,6 +147,7 @@ function _getUrl(model) {
     for (var key in props) {
         url = url.replace(':' + key, props[key]);
     }
+    console.log("***** url ", url);
     return url;
 }
 

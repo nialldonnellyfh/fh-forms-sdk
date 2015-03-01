@@ -15,6 +15,7 @@ var Log = {
 };
 
 Log.info = function(logLevel, msgs) {
+    console.log(logLevel, msgs);
     var args = Array.prototype.slice.call(arguments, 0);
 
     var self = this;

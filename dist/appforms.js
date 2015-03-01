@@ -22,7 +22,7 @@ module.exports = {
     "env": "dev",
     "deviceId": "dev1234",
     "cloudHost": "host",
-    "mbaasBaseUrl": "mbaas",
+    "mbaasBaseUrl": "/mbaas",
     "sent_save_min": 10,
     "sent_save_max": 1000,
     "targetWidth": 640,
@@ -15496,10 +15496,11 @@ DataAgent.read = function(model, cb) {
 
             log.d("Error reading model from localStore, Attempting Refresh ", model, err);
 
-            that.refreshRead(model, cb);
+            // that.refreshRead(model, cb);
+            return cb("Error reading model from localStore");
         } else {
             //local loading succeed
-            cb(null, locRes, false);
+            return cb(null, locRes, false);
         }
     });
 };
@@ -17121,60 +17122,87 @@ module.exports = FormSubmissionStatus;
 var Model = require("./model");
 var utils = require("./utils");
 var log = require("./log");
+var _ = require("underscore");
+var async = require("async");
 
 var forms;
 
 function Forms() {
-    Model.call(this, {
-        '_type': 'forms',
-        '_ludid': 'forms_list',
-        'loaded': false
-    });
+  Model.call(this, {
+    '_type': 'forms',
+    '_ludid': 'forms_list',
+    'loaded': false
+  });
 }
 
 utils.extend(Forms, Model);
 
 Forms.prototype.isFormUpdated = function(formModel) {
-    var id = formModel.get('_id');
-    var formLastUpdate = formModel.getLastUpdate();
-    var formMeta = this.getFormMetaById(id);
-    if (formMeta) {
-        return formLastUpdate !== formMeta.lastUpdatedTimestamp;
-    } else {
-        //could have been deleted. leave it for now
-        return false;
-    }
+  var id = formModel.get('_id');
+  var formLastUpdate = formModel.getLastUpdate();
+  var formMeta = this.getFormMetaById(id);
+  if (formMeta) {
+    return formLastUpdate !== formMeta.lastUpdatedTimestamp;
+  } else {
+    //could have been deleted. leave it for now
+    return false;
+  }
 };
+
+//Removes All Forms, Warnging: this will remove all forms from local storage.
+Forms.prototype.clearAllForms = function(cb) {
+  var self = this;
+
+  var forms = self.getFormsList();
+
+  async.eachSeries(forms, function(formMeta, cb) {
+    var Form = require("./form");
+    new Form({
+      formId: formMeta._id,
+      rawMode: true
+    }, function(err, formModel) {
+      if (err) {
+        log.e("Forms: Error Loading Form ", err, formMeta);
+        return cb();
+      }
+
+      formModel.clearLocal(cb);
+    });
+  }, function(err) {
+    if (err) {
+      log.e("Forms: Error clearing all forms ", err);
+      return cb(err);
+    }
+
+    self.clearLocal(cb);
+  });
+};
+
 Forms.prototype.setLocalId = function() {
-    log.e("Forms setLocalId. Not Permitted for Forms.prototype.");
+  log.e("Forms setLocalId. Not Permitted for Forms.prototype.");
 };
 Forms.prototype.getFormMetaById = function(formId) {
-    log.d("Forms getFormMetaById ", formId);
-    var forms = this.getFormsList();
-    for (var i = 0; i < forms.length; i++) {
-        var form = forms[i];
-        if (form._id === formId) {
-            return form;
-        }
-    }
-    log.e("Forms getFormMetaById: No form found for id: ", formId);
-    return null;
+  log.d("Forms getFormMetaById ", formId);
+  var forms = this.getFormsList();
+
+  return _.findWhere(forms, {
+    _id: formId
+  });
 };
 Forms.prototype.size = function() {
-    return this.get('forms').length;
+  return this.get('forms').length;
 };
 Forms.prototype.getFormsList = function() {
-    return this.get('forms', []);
+  return this.get('forms', []);
 };
 Forms.prototype.getFormIdByIndex = function(index) {
-    log.d("Forms getFormIdByIndex: ", index);
-    return this.getFormsList()[index]._id;
+  log.d("Forms getFormIdByIndex: ", index);
+  return this.getFormsList()[index]._id;
 };
 
 
 module.exports = new Forms();
-
-},{"./log":35,"./model":36,"./utils":46}],33:[function(require,module,exports){
+},{"./form":27,"./log":35,"./model":36,"./utils":46,"async":7,"underscore":12}],33:[function(require,module,exports){
 var log = require("./log");
 var config = require("./config");
 var submissions = require("./submissions");
@@ -17533,6 +17561,7 @@ var Log = {
 };
 
 Log.info = function(logLevel, msgs) {
+    console.log(logLevel, msgs);
     var args = Array.prototype.slice.call(arguments, 0);
 
     var self = this;
@@ -19600,7 +19629,6 @@ function _getUrl(model) {
     //Theme and forms do not require any parameters that are not in _fh
     switch (type) {
         case 'config':
-            props.appid = model.get("appId");
             props.deviceId = model.get("deviceId");
             break;
         case 'form':
@@ -19638,6 +19666,7 @@ function _getUrl(model) {
     for (var key in props) {
         url = url.replace(':' + key, props[key]);
     }
+    console.log("***** url ", url);
     return url;
 }
 
@@ -20637,17 +20666,17 @@ var _ = require("underscore");
 var async = require("async");
 
 function Submissions() {
-    Model.call(this, {
-        '_type': 'submissions',
-        '_ludid': 'submissions_list',
-        'submissions': []
-    });
+  Model.call(this, {
+    '_type': 'submissions',
+    '_ludid': 'submissions_list',
+    'submissions': []
+  });
 }
 
 utils.extend(Submissions, Model);
 
 Submissions.prototype.setLocalId = function() {
-    log.e("Submissions setLocalId. Not Permitted for submissions.");
+  log.e("Submissions setLocalId. Not Permitted for submissions.");
 };
 /**
  * save a submission to list and store it immediately
@@ -20656,96 +20685,100 @@ Submissions.prototype.setLocalId = function() {
  * @return {[type]}              [description]
  */
 Submissions.prototype.saveSubmission = function(submission, cb) {
-    log.d("Submissions saveSubmission");
-    var self = this;
-    this.updateSubmissionWithoutSaving(submission);
-    this.clearSentSubmission(function() {
-        self.saveLocal(cb);
-    });
+  log.d("Submissions saveSubmission");
+  var self = this;
+  this.updateSubmissionWithoutSaving(submission);
+  this.clearSentSubmission(function() {
+    self.saveLocal(cb);
+  });
 };
 Submissions.prototype.updateSubmissionWithoutSaving = function(submission) {
-    log.d("Submissions updateSubmissionWithoutSaving");
-    var pruneData = this.pruneSubmission(submission);
-    var localId = pruneData._ludid;
-    if (localId) {
-        var meta = this.findMetaByLocalId(localId) || pruneData;
-        var submissions = this.getSubmissions();
-
-        var currentMeta = _.findWhere(submissions, {_ludid: localId});
-
-        if(currentMeta){
-            _.extend(currentMeta, meta);
-        } else {
-            submissions.push(meta);
-        }
-
-        this.updateSubmissionCache(submissions);
-    } else {
-        // invalid local id.
-        log.e('Invalid submission for localId:', localId, JSON.stringify(submission));
-    }
-};
-Submissions.prototype.clearSentSubmission = function(cb) {
-    log.d("Submissions clearSentSubmission");
-    var self = this;
-    var maxSent = config.get("max_sent_saved") ? config.get("max_sent_saved") : config.get("sent_save_min");
-    var submissions = self.getSubmissions();
-    var sentSubmissions = this.getSubmitted();
-    var toBeRemoved = [];
-
-    //Submissions are sorted by the date they were submitted
-    sentSubmissions = _.sortBy(sentSubmissions, function(submission) {
-        return Date(submission.submittedDate);
-    });
-
-    sentSubmissions = _.map(sentSubmissions, function(submission) {
-        return submission._ludid;
-    });
-
-    //toBeRemoved Submissions = all but the last maxSent submissions
-    toBeRemoved = _.without(sentSubmissions, _.last(sentSubmissions, maxSent));
-
-    //Need to map back to submission meta info
-    toBeRemoved = _.map(toBeRemoved, function(submissionLocalId) {
-        return self.findMetaByLocalId(submissionLocalId);
-    });
-
-    async.eachSeries(toBeRemoved, function(submissionMeta, cb) {
-        self.getSubmissionByMeta(submissionMeta, function(err, submission) {
-            submission.clearLocal(function(err) {
-                if (err) {
-                    log.e("Submissions clearSentSubmission submission clearLocal", err);
-                }
-                cb(err);
-            });
-        });
-    }, function(err) {
-        if (err) {
-            log.e("Error Deleting Submissions");
-        }
-
-        cb(err);
-    });
-};
-Submissions.prototype.findByFormId = function(formId) {
-    log.d("Submissions findByFormId", formId);
-    var rtn = [];
+  log.d("Submissions updateSubmissionWithoutSaving");
+  var pruneData = this.pruneSubmission(submission);
+  var localId = pruneData._ludid;
+  if (localId) {
+    var meta = this.findMetaByLocalId(localId) || pruneData;
     var submissions = this.getSubmissions();
 
-    return _.filter(submissions, function(submission){
-        return _.isEqual(submission.formId, formId);   
+    var currentMeta = _.findWhere(submissions, {
+      _ludid: localId
     });
+
+    if (currentMeta) {
+      _.extend(currentMeta, meta);
+    } else {
+      submissions.push(meta);
+    }
+
+    this.updateSubmissionCache(submissions);
+  } else {
+    // invalid local id.
+    log.e('Invalid submission for localId:', localId, JSON.stringify(submission));
+  }
+};
+Submissions.prototype.clearSentSubmission = function(cb) {
+  log.d("Submissions clearSentSubmission");
+  var self = this;
+  var maxSent = config.get("max_sent_saved") ? config.get("max_sent_saved") : config.get("sent_save_min");
+  var submissions = self.getSubmissions();
+  var sentSubmissions = this.getSubmitted();
+  var toBeRemoved = [];
+
+  //Submissions are sorted by the date they were submitted
+  sentSubmissions = _.sortBy(sentSubmissions, function(submission) {
+    return Date(submission.submittedDate);
+  });
+
+  sentSubmissions = _.map(sentSubmissions, function(submission) {
+    return submission._ludid;
+  });
+
+  //toBeRemoved Submissions = all but the last maxSent submissions
+  toBeRemoved = _.without(sentSubmissions, _.last(sentSubmissions, maxSent));
+
+  //Need to map back to submission meta info
+  toBeRemoved = _.map(toBeRemoved, function(submissionLocalId) {
+    return self.findMetaByLocalId(submissionLocalId);
+  });
+
+  async.eachSeries(toBeRemoved, function(submissionMeta, cb) {
+    self.getSubmissionByMeta(submissionMeta, function(err, submission) {
+      submission.clearLocal(function(err) {
+        if (err) {
+          log.e("Submissions clearSentSubmission submission clearLocal", err);
+        }
+        cb(err);
+      });
+    });
+  }, function(err) {
+    if (err) {
+      log.e("Error Deleting Submissions");
+    }
+
+    cb(err);
+  });
+};
+Submissions.prototype.findByFormId = function(formId) {
+  log.d("Submissions findByFormId", formId);
+  var rtn = [];
+  var submissions = this.getSubmissions();
+
+  return _.filter(submissions, function(submission) {
+    return _.isEqual(submission.formId, formId);
+  });
 };
 Submissions.prototype.getSubmissions = function() {
-    return _.compact(this.get('submissions', []));
+  return _.compact(this.get('submissions', []));
 };
 Submissions.prototype.getSubmissionMetaList = Submissions.prototype.getSubmissions;
 //function alias
 Submissions.prototype.findMetaByLocalId = function(localId) {
-    log.d("Submissions findMetaByLocalId", localId);
-    var submissions = this.getSubmissions();
+  log.d("Submissions findMetaByLocalId", localId);
+  var submissions = this.getSubmissions();
 
-    return _.findWhere(submissions, {_ludid: localId});
+  return _.findWhere(submissions, {
+    _ludid: localId
+  });
 };
 
 /**
@@ -20754,142 +20787,180 @@ Submissions.prototype.findMetaByLocalId = function(localId) {
  * @returns {*}
  */
 Submissions.prototype.findMetaByRemoteId = function(remoteId) {
-    if(!remoteId){
-        return undefined;
-    }
+  if (!remoteId) {
+    return undefined;
+  }
 
-    log.d("Submissions findMetaByRemoteId: " + remoteId);
-    var submissions = this.getSubmissions();
+  log.d("Submissions findMetaByRemoteId: " + remoteId);
+  var submissions = this.getSubmissions();
 
-    return _.findWhere(submissions, {submissionId: remoteId});
+  return _.findWhere(submissions, {
+    submissionId: remoteId
+  });
 };
 Submissions.prototype.pruneSubmission = function(submission) {
-    log.d("Submissions pruneSubmission");
-    var fields = [
-        '_id',
-        '_ludid',
-        'status',
-        'formName',
-        'formId',
-        '_localLastUpdate',
-        'createDate',
-        'submitDate',
-        'deviceFormTimestamp',
-        'errorMessage',
-        'submissionStartedTimestamp',
-        'submittedDate',
-        'submissionId',
-        'saveDate',
-        'uploadStartDate'
-    ];
-    var data = submission.getProps();
-    return _.pick(data, fields);
+  log.d("Submissions pruneSubmission");
+  var fields = [
+    '_id',
+    '_ludid',
+    'status',
+    'formName',
+    'formId',
+    '_localLastUpdate',
+    'createDate',
+    'submitDate',
+    'deviceFormTimestamp',
+    'errorMessage',
+    'submissionStartedTimestamp',
+    'submittedDate',
+    'submissionId',
+    'saveDate',
+    'uploadStartDate'
+  ];
+  var data = submission.getProps();
+  return _.pick(data, fields);
 };
 
 Submissions.prototype.clear = function(cb) {
-    log.d("Submissions clear");
-    var that = this;
-    this.clearLocal(function(err) {
+  log.d("Submissions clear");
+  var that = this;
+
+  async.series([
+
+    function(cb) {
+      that.removeAllSubmissions(cb);
+    },
+    function clearSubmissionMeta(cb) {
+      that.clearLocal(function(err) {
         if (err) {
-            log.e(err);
-            cb(err);
+          log.e(err);
+          cb(err);
         } else {
-            that.resetSubmissionCache();
-            that.set("submissions", []);
-            cb(null, null);
+          that.resetSubmissionCache();
+          that.set("submissions", []);
+          cb();
         }
+      });
+    }
+  ], cb);
+};
+
+//Removing All Submissions From Local Storage. WARNING: This will remove all files associated with any submission.
+Submissions.prototype.removeAllSubmissions = function(cb) {
+  log.l("Submissions: Removing All Submissions");
+  var self = this;
+  var submissions = self.getSubmissions();
+
+  log.d("Submissions: To Be Removed: ", submissions);
+
+  async.eachSeries(submissions, function(submissionMeta, cb) {
+    log.d("Submissions: ", submissionMeta);
+
+    self.getSubmissionByMeta(submissionMeta, function(err, submission) {
+      if (err) {
+        log.e("Submission: Error Getting Submission Meta");
+      }
+      submission.clearLocal(cb);
     });
+  }, function(err) {
+    if (err) {
+      log.e("Submissions: Error Removing All Submissions ", err);
+    }
+
+    cb(err);
+  });
 };
-Submissions.prototype.resetSubmissionCache = function(){
-    this.set('submissions', []);
+
+Submissions.prototype.resetSubmissionCache = function() {
+  this.set('submissions', []);
 };
-Submissions.prototype.updateSubmissionCache = function(updatedSubmissions){
-    this.set('submissions', updatedSubmissions || []);
+Submissions.prototype.updateSubmissionCache = function(updatedSubmissions) {
+  this.set('submissions', updatedSubmissions || []);
 };
 Submissions.prototype.getDrafts = function(params) {
-    log.d("Submissions getDrafts: ", params);
-    if (!params) {
-        params = {};
-    }
-    params.status = "draft";
-    return this.findByStatus(params);
+  log.d("Submissions getDrafts: ", params);
+  if (!params) {
+    params = {};
+  }
+  params.status = "draft";
+  return this.findByStatus(params);
 };
 Submissions.prototype.getPending = function(params) {
-    log.d("Submissions getPending: ", params);
-    if (!params) {
-        params = {};
-    }
-    params.status = "pending";
-    return this.findByStatus(params);
+  log.d("Submissions getPending: ", params);
+  if (!params) {
+    params = {};
+  }
+  params.status = "pending";
+  return this.findByStatus(params);
 };
 Submissions.prototype.getSubmitted = function(params) {
-    log.d("Submissions getSubmitted: ", params);
-    if (!params) {
-        params = {};
-    }
-    params.status = "submitted";
-    return this.findByStatus(params);
+  log.d("Submissions getSubmitted: ", params);
+  if (!params) {
+    params = {};
+  }
+  params.status = "submitted";
+  return this.findByStatus(params);
 };
 Submissions.prototype.getError = function(params) {
-    log.d("Submissions getError: ", params);
-    if (!params) {
-        params = {};
-    }
-    params.status = "error";
-    return this.findByStatus(params);
+  log.d("Submissions getError: ", params);
+  if (!params) {
+    params = {};
+  }
+  params.status = "error";
+  return this.findByStatus(params);
 };
 Submissions.prototype.getInProgress = function(params) {
-    log.d("Submissions getInProgress: ", params);
-    if (!params) {
-        params = {};
-    }
-    params.status = "inprogress";
-    return this.findByStatus(params);
+  log.d("Submissions getInProgress: ", params);
+  if (!params) {
+    params = {};
+  }
+  params.status = "inprogress";
+  return this.findByStatus(params);
 };
 Submissions.prototype.getDownloaded = function(params) {
-    log.d("Submissions getDownloaded: ", params);
-    if (!params) {
-        params = {};
-    }
-    params.status = "downloaded";
-    return this.findByStatus(params);
+  log.d("Submissions getDownloaded: ", params);
+  if (!params) {
+    params = {};
+  }
+  params.status = "downloaded";
+  return this.findByStatus(params);
 };
 Submissions.prototype.findByStatus = function(params) {
-    log.d("Submissions findByStatus: ", params);
-    if (!params) {
-        params = {};
+  log.d("Submissions findByStatus: ", params);
+  if (!params) {
+    params = {};
+  }
+  if (typeof params === "string") {
+    params = {
+      status: params
+    };
+  }
+  if (params.status === null) {
+    return [];
+  }
+
+  var status = params.status;
+  var formId = params.formId;
+  var sortField = params.sortField || "createDate";
+
+  var submissions = this.getSubmissions();
+  var rtn = _.filter(submissions, function(submission) {
+    if (status === submission.status) {
+      if (formId) {
+        return submission.formId === formId;
+      } else {
+        return true;
+      }
+    } else {
+      return false;
     }
-    if (typeof params === "string") {
-        params = {
-            status: params
-        };
-    }
-    if (params.status === null) {
-        return [];
-    }
+  });
 
-    var status = params.status;
-    var formId = params.formId;
-    var sortField = params.sortField || "createDate";
+  rtn = _.sortBy(rtn, function(submission) {
+    return Date(submission.sortField);
+  });
 
-    var submissions = this.getSubmissions();
-    var rtn = _.filter(submissions, function(submission) {
-        if (status === submission.status) {
-            if (formId) {
-                return submission.formId === formId;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
-        }
-    });
-
-    rtn = _.sortBy(rtn, function(submission) {
-        return Date(submission.sortField);
-    });
-
-    return rtn;
+  return rtn;
 };
 /**
  * return a submission model object by the meta data passed in.
@@ -20898,44 +20969,44 @@ Submissions.prototype.findByStatus = function(params) {
  * @return {[type]}        [description]
  */
 Submissions.prototype.getSubmissionByMeta = function(meta, cb) {
-    log.d("Submissions getSubmissionByMeta: ", meta);
-    var localId = meta._ludid;
-    if (localId) {
-        require("./submission").fromLocal(localId, cb);
-    } else {
-        log.e("Submissions getSubmissionByMeta: local id not found for retrieving submission.", localId, meta);
-        cb("local id not found for retrieving submission");
-    }
+  log.d("Submissions getSubmissionByMeta: ", meta);
+  var localId = meta._ludid;
+  if (localId) {
+    require("./submission").fromLocal(localId, cb);
+  } else {
+    log.e("Submissions getSubmissionByMeta: local id not found for retrieving submission.", localId, meta);
+    cb("local id not found for retrieving submission");
+  }
 };
 Submissions.prototype.removeSubmission = function(localId, cb) {
-    log.d("Submissions removeSubmission: ", localId);
-    if(!localId){
-        return cb("Local ID Needed To Remove A Submission");
-    }
+  log.d("Submissions removeSubmission: ", localId);
+  if (!localId) {
+    return cb("Local ID Needed To Remove A Submission");
+  }
 
-    var filteredSubmissions = _.filter(this.getSubmissions(), function(submission){
-        return submission._ludid !== localId;
-    });
+  var filteredSubmissions = _.filter(this.getSubmissions(), function(submission) {
+    return submission._ludid !== localId;
+  });
 
-    this.updateSubmissionCache();
-    this.saveLocal(cb);
+  this.updateSubmissionCache();
+  this.saveLocal(cb);
 };
 Submissions.prototype.indexOf = function(localId) {
-    log.d("Submissions indexOf: ", localId);
-    var submissions = this.getSubmissions();
+  log.d("Submissions indexOf: ", localId);
+  var submissions = this.getSubmissions();
 
-    return _.findIndex(submissions, function(submission){
-        return _.isEqual(submissions[i]._ludid, localId);
-    });
+  return _.findIndex(submissions, function(submission) {
+    return _.isEqual(submissions[i]._ludid, localId);
+  });
 };
 var submissionsModel;
 
-function getSubmissionsModel(){
-    if(!submissionsModel){
-        submissionsModel = new Submissions();
-    }
+function getSubmissionsModel() {
+  if (!submissionsModel) {
+    submissionsModel = new Submissions();
+  }
 
-    return submissionsModel;
+  return submissionsModel;
 }
 
 module.exports = getSubmissionsModel();
@@ -22151,6 +22222,7 @@ function post(url, body, cb) {
             cb(null, data);
         },
         error: function(xhr, status, err) {
+            debugger;
             log.e("Ajax post ", url, " Fail ", xhr, status, err);
             cb(xhr);
         }

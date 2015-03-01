@@ -4,7 +4,7 @@ module.exports = {
     "env": "dev",
     "deviceId": "dev1234",
     "cloudHost": "host",
-    "mbaasBaseUrl": "mbaas",
+    "mbaasBaseUrl": "/mbaas",
     "sent_save_min": 10,
     "sent_save_max": 1000,
     "targetWidth": 640,

@@ -28,10 +28,11 @@ DataAgent.read = function(model, cb) {
 
             log.d("Error reading model from localStore, Attempting Refresh ", model, err);
 
-            that.refreshRead(model, cb);
+            // that.refreshRead(model, cb);
+            return cb("Error reading model from localStore");
         } else {
             //local loading succeed
-            cb(null, locRes, false);
+            return cb(null, locRes, false);
         }
     });
 };
