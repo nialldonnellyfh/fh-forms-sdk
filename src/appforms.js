@@ -7,6 +7,7 @@ var submissions = require("./submissions");
 var submission = require("./submission");
 var log = require("./log");
 var init = require("./init");
+var _ = require('underscore');
 var waitOnSubmission = {};
 var defaultFunction = function(err) {
     err = err ? err : "";
@@ -86,9 +87,11 @@ var configInterface = {
         });
     },
     "offline": function() {
+        log.d("Setting Offline Mode");
         formConfig.setOffline();
     },
     "online": function() {
+        log.d("Setting Online Mode");
         formConfig.setOnline();
     },
     "mbaasOnline": function(cb) {
@@ -108,6 +111,7 @@ var configInterface = {
         return formConfig.isStudioMode();
     },
     refresh: function(cb) {
+        log.d("Refreshing Config");
         formConfig.refresh(true, cb);
     }
 };
@@ -140,13 +144,26 @@ var getForms = function(params, cb) {
  * @return {[type]}          [description]
  */
 var getForm = function(params, cb) {
-    if (typeof(params) === 'function') {
-        cb = params;
-        params = {};
+
+    if(_.isFunction(params)){
+        return params("Invalid Parameters, Form Id Required");
+    }
+
+    params = params || {};
+
+    if(!_.isString(params.formId)){
+        if(_.isFunction(cb)){
+            return cb("Invalid Parameters. Form ID Required");
+        } else {
+            return null;
+        }
     }
 
     params = params ? params : {};
     cb = cb ? cb : defaultFunction;
+
+    var form = Form.fromLocal();
+
     Form(params, cb);
 };
 

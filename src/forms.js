@@ -36,9 +36,8 @@ Forms.prototype.clearAllForms = function(cb) {
 
   async.eachSeries(forms, function(formMeta, cb) {
     var Form = require("./form");
-    new Form({
-      formId: formMeta._id,
-      rawMode: true
+    Form.fromLocal({
+      formId: formMeta._id
     }, function(err, formModel) {
       if (err) {
         log.e("Forms: Error Loading Form ", err, formMeta);
@@ -77,6 +76,20 @@ Forms.prototype.getFormsList = function() {
 Forms.prototype.getFormIdByIndex = function(index) {
   log.d("Forms getFormIdByIndex: ", index);
   return this.getFormsList()[index]._id;
+};
+
+Forms.prototype.getForm = function(params, cb){
+  params = params || {};
+
+  if(!_.isString(params.formId)){
+    return _.isFunction(cb) ? cb("Form Id Required") : null;
+  }
+
+  if(!this.getFormMetaById(params.formId)){
+    return cb("No Form Exists With ID: " + params.formId);
+  }
+
+  Form.fromLocal(params, cb);
 };
 
 

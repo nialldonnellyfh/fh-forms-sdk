@@ -70,7 +70,7 @@ describe("forms model", function() {
       JSON.stringify(response)
     ]);
 
-    forms.refresh(function(err, model) {
+    forms.refresh(true, function(err, model) {
       assert(!err);
       var timeStamp2 = model.getLocalUpdateTimeStamp();
 

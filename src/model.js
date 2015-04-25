@@ -39,7 +39,6 @@ Model.prototype.setLocalId = function(localId) {
 };
 Model.prototype.getLocalId = function() {
     var localId = this.get('_ludid', utils.localId(this));
-    this.setLocalId(localId);
     return localId;
 };
 Model.prototype.getRemoteId = function() {
@@ -123,15 +122,15 @@ Model.prototype.attemptRefresh = function(cb) {
  * @return {[type]}      [description]
  */
 Model.prototype.loadLocal = function(cb) {
-    var that = this;
-    localStorage.read(this, function(err, res) {
+    var self = this;
+    localStorage.read(self, function(err, res) {
         if (err) {
             cb(err);
         } else {
             if (res) {
-                that.fromJSON(res);
+                self.fromJSON(res);
             }
-            cb(err, that);
+            cb(err, self);
         }
     });
 };

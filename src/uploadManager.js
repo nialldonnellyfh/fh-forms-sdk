@@ -6,7 +6,6 @@ var utils = require("./utils");
 var log = require("./log");
 var dataAgent = require("./dataAgent");
 var uploadTask = require("./uploadTask");
-var utils = require("./utils");
 
 function UploadManager() {
     var self = this;

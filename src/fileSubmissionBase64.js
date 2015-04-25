@@ -10,6 +10,6 @@ function Base64FileSubmission(fileData) {
     this.set('_type', 'base64fileSubmission');
 }
 
-utils.extend(Base64FileSubmission, Model);
+utils.extend(Base64FileSubmission, FileSubmission);
 
 module.exports = Base64FileSubmission;

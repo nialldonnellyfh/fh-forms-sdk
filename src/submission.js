@@ -1,15 +1,14 @@
 //implmenetation
 var _submissions = {};
 //cache in mem for single reference usage.
-var Model = require("./model");
-var submissions = require("./submissions");
-var log = require("./log");
-var utils = require("./utils");
-var config = require("./config");
-var uploadManager = require("./uploadManager");
-var submissions = require("./submissions");
-var localStorage = require("./localStorage");
-var Form = require("./form");
+var Model = require("./model.js");
+var submissions = require("./submissions.js");
+var log = require("./log.js");
+var utils = require("./utils.js");
+var config = require("./config.js");
+var uploadManager = require("./uploadManager.js");
+var localStorage = require("./localStorage.js");
+var Form = require("./form.js");
 var async = require("async");
 var _ = require("underscore");
 var rulesEngine = require('./rulesEngine.js');
@@ -82,6 +81,7 @@ function Submission(form, params) {
     this.set('status', 'new');
     this.getLocalId();
     var localId = this.getLocalId();
+    this.setLocalId(localId);
     _submissions[localId] = this;
 }
 
@@ -711,6 +711,9 @@ Submission.prototype.removeFieldValue = function(fieldId, index) {
 };
 Submission.prototype.getInputValueObjectById = function(fieldId) {
     var formFields = this.getFormFields();
+
+
+
     for (var i = 0; i < formFields.length; i++) {
         var formField = formFields[i];
 
@@ -741,9 +744,8 @@ Submission.prototype.getForm = function(cb) {
 
     if (formId) {
         log.d("FormId found for getForm: " + formId);
-        new Form({
-            'formId': formId,
-            'rawMode': true
+        Form.fromLocal({
+            'formId': formId
         }, cb);
     } else {
         log.e("No form Id specified for getForm");
@@ -754,9 +756,8 @@ Submission.prototype.reloadForm = function(cb) {
     log.d("Submission reload form");
     var formId = this.get('formId');
     var self = this;
-    new require("./form")({
-        formId: formId,
-        'rawMode': true
+    new require("./form").fromLocal({
+        formId: formId
     }, function(err, form) {
         if (err) {
             cb(err);
@@ -787,6 +788,8 @@ Submission.prototype.getFileInputValues = function(cb) {
 Submission.prototype.getFormFields = function() {
     var formFields = this.get("formFields", []);
 
+
+
     //Removing null values
     for (var formFieldIndex = 0; formFieldIndex < formFields.length; formFieldIndex++) {
         formFields[formFieldIndex].fieldValues = formFields[formFieldIndex].fieldValues || [];
@@ -806,14 +809,12 @@ Submission.prototype.getFileFieldsId = function(cb) {
         //For Submission downloads, there needs to be a scan through the formFields param
         var formFields = self.getFormFields();
 
-        for (var formFieldIndex = 0; formFieldIndex < formFields.length; formFieldIndex++) {
-            var formFieldEntry = formFields[formFieldIndex].fieldId || {};
-            if (formFieldEntry.type === 'file' || formFieldEntry.type === 'photo' || formFieldEntry.type === 'signature') {
-                if (formFieldEntry._id) {
-                    formFieldIds.push(formFieldEntry._id);
-                }
-            }
-        }
+        formFields = _.filter(formFields, function(formFieldEntry){
+            return (formFieldEntry.type === 'file' || formFieldEntry.type === 'photo' || formFieldEntry.type === 'signature');
+        });
+
+        formFieldIds = _.pluck(formFields, '_id');
+
         return cb(null, formFieldIds);
     } else {
         self.getForm(function(err, form) {
@@ -876,6 +877,9 @@ Submission.prototype.findFilePlaceholderFieldId = function(filePlaceholderName, 
 
 Submission.prototype.getInputValueArray = function(fieldIds) {
     var rtn = [];
+
+
+
     for (var i = 0; i < fieldIds.length; i++) {
         var fieldId = fieldIds[i];
         var inputValue = this.getInputValueObjectById(fieldId);
