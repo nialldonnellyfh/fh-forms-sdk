@@ -15,6 +15,7 @@ var FileSubmissionDownload = require("./fileSubmissionDownload.js");
 var FormSubmissionComplete = require("./formSubmissionComplete.js");
 var submission = require("./submission.js");
 var utils = require("./utils.js");
+var _ = require('underscore');
 
 var _uploadTasks = {};
 
@@ -42,6 +43,9 @@ function fromLocal(localId, cb) {
 
 
 function UploadTask() {
+
+  _.bindAll(this, 'addFileTask');
+
   Model.call(this, {
     '_type': 'uploadTask'
   });
@@ -86,13 +90,10 @@ UploadTask.prototype.getTotalSize = function () {
   var self = this;
   var jsonSize = JSON.stringify(self.get('jsonTask')).length;
   var fileTasks = self.get('fileTasks');
-  var fileSize = 0;
-  var fileTask;
-  for (var i = 0; i < fileTasks.length; i++) {
-    fileTask = fileTasks[i];
-    fileSize += fileTask.fileSize;
-  }
-  return jsonSize + fileSize;
+
+  return  _.reduce(fileTasks, function(memo, fileTask){
+    return memo + fileTask.fileSize;
+  }, jsonSize);
 };
 UploadTask.prototype.getUploadedSize = function () {
   var currentTask = this.getCurrentTask();
@@ -739,7 +740,7 @@ UploadTask.prototype.error = function (uploadErrorMessage, cb) {
 };
 UploadTask.prototype.isFormCompleted = function () {
   var curTask = this.getCurrentTask();
-  return curTask === null;
+  return curTask !== null;
 };
 UploadTask.prototype.isFileCompleted = function () {
   var curTask = this.getCurrentTask();

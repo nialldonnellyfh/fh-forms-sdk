@@ -19,9 +19,9 @@ function Form(params) {
     params = params || {};
   var self = this;
 
-  if(params.id){
-    self.setRemoteId(params.id);
-    self.setLocalId(params.id);
+  if(_.isString(params.formId)){
+    self.setRemoteId(params.formId);
+    self.setLocalId(params.formId);
   }
 
   var rawMode = params.rawMode || false;
@@ -33,9 +33,6 @@ function Form(params) {
     self.fromJSON(rawData);
     self.getLocalId();
     self.initialise();
-
-    _forms[self.getFormId()] = _forms[self.getFormId()] || self;
-    return _forms[self.getFormId()];
   }
 
   //Raw mode is for avoiding interaction with the mbaas
@@ -48,19 +45,15 @@ function Form(params) {
 utils.extend(Form, Model);
 
 Form.prototype.loadFromRemote = function(cb) {
-  log.d("Form: loadFromRemote", rawMode, rawData, formId, fromRemote);
   var self = this;
-  if (_forms[formId]) {
-    log.d("Form: loaded from cache", rawMode, rawData, formId, fromRemote);
-    //found form object in mem return it.
-    cb(null, _forms[formId]);
-    return _forms[formId];
-  }
+  var id = self.getFormId();
+
+  log.d("Form: loadFromRemote", id);
 
   self.refresh(true, function(err, obj1) {
     self.initialise();
 
-    _forms[formId] = obj1;
+    _forms[id] = obj1;
     return cb(err, obj1);
   });
 };
@@ -111,7 +104,7 @@ Form.prototype.buildFieldRef = function() {
 
   _.each(pages, function(page, pageIndex) {
     pageRef[page._id] = pageIndex;
-    var fields = _.each(page.fields, function(field, fieldIndex) {
+    _.each(page.fields, function(field, fieldIndex) {
       newFieldRef[field._id] = {
         page: pageIndex,
         field: fieldIndex
@@ -126,31 +119,24 @@ Form.prototype.buildFieldRef = function() {
 Form.prototype.initialiseFields = function() {
   log.d("Form: initialiseFields");
   var fieldsRef = this.getFieldRef();
-  this.fields = {};
+  var self = this;
+  self.fields = {};
   for (var fieldId in fieldsRef) {
     var fieldRef = fieldsRef[fieldId];
     var pageIndex = fieldRef.page;
     var fieldIndex = fieldRef.field;
-    if (pageIndex === undefined || fieldIndex === undefined) {
-      throw 'Corruptted field reference';
-    }
+
     var fieldDef = this.getFieldDefByIndex(pageIndex, fieldIndex);
-    if (fieldDef) {
-      this.fields[fieldId] = new Field(fieldDef, this);
-    } else {
-      throw 'Field def is not found.';
-    }
+    self.fields[fieldId] = new Field(fieldDef, self);
   }
 };
 Form.prototype.initialisePage = function() {
   log.d("Form: initialisePage");
+  var self = this;
   var pages = this.getPagesDef();
-  this.pages = [];
-  for (var i = 0; i < pages.length; i++) {
-    var pageDef = pages[i];
-    var pageModel = new Page(pageDef, this);
-    this.pages.push(pageModel);
-  }
+  self.pages = _.map(pages, function(pageDef){
+    return new Page(pageDef, self);
+  });
 };
 Form.prototype.getPageNumberByFieldId = function(fieldId) {
   if (fieldId) {
@@ -191,14 +177,9 @@ Form.prototype.getFieldModelByCode = function(code) {
     return null;
   }
 
-  for (var fieldId in self.fields) {
-    var field = self.fields[fieldId];
-    if (field.getCode() !== null && field.getCode() === code) {
-      return field;
-    }
-  }
-
-  return null;
+  return _.find(self.fields, function(field){
+    return (field.getCode() !== null && field.getCode() === code);
+  });
 };
 Form.prototype.getFieldDefByIndex = function(pageIndex, fieldIndex) {
   log.d("Form: getFieldDefByIndex: ", pageIndex, fieldIndex);
@@ -238,14 +219,14 @@ Form.prototype.removeFromCache = function() {
 };
 Form.prototype.getFileFieldsId = function() {
   log.d("Form: getFileFieldsId");
-  var fieldsId = [];
-  for (var fieldId in this.fields) {
-    var field = this.fields[fieldId];
-    if (field.getType() === 'file' || field.getType() === 'photo' || field.getType() === 'signature') {
-      fieldsId.push(fieldId);
-    }
-  }
-  return fieldsId;
+
+  var fileFields = _.filter(this.fields, function(field){
+    return (field.getType() === 'file' || field.getType() === 'photo' || field.getType() === 'signature');
+  });
+
+  return _.map(fileFields, function(field){
+    return field.getFieldId();
+  });
 };
 
 Form.prototype.getRuleEngine = function() {

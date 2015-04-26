@@ -28614,9 +28614,9 @@ function Form(params) {
     params = params || {};
   var self = this;
 
-  if(params.id){
-    self.setRemoteId(params.id);
-    self.setLocalId(params.id);
+  if(_.isString(params.formId)){
+    self.setRemoteId(params.formId);
+    self.setLocalId(params.formId);
   }
 
   var rawMode = params.rawMode || false;
@@ -28628,9 +28628,6 @@ function Form(params) {
     self.fromJSON(rawData);
     self.getLocalId();
     self.initialise();
-
-    _forms[self.getFormId()] = _forms[self.getFormId()] || self;
-    return _forms[self.getFormId()];
   }
 
   //Raw mode is for avoiding interaction with the mbaas
@@ -28643,19 +28640,15 @@ function Form(params) {
 utils.extend(Form, Model);
 
 Form.prototype.loadFromRemote = function(cb) {
-  log.d("Form: loadFromRemote", rawMode, rawData, formId, fromRemote);
   var self = this;
-  if (_forms[formId]) {
-    log.d("Form: loaded from cache", rawMode, rawData, formId, fromRemote);
-    //found form object in mem return it.
-    cb(null, _forms[formId]);
-    return _forms[formId];
-  }
+  var id = self.getFormId();
+
+  log.d("Form: loadFromRemote", id);
 
   self.refresh(true, function(err, obj1) {
     self.initialise();
 
-    _forms[formId] = obj1;
+    _forms[id] = obj1;
     return cb(err, obj1);
   });
 };
@@ -28706,7 +28699,7 @@ Form.prototype.buildFieldRef = function() {
 
   _.each(pages, function(page, pageIndex) {
     pageRef[page._id] = pageIndex;
-    var fields = _.each(page.fields, function(field, fieldIndex) {
+    _.each(page.fields, function(field, fieldIndex) {
       newFieldRef[field._id] = {
         page: pageIndex,
         field: fieldIndex
@@ -28721,31 +28714,24 @@ Form.prototype.buildFieldRef = function() {
 Form.prototype.initialiseFields = function() {
   log.d("Form: initialiseFields");
   var fieldsRef = this.getFieldRef();
-  this.fields = {};
+  var self = this;
+  self.fields = {};
   for (var fieldId in fieldsRef) {
     var fieldRef = fieldsRef[fieldId];
     var pageIndex = fieldRef.page;
     var fieldIndex = fieldRef.field;
-    if (pageIndex === undefined || fieldIndex === undefined) {
-      throw 'Corruptted field reference';
-    }
+
     var fieldDef = this.getFieldDefByIndex(pageIndex, fieldIndex);
-    if (fieldDef) {
-      this.fields[fieldId] = new Field(fieldDef, this);
-    } else {
-      throw 'Field def is not found.';
-    }
+    self.fields[fieldId] = new Field(fieldDef, self);
   }
 };
 Form.prototype.initialisePage = function() {
   log.d("Form: initialisePage");
+  var self = this;
   var pages = this.getPagesDef();
-  this.pages = [];
-  for (var i = 0; i < pages.length; i++) {
-    var pageDef = pages[i];
-    var pageModel = new Page(pageDef, this);
-    this.pages.push(pageModel);
-  }
+  self.pages = _.map(pages, function(pageDef){
+    return new Page(pageDef, self);
+  });
 };
 Form.prototype.getPageNumberByFieldId = function(fieldId) {
   if (fieldId) {
@@ -28786,14 +28772,9 @@ Form.prototype.getFieldModelByCode = function(code) {
     return null;
   }
 
-  for (var fieldId in self.fields) {
-    var field = self.fields[fieldId];
-    if (field.getCode() !== null && field.getCode() === code) {
-      return field;
-    }
-  }
-
-  return null;
+  return _.find(self.fields, function(field){
+    return (field.getCode() !== null && field.getCode() === code);
+  });
 };
 Form.prototype.getFieldDefByIndex = function(pageIndex, fieldIndex) {
   log.d("Form: getFieldDefByIndex: ", pageIndex, fieldIndex);
@@ -28833,14 +28814,14 @@ Form.prototype.removeFromCache = function() {
 };
 Form.prototype.getFileFieldsId = function() {
   log.d("Form: getFileFieldsId");
-  var fieldsId = [];
-  for (var fieldId in this.fields) {
-    var field = this.fields[fieldId];
-    if (field.getType() === 'file' || field.getType() === 'photo' || field.getType() === 'signature') {
-      fieldsId.push(fieldId);
-    }
-  }
-  return fieldsId;
+
+  var fileFields = _.filter(this.fields, function(field){
+    return (field.getType() === 'file' || field.getType() === 'photo' || field.getType() === 'signature');
+  });
+
+  return _.map(fileFields, function(field){
+    return field.getFieldId();
+  });
 };
 
 Form.prototype.getRuleEngine = function() {
@@ -31510,75 +31491,75 @@ var _ = require("underscore");
 var rulesEngine = require('./rulesEngine.js');
 
 var statusMachine = {
-    'new': [
-        'draft',
-        'pending'
-    ],
-    'draft': [
-        'pending',
-        'draft'
-    ],
-    'pending': [
-        'inprogress',
-        'error',
-        'draft'
-    ],
-    'inprogress': [
-        'pending',
-        'error',
-        'inprogress',
-        'downloaded',
-        'queued'
-    ],
-    'submitted': [],
-    'error': [
-        'draft',
-        'pending',
-        'error'
-    ],
-    'downloaded': [],
-    'queued': ['error', 'submitted']
+  'new': [
+    'draft',
+    'pending'
+  ],
+  'draft': [
+    'pending',
+    'draft'
+  ],
+  'pending': [
+    'inprogress',
+    'error',
+    'draft'
+  ],
+  'inprogress': [
+    'pending',
+    'error',
+    'inprogress',
+    'downloaded',
+    'queued'
+  ],
+  'submitted': [],
+  'error': [
+    'draft',
+    'pending',
+    'error'
+  ],
+  'downloaded': [],
+  'queued': ['error', 'submitted']
 };
 
 function Submission(form, params) {
-    params = params || {};
-    log.d("Submission: ", params);
-    Model.call(this, {
-        '_type': 'submission'
-    });
-    if (typeof form !== 'undefined' && form) {
-        this.set('formName', form.get('name'));
-        this.set('formId', form.get('_id'));
-        this.set('deviceFormTimestamp', form.getLastUpdate());
-        this.set('createDate', utils.getTime());
-        this.set('timezoneOffset', utils.getTime(true));
-        this.set('appId', config.get('appId'));
-        this.set('appEnvironment', config.get('env'));
-        this.set('appCloudName', '');
-        this.set('comments', []);
-        this.set('formFields', []);
-        this.set('saveDate', null);
-        this.set('submitDate', null);
-        this.set('uploadStartDate', null);
-        this.set('submittedDate', null);
-        this.set('userId', null);
-        this.set('filesInSubmission', []);
-        this.set('deviceId', config.get('deviceId'));
-        this.transactionMode = false;
+  params = params || {};
+  log.d("Submission: ", params);
+  Model.call(this, {
+    '_type': 'submission'
+  });
+  if (typeof form !== 'undefined' && form) {
+    this.set('formName', form.get('name'));
+    this.set('formId', form.get('_id'));
+    this.set('deviceFormTimestamp', form.getLastUpdate());
+    this.set('createDate', utils.getTime());
+    this.set('timezoneOffset', utils.getTime(true));
+    this.set('appId', config.get('appId'));
+    this.set('appEnvironment', config.get('env'));
+    this.set('appCloudName', '');
+    this.set('comments', []);
+    this.set('formFields', []);
+    this.set('saveDate', null);
+    this.set('submitDate', null);
+    this.set('uploadStartDate', null);
+    this.set('submittedDate', null);
+    this.set('userId', null);
+    this.set('filesInSubmission', []);
+    this.set('deviceId', config.get('deviceId'));
+    this.transactionMode = false;
+  } else {
+    this.set('appId', config.get('appId'));
+    if (params.submissionId) {
+      this.set('downloadSubmission', true);
+      this.setRemoteSubmissionId(params.submissionId);
     } else {
-        this.set('appId', config.get('appId'));
-        if (params.submissionId) {
-            this.set('downloadSubmission', true);
-            this.setRemoteSubmissionId(params.submissionId);
-        } else {
-            this.set('status', 'new');
-        }
+      this.set('status', 'new');
     }
-    this.set('status', 'new');
-    this.getLocalId();
-    var localId = this.getLocalId();
-    this.setLocalId(localId);
-    _submissions[localId] = this;
+  }
+  this.set('status', 'new');
+  this.getLocalId();
+  var localId = this.getLocalId();
+  this.setLocalId(localId);
+  _submissions[localId] = this;
 }
 
 utils.extend(Submission, Model);
@@ -31587,81 +31568,81 @@ utils.extend(Submission, Model);
  * save current submission as draft
  * @return {[type]} [description]
  */
-Submission.prototype.saveDraft = function(cb) {
-    log.d("Submission saveDraft: ");
-    var targetStatus = 'draft';
-    var that = this;
-    this.set('timezoneOffset', utils.getTime(true));
-    this.set('saveDate', utils.getTime());
-    this.changeStatus(targetStatus, function(err) {
-        if (err) {
-            return cb(err);
-        } else {
-            that.emit('savedraft');
-            cb(null, null);
-        }
-    });
+Submission.prototype.saveDraft = function (cb) {
+  log.d("Submission saveDraft: ");
+  var targetStatus = 'draft';
+  var that = this;
+  this.set('timezoneOffset', utils.getTime(true));
+  this.set('saveDate', utils.getTime());
+  this.changeStatus(targetStatus, function (err) {
+    if (err) {
+      return cb(err);
+    } else {
+      that.emit('savedraft');
+      cb(null, null);
+    }
+  });
 };
-Submission.prototype.validateField = function(fieldId, cb) {
-    log.d("Submission validateField: ", fieldId);
-    var that = this;
-    this.getForm(function(err, form) {
-        if (err) {
-            cb(err);
-        } else {
-            var submissionData = that.getProps();
-            var rE = form.getRuleEngine();
-            rE.validateField(fieldId, submissionData, cb);
-        }
-    });
+Submission.prototype.validateField = function (fieldId, cb) {
+  log.d("Submission validateField: ", fieldId);
+  var that = this;
+  this.getForm(function (err, form) {
+    if (err) {
+      cb(err);
+    } else {
+      var submissionData = that.getProps();
+      var rE = form.getRuleEngine();
+      rE.validateField(fieldId, submissionData, cb);
+    }
+  });
 };
-Submission.prototype.checkRules = function(cb) {
-    log.d("Submission checkRules: ");
-    var self = this;
-    this.getForm(function(err, form) {
-        if (err) {
-            cb(err);
-        } else {
-            var submission = self.getProps();
-            var rE = form.getRuleEngine();
-            rE.checkRules(submission, cb);
-        }
-    });
+Submission.prototype.checkRules = function (cb) {
+  log.d("Submission checkRules: ");
+  var self = this;
+  this.getForm(function (err, form) {
+    if (err) {
+      cb(err);
+    } else {
+      var submission = self.getProps();
+      var rE = form.getRuleEngine();
+      rE.checkRules(submission, cb);
+    }
+  });
 };
 
-Submission.prototype.performValidation = function(cb) {
-    var self = this;
-    self.getForm(function(err, form) {
-        if (err) {
-            log.e("Submission submit: Error getting form ", err);
-            return cb(err);
-        }
-        var rE = form.getRuleEngine();
-        var submission = self.getProps();
-        var formRuleEngine = rulesEngine(form.getProps());
+Submission.prototype.performValidation = function (cb) {
+  var self = this;
+  self.getForm(function (err, form) {
+    if (err) {
+      log.e("Submission submit: Error getting form ", err);
+      return cb(err);
+    }
+    var rE = form.getRuleEngine();
+    var submission = self.getProps();
+    var formRuleEngine = rulesEngine(form.getProps());
 
-        formRuleEngine.validateForm(submission, cb);
-    });
+    formRuleEngine.validateForm(submission, cb);
+  });
 };
 
 /**
  * Validate the submission only.
  */
-Submission.prototype.validateSubmission = function(cb) {
-    var self = this;
+Submission.prototype.validateSubmission = function (cb) {
+  var self = this;
 
-    self.performValidation(function(err, res) {
-        if (err) {
-            return cb(err);
-        }
-        var validation = res.validation;
-        if (validation.valid) {
-            return cb(null, validation.valid);
-        } else {
-            self.emit('validationerror', validation);
-            cb(null, validation.valid);
-        }
-    });
+  self.performValidation(function (err, res) {
+    if (err) {
+      return cb(err);
+    }
+    var validation = res.validation;
+    if (validation.valid) {
+      return cb(null, validation.valid);
+    } else {
+      self.emit('validationerror', validation);
+      cb(null, validation.valid);
+    }
+  });
 };
 
 /**
@@ -31669,316 +31650,316 @@ Submission.prototype.validateSubmission = function(cb) {
  * @param  {Function} cb [description]
  * @return {[type]}      [description]
  */
-Submission.prototype.submit = function(cb) {
-    var that = this;
-    log.d("Submission submit: ");
-    var targetStatus = 'pending';
-    var validateResult = true;
+Submission.prototype.submit = function (cb) {
+  var that = this;
+  log.d("Submission submit: ");
+  var targetStatus = 'pending';
+  var validateResult = true;
 
-    this.set('timezoneOffset', utils.getTime(true));
-    that.performValidation(function(err, res) {
-        if (err) {
-            log.e("Submission submit validateForm: Error validating form ", err);
-            cb(err);
-        } else {
-            log.d("Submission submit: validateForm. Completed result", res);
-            var validation = res.validation;
-            if (validation.valid) {
-                log.d("Submission submit: validateForm. Completed Form Valid", res);
-                that.set('submitDate', new Date());
-                that.changeStatus(targetStatus, function(error) {
-                    if (error) {
-                        cb(error);
-                    } else {
-                        that.emit('submit');
-                        cb(null, null);
-                    }
-                });
-            } else {
-                log.d("Submission submit: validateForm. Completed Validation error", res);
-                that.emit('validationerror', validation);
-                cb('Validation error');
-            }
-        }
-    });
-};
-Submission.prototype.getUploadTask = function(cb) {
-    var taskId = this.getUploadTaskId();
-    if (taskId) {
-        uploadManager.getTaskById(taskId, cb);
+  this.set('timezoneOffset', utils.getTime(true));
+  that.performValidation(function (err, res) {
+    if (err) {
+      log.e("Submission submit validateForm: Error validating form ", err);
+      cb(err);
     } else {
-        cb(null, null);
+      log.d("Submission submit: validateForm. Completed result", res);
+      var validation = res.validation;
+      if (validation.valid) {
+        log.d("Submission submit: validateForm. Completed Form Valid", res);
+        that.set('submitDate', new Date());
+        that.changeStatus(targetStatus, function (error) {
+          if (error) {
+            cb(error);
+          } else {
+            that.emit('submit');
+            cb(null, null);
+          }
+        });
+      } else {
+        log.d("Submission submit: validateForm. Completed Validation error", res);
+        that.emit('validationerror', validation);
+        cb('Validation error');
+      }
     }
+  });
 };
-Submission.prototype.getFormId = function() {
-    return this.get("formId");
+Submission.prototype.getUploadTask = function (cb) {
+  var taskId = this.getUploadTaskId();
+  if (taskId) {
+    uploadManager.getTaskById(taskId, cb);
+  } else {
+    cb(null, null);
+  }
+};
+Submission.prototype.getFormId = function () {
+  return this.get("formId");
 };
 /**
  * If a submission is a download submission, the JSON definition of the form
  * that it was submitted against is contained in the submission.
  */
-Submission.prototype.getFormSubmittedAgainst = function() {
-    return this.get("formSubmittedAgainst");
+Submission.prototype.getFormSubmittedAgainst = function () {
+  return this.get("formSubmittedAgainst");
 };
-Submission.prototype.getDownloadTask = function(cb) {
-    var self = this;
-    log.d("getDownloadTask");
-    if (self.isDownloadSubmission()) {
-        self.getUploadTask(cb);
+Submission.prototype.getDownloadTask = function (cb) {
+  var self = this;
+  log.d("getDownloadTask");
+  if (self.isDownloadSubmission()) {
+    self.getUploadTask(cb);
+  } else {
+    if (cb && typeof(cb) === 'function') {
+      log.e("Submission is not a download submission");
+      return cb("Submission is not a download submission");
+    }
+  }
+};
+Submission.prototype.cancelUploadTask = function (cb) {
+  var targetStatus = 'submit';
+  var that = this;
+  uploadManager.cancelSubmission(this, function (err) {
+    if (err) {
+      log.e(err);
+    }
+    that.changeStatus(targetStatus, cb);
+  });
+};
+Submission.prototype.getUploadTaskId = function () {
+  return this.get('uploadTaskId');
+};
+Submission.prototype.setUploadTaskId = function (utId) {
+  this.set('uploadTaskId', utId);
+};
+Submission.prototype.isInProgress = function () {
+  return this.get("status") === "inprogress";
+};
+Submission.prototype.isDownloaded = function () {
+  return this.get("status") === "downloaded";
+};
+Submission.prototype.isSubmitted = function () {
+  return this.get("status") === "submitted";
+};
+Submission.prototype.submitted = function (cb) {
+  var self = this;
+  if (self.isDownloadSubmission()) {
+    var errMsg = "Downloaded submissions should not call submitted function.";
+    log.e(errMsg);
+    return cb(errMsg);
+  }
+  log.d("Submission submitted called");
+
+  var targetStatus = 'submitted';
+
+  self.set('submittedDate', utils.getTime());
+  self.changeStatus(targetStatus, function (err) {
+    if (err) {
+      log.e("Error setting submitted status " + err);
+      cb(err);
     } else {
-        if (cb && typeof(cb) === 'function') {
-            log.e("Submission is not a download submission");
-            return cb("Submission is not a download submission");
-        }
+      log.d("Submitted status set for submission " + self.get('submissionId') + " with localId " + self.getLocalId());
+      self.emit('submitted', self.get('submissionId'));
+      cb(null, null);
     }
+  });
 };
-Submission.prototype.cancelUploadTask = function(cb) {
-    var targetStatus = 'submit';
-    var that = this;
-    uploadManager.cancelSubmission(this, function(err) {
-        if (err) {
-            log.e(err);
-        }
-        that.changeStatus(targetStatus, cb);
-    });
-};
-Submission.prototype.getUploadTaskId = function() {
-    return this.get('uploadTaskId');
-};
-Submission.prototype.setUploadTaskId = function(utId) {
-    this.set('uploadTaskId', utId);
-};
-Submission.prototype.isInProgress = function() {
-    return this.get("status") === "inprogress";
-};
-Submission.prototype.isDownloaded = function() {
-    return this.get("status") === "downloaded";
-};
-Submission.prototype.isSubmitted = function() {
-    return this.get("status") === "submitted";
-};
-Submission.prototype.submitted = function(cb) {
-    var self = this;
-    if (self.isDownloadSubmission()) {
-        var errMsg = "Downloaded submissions should not call submitted function.";
-        log.e(errMsg);
-        return cb(errMsg);
+Submission.prototype.queued = function (cb) {
+  var self = this;
+  if (self.isDownloadSubmission()) {
+    var errMsg = "Downloaded submissions should not call queued function.";
+    log.e(errMsg);
+    return cb(errMsg);
+  }
+
+  var targetStatus = 'queued';
+  self.set('queuedDate', utils.getTime());
+  self.changeStatus(targetStatus, function (err) {
+    if (err) {
+      log.e("Error setting queued status " + err);
+      cb(err);
+    } else {
+      log.d("Queued status set for submission " + self.get('submissionId') + " with localId " + self.getLocalId());
+      self.emit('queued', self.get('submissionId'));
+      cb(null, self);
     }
-    log.d("Submission submitted called");
-
-    var targetStatus = 'submitted';
-
-    self.set('submittedDate', utils.getTime());
-    self.changeStatus(targetStatus, function(err) {
-        if (err) {
-            log.e("Error setting submitted status " + err);
-            cb(err);
-        } else {
-            log.d("Submitted status set for submission " + self.get('submissionId') + " with localId " + self.getLocalId());
-            self.emit('submitted', self.get('submissionId'));
-            cb(null, null);
-        }
-    });
+  });
 };
-Submission.prototype.queued = function(cb) {
-    var self = this;
-    if (self.isDownloadSubmission()) {
-        var errMsg = "Downloaded submissions should not call queued function.";
-        log.e(errMsg);
-        return cb(errMsg);
+Submission.prototype.downloaded = function (cb) {
+  log.d("Submission Downloaded called");
+  var that = this;
+  var targetStatus = 'downloaded';
+
+  that.set('downloadedDate', utils.getTime());
+  that.changeStatus(targetStatus, function (err) {
+    if (err) {
+      log.e("Error setting downloaded status " + err);
+      cb(err);
+    } else {
+      log.d("Downloaded status set for submission " + that.get('submissionId') + " with localId " + that.getLocalId());
+      that.emit('downloaded', that.get('submissionId'));
+      cb(null, that);
     }
-
-    var targetStatus = 'queued';
-    self.set('queuedDate', utils.getTime());
-    self.changeStatus(targetStatus, function(err) {
-        if (err) {
-            log.e("Error setting queued status " + err);
-            cb(err);
-        } else {
-            log.d("Queued status set for submission " + self.get('submissionId') + " with localId " + self.getLocalId());
-            self.emit('queued', self.get('submissionId'));
-            cb(null, self);
-        }
-    });
-};
-Submission.prototype.downloaded = function(cb) {
-    log.d("Submission Downloaded called");
-    var that = this;
-    var targetStatus = 'downloaded';
-
-    that.set('downloadedDate', utils.getTime());
-    that.changeStatus(targetStatus, function(err) {
-        if (err) {
-            log.e("Error setting downloaded status " + err);
-            cb(err);
-        } else {
-            log.d("Downloaded status set for submission " + that.get('submissionId') + " with localId " + that.getLocalId());
-            that.emit('downloaded', that.get('submissionId'));
-            cb(null, that);
-        }
-    });
+  });
 };
 
 /**
  * change status and save the submission locally and register to submissions list.
  * @param {[type]} status [description]
  */
-Submission.prototype.changeStatus = function(status, cb) {
-    if (this.isStatusValid(status)) {
-        var that = this;
-        this.set('status', status);
-        this.saveToList(function(err) {
-            if (err) {
-                log.e(err);
-            }
-        });
-        this.saveLocal(cb);
-    } else {
-        log.e('Target status is not valid: ' + status);
-        cb('Target status is not valid: ' + status);
-    }
-};
-Submission.prototype.upload = function(cb) {
-    var targetStatus = "inprogress";
-    var self = this;
-    if (this.isStatusValid(targetStatus)) {
-        this.set("status", targetStatus);
-        this.set("uploadStartDate", utils.getTime());
-        submissions.updateSubmissionWithoutSaving(this);
-        uploadManager.queueSubmission(self, function(err, ut) {
-            if (err) {
-                cb(err);
-            } else {
-                ut.set("error", null);
-                ut.saveLocal(function(err) {
-                    if (err) {
-                        log.e("Error saving upload task: " + err);
-                    }
-                    self.emit("inprogress", ut);
-                    ut.on("progress", function(progress) {
-                        log.d("Emitting upload progress for submission: " + self.getLocalId() + JSON.stringify(progress));
-                        self.emit("progress", progress);
-                    });
-                    cb(null, ut);
-                });
-            }
-        });
-    } else {
-        return cb("Invalid Status to upload a form submission.");
-    }
-};
-Submission.prototype.download = function(cb) {
+Submission.prototype.changeStatus = function (status, cb) {
+  if (this.isStatusValid(status)) {
     var that = this;
-    log.d("Starting download for submission: " + that.getLocalId());
-    var targetStatus = "pending";
+    this.set('status', status);
+    this.saveToList(function (err) {
+      if (err) {
+        log.e(err);
+      }
+    });
+    this.saveLocal(cb);
+  } else {
+    log.e('Target status is not valid: ' + status);
+    cb('Target status is not valid: ' + status);
+  }
+};
+Submission.prototype.upload = function (cb) {
+  var targetStatus = "inprogress";
+  var self = this;
+  if (this.isStatusValid(targetStatus)) {
+    this.set("status", targetStatus);
+    this.set("uploadStartDate", utils.getTime());
+    submissions.updateSubmissionWithoutSaving(this);
+    uploadManager.queueSubmission(self, function (err, ut) {
+      if (err) {
+        cb(err);
+      } else {
+        ut.set("error", null);
+        ut.saveLocal(function (err) {
+          if (err) {
+            log.e("Error saving upload task: " + err);
+          }
+          self.emit("inprogress", ut);
+          ut.on("progress", function (progress) {
+            log.d("Emitting upload progress for submission: " + self.getLocalId() + JSON.stringify(progress));
+            self.emit("progress", progress);
+          });
+          cb(null, ut);
+        });
+      }
+    });
+  } else {
+    return cb("Invalid Status to upload a form submission.");
+  }
+};
+Submission.prototype.download = function (cb) {
+  var that = this;
+  log.d("Starting download for submission: " + that.getLocalId());
+  var targetStatus = "pending";
+  if (this.isStatusValid(targetStatus)) {
+    this.set("status", targetStatus);
+    targetStatus = "inprogress";
     if (this.isStatusValid(targetStatus)) {
-        this.set("status", targetStatus);
-        targetStatus = "inprogress";
-        if (this.isStatusValid(targetStatus)) {
-            this.set("status", targetStatus);
-            //Status is valid, add the submission to the
-            uploadManager.queueSubmission(that, function(err, downloadTask) {
-                if (err) {
-                    return cb(err);
-                }
-                downloadTask.set("error", null);
-                downloadTask.saveLocal(function(err) {
-                    if (err) {
-                        log.e("Error saving download task: " + err);
-                    }
-                    that.emit("inprogress", downloadTask);
-                    downloadTask.on("progress", function(progress) {
-                        log.d("Emitting download progress for submission: " + that.getLocalId() + JSON.stringify(progress));
-                        that.emit("progress", progress);
-                    });
-                    return cb(null, downloadTask);
-                });
-                
-            });
-        } else {
-            return cb("Invalid Status to dowload a form submission");
+      this.set("status", targetStatus);
+      //Status is valid, add the submission to the
+      uploadManager.queueSubmission(that, function (err, downloadTask) {
+        if (err) {
+          return cb(err);
         }
+        downloadTask.set("error", null);
+        downloadTask.saveLocal(function (err) {
+          if (err) {
+            log.e("Error saving download task: " + err);
+          }
+          that.emit("inprogress", downloadTask);
+          downloadTask.on("progress", function (progress) {
+            log.d("Emitting download progress for submission: " + that.getLocalId() + JSON.stringify(progress));
+            that.emit("progress", progress);
+          });
+          return cb(null, downloadTask);
+        });
+
+      });
     } else {
-        return cb("Invalid Status to download a form submission.");
+      return cb("Invalid Status to dowload a form submission");
     }
+  } else {
+    return cb("Invalid Status to download a form submission.");
+  }
 };
-Submission.prototype.saveToList = function(cb) {
-    submissions.saveSubmission(this, cb);
+Submission.prototype.saveToList = function (cb) {
+  submissions.saveSubmission(this, cb);
 };
-Submission.prototype.error = function(errorMsg, cb) {
-    this.set('errorMessage', errorMsg);
-    var targetStatus = 'error';
-    this.changeStatus(targetStatus, cb);
-    this.emit('error', errorMsg);
+Submission.prototype.error = function (errorMsg, cb) {
+  this.set('errorMessage', errorMsg);
+  var targetStatus = 'error';
+  this.changeStatus(targetStatus, cb);
+  this.emit('error', errorMsg);
 };
-Submission.prototype.getStatus = function() {
-    return this.get('status');
+Submission.prototype.getStatus = function () {
+  return this.get('status');
 };
 /**
  * check if a target status is valid
  * @param  {[type]}  targetStatus [description]
  * @return {Boolean}              [description]
  */
-Submission.prototype.isStatusValid = function(targetStatus) {
-    log.d("isStatusValid. Target Status: " + targetStatus + " Current Status: " + this.get('status').toLowerCase());
-    var status = this.get('status').toLowerCase();
-    var nextStatus = statusMachine[status];
-    if (nextStatus.indexOf(targetStatus) > -1) {
-        return true;
-    } else {
-        this.set('status', 'error');
-        return false;
-    }
+Submission.prototype.isStatusValid = function (targetStatus) {
+  log.d("isStatusValid. Target Status: " + targetStatus + " Current Status: " + this.get('status').toLowerCase());
+  var status = this.get('status').toLowerCase();
+  var nextStatus = statusMachine[status];
+  if (nextStatus.indexOf(targetStatus) > -1) {
+    return true;
+  } else {
+    this.set('status', 'error');
+    return false;
+  }
 };
-Submission.prototype.addComment = function(msg, user) {
-    var now = utils.getTime();
-    var ts = now.getTime();
-    var newComment = {
-        'madeBy': typeof user === 'undefined' ? '' : user.toString(),
-        'madeOn': now,
-        'value': msg,
-        'timeStamp': ts
-    };
-    this.getComments().push(newComment);
-    return ts;
+Submission.prototype.addComment = function (msg, user) {
+  var now = utils.getTime();
+  var ts = now.getTime();
+  var newComment = {
+    'madeBy': typeof user === 'undefined' ? '' : user.toString(),
+    'madeOn': now,
+    'value': msg,
+    'timeStamp': ts
+  };
+  this.getComments().push(newComment);
+  return ts;
 };
-Submission.prototype.getComments = function() {
-    return this.get('comments', []);
+Submission.prototype.getComments = function () {
+  return this.get('comments', []);
 };
-Submission.prototype.removeComment = function(timeStamp) {
-    var comments = this.getComments();
+Submission.prototype.removeComment = function (timeStamp) {
+  var comments = this.getComments();
 
-    comments = _.reject(comments, function(comment){
-        return _.isEqual(comment.timeStamp, timeStamp);   
+  comments = _.reject(comments, function (comment) {
+    return _.isEqual(comment.timeStamp, timeStamp);
+  });
+
+  this.set('comments', comments);
+};
+
+Submission.prototype.populateFilesInSubmission = function () {
+  var self = this;
+  var tmpFileNames = _.map(self.getSubmissionFiles(), function (submissionFile) {
+    return submissionFile.fileName || submissionFile.hashName;
+  });
+
+  tmpFileNames = _.compact(tmpFileNames);
+
+  self.set("filesInSubmission", tmpFileNames);
+};
+
+Submission.prototype.getSubmissionFiles = function () {
+  var self = this;
+  log.d("In getSubmissionFiles: " + self.getLocalId());
+  var submissionFiles = [];
+
+  var formFields = _.map(self.getFormFields(), function (formField) {
+    return _.filter(formField.fieldValues || [], function (fieldValue) {
+      return fieldValue.fileName || fieldValue.hashName;
     });
+  });
+  submissionFiles = _.flatten(formFields);
 
-    this.set('comments', comments);
-};
-
-Submission.prototype.populateFilesInSubmission = function() {
-    var self = this;
-    var tmpFileNames = _.map(self.getSubmissionFiles(), function(submissionFile){
-        return submissionFile.fileName || submissionFile.hashName;
-    });
-
-    tmpFileNames = _.compact(tmpFileNames);
-
-    self.set("filesInSubmission", tmpFileNames);
-};
-
-Submission.prototype.getSubmissionFiles = function() {
-    var self = this;
-    log.d("In getSubmissionFiles: " + self.getLocalId());
-    var submissionFiles = [];
-
-    var formFields = _.map(self.getFormFields(), function(formField){
-        return _.filter(formField.fieldValues || [], function(fieldValue){
-            return fieldValue.fileName || fieldValue.hashName;    
-        });    
-    });
-    submissionFiles = _.flatten(formFields);
-
-    return submissionFiles;
+  return submissionFiles;
 };
 
 // *
@@ -31992,185 +31973,185 @@ Submission.prototype.getSubmissionFiles = function() {
 //  * @param {} cb(err,res) callback function when finished
 //  * @return true / error message
 
-Submission.prototype.addInputValue = function(params, cb) {
-    log.d("Adding input value: ", JSON.stringify(params || {}));
-    var that = this;
-    var fieldId = params.fieldId;
-    var inputValue = params.value;
+Submission.prototype.addInputValue = function (params, cb) {
+  log.d("Adding input value: ", JSON.stringify(params || {}));
+  var that = this;
+  var fieldId = params.fieldId;
+  var inputValue = params.value;
 
-    if (inputValue !== null && typeof(inputValue) !== 'undefined') {
-        var index = params.index === undefined ? -1 : params.index;
-        this.getForm(function(err, form) {
-            var fieldModel = form.getFieldModelById(fieldId);
-            if (that.transactionMode) {
-                if (!that.tmpFields[fieldId]) {
-                    that.tmpFields[fieldId] = [];
-                }
-
-                params.isStore = false; //Don't store the files until the transaction is complete
-                fieldModel.processInput(params, function(err, result) {
-                    if (err) {
-                        return cb(err);
-                    } else {
-                        if (index > -1) {
-                            that.tmpFields[fieldId][index] = result;
-                        } else {
-                            that.tmpFields[fieldId].push(result);
-                        }
-
-                        return cb(null, result);
-                    }
-                });
-            } else {
-                var target = that.getInputValueObjectById(fieldId);
-
-                //File already exists for this input, overwrite rather than create a new file
-                if (target.fieldValues[index]) {
-                    if (typeof(target.fieldValues[index].hashName) === "string") {
-                        params.previousFile = target.fieldValues[index];
-                    }
-                }
-
-
-                fieldModel.processInput(params, function(err, result) {
-                    if (err) {
-                        return cb(err);
-                    } else {
-                        if (index > -1) {
-                            target.fieldValues[index] = result;
-                        } else {
-                            target.fieldValues.push(result);
-                        }
-
-                        if (typeof(result.hashName) === "string") {
-                            that.pushFile(result.hashName);
-                        }
-
-                        return cb(null, result);
-                    }
-                });
-            }
-        });
-    } else {
-        log.e("addInputValue: Input value was null. Params: " + fieldId);
-        return cb(null, {});
-    }
-};
-Submission.prototype.pushFile = function(hashName) {
-    var subFiles = this.get('filesInSubmission', []);
-    if (typeof(hashName) === "string") {
-        if (subFiles.indexOf(hashName) === -1) {
-            subFiles.push(hashName);
-            this.set('filesInSubmission', subFiles);
+  if (inputValue !== null && typeof(inputValue) !== 'undefined') {
+    var index = params.index === undefined ? -1 : params.index;
+    this.getForm(function (err, form) {
+      var fieldModel = form.getFieldModelById(fieldId);
+      if (that.transactionMode) {
+        if (!that.tmpFields[fieldId]) {
+          that.tmpFields[fieldId] = [];
         }
-    }
-};
-Submission.prototype.removeFileValue = function(hashName) {
-    var subFiles = this.get('filesInSubmission', []);
-    if (typeof(hashName) === "string" && subFiles.indexOf(hashName) > -1) {
-        subFiles.splice(subFiles.indexOf(hashName), 1);
-        this.set('filesInSubmission', subFiles);
-    }
-};
-Submission.prototype.getInputValueByFieldId = function(fieldId, cb) {
-    var self = this;
-    var values = this.getInputValueObjectById(fieldId).fieldValues;
-    this.getForm(function(err, form) {
-        var fieldModel = form.getFieldModelById(fieldId);
-        fieldModel.convertSubmission(values, cb);
+
+        params.isStore = false; //Don't store the files until the transaction is complete
+        fieldModel.processInput(params, function (err, result) {
+          if (err) {
+            return cb(err);
+          } else {
+            if (index > -1) {
+              that.tmpFields[fieldId][index] = result;
+            } else {
+              that.tmpFields[fieldId].push(result);
+            }
+
+            return cb(null, result);
+          }
+        });
+      } else {
+        var target = that.getInputValueObjectById(fieldId);
+
+        //File already exists for this input, overwrite rather than create a new file
+        if (target.fieldValues[index]) {
+          if (typeof(target.fieldValues[index].hashName) === "string") {
+            params.previousFile = target.fieldValues[index];
+          }
+        }
+
+
+        fieldModel.processInput(params, function (err, result) {
+          if (err) {
+            return cb(err);
+          } else {
+            if (index > -1) {
+              target.fieldValues[index] = result;
+            } else {
+              target.fieldValues.push(result);
+            }
+
+            if (typeof(result.hashName) === "string") {
+              that.pushFile(result.hashName);
+            }
+
+            return cb(null, result);
+          }
+        });
+      }
     });
+  } else {
+    log.e("addInputValue: Input value was null. Params: " + fieldId);
+    return cb(null, {});
+  }
+};
+Submission.prototype.pushFile = function (hashName) {
+  var subFiles = this.get('filesInSubmission', []);
+  if (typeof(hashName) === "string") {
+    if (subFiles.indexOf(hashName) === -1) {
+      subFiles.push(hashName);
+      this.set('filesInSubmission', subFiles);
+    }
+  }
+};
+Submission.prototype.removeFileValue = function (hashName) {
+  var subFiles = this.get('filesInSubmission', []);
+  if (typeof(hashName) === "string" && subFiles.indexOf(hashName) > -1) {
+    subFiles.splice(subFiles.indexOf(hashName), 1);
+    this.set('filesInSubmission', subFiles);
+  }
+};
+Submission.prototype.getInputValueByFieldId = function (fieldId, cb) {
+  var self = this;
+  var values = this.getInputValueObjectById(fieldId).fieldValues;
+  this.getForm(function (err, form) {
+    var fieldModel = form.getFieldModelById(fieldId);
+    fieldModel.convertSubmission(values, cb);
+  });
 };
 /**
  * Reset submission
  * @return {[type]} [description]
  */
-Submission.prototype.reset = function() {
-    var self = this;
-    self.clearLocalSubmissionFiles(function(err) {
-        self.set('formFields', []);
+Submission.prototype.reset = function () {
+  var self = this;
+  self.clearLocalSubmissionFiles(function (err) {
+    self.set('formFields', []);
+  });
+};
+Submission.prototype.isDownloadSubmission = function () {
+  return this.get("downloadSubmission") === true;
+};
+
+Submission.prototype.getSubmissionFile = function (fileName, cb) {
+  localStorage.readFile(fileName, cb);
+};
+Submission.prototype.clearLocalSubmissionFiles = function (cb) {
+  log.d("In clearLocalSubmissionFiles");
+  var self = this;
+  var filesInSubmission = self.get("filesInSubmission", []);
+  log.d("Files to clear ", filesInSubmission);
+  var localFileName = "";
+
+  //Should probably be emitting events..
+  async.eachSeries(filesInSubmission, function (fileMetaObject, cb) {
+    localStorage.removeEntry(fileMetaObject, function (err) {
+      if (err) {
+        log.e("Error removing files from " + err);
+      }
+
+      cb(err);
     });
+  }, cb);
 };
-Submission.prototype.isDownloadSubmission = function() {
-    return this.get("downloadSubmission") === true;
+Submission.prototype.startInputTransaction = function () {
+  this.transactionMode = true;
+  this.tmpFields = {};
 };
-
-Submission.prototype.getSubmissionFile = function(fileName, cb) {
-    localStorage.readFile(fileName, cb);
-};
-Submission.prototype.clearLocalSubmissionFiles = function(cb) {
-    log.d("In clearLocalSubmissionFiles");
-    var self = this;
-    var filesInSubmission = self.get("filesInSubmission", []);
-    log.d("Files to clear ", filesInSubmission);
-    var localFileName = "";
-
-    //Should probably be emitting events..
-    async.eachSeries(filesInSubmission, function(fileMetaObject, cb) {
-        localStorage.removeEntry(fileMetaObject, function(err) {
-            if (err) {
-                log.e("Error removing files from " + err);
-            }
-
-            cb(err);
-        });
-    }, cb);
-};
-Submission.prototype.startInputTransaction = function() {
-    this.transactionMode = true;
-    this.tmpFields = {};
-};
-Submission.prototype.endInputTransaction = function(succeed) {
-    var self = this;
-    self.transactionMode = false;
-    var tmpFields = {};
-    var fieldId = "";
-    var valIndex = 0;
-    var valArr = [];
-    var val = "";
-    if (succeed) {
-        tmpFields = this.tmpFields;
-        for (fieldId in tmpFields) {
-            var target = this.getInputValueObjectById(fieldId);
-            valArr = tmpFields[fieldId];
-            for (valIndex = 0; valIndex < valArr.length; valIndex++) {
-                val = valArr[valIndex];
-                target.fieldValues.push(val);
-                if (typeof(val.hashName) === "string") {
-                    this.pushFile(val.hashName);
-                }
-            }
+Submission.prototype.endInputTransaction = function (succeed) {
+  var self = this;
+  self.transactionMode = false;
+  var tmpFields = {};
+  var fieldId = "";
+  var valIndex = 0;
+  var valArr = [];
+  var val = "";
+  if (succeed) {
+    tmpFields = this.tmpFields;
+    for (fieldId in tmpFields) {
+      var target = this.getInputValueObjectById(fieldId);
+      valArr = tmpFields[fieldId];
+      for (valIndex = 0; valIndex < valArr.length; valIndex++) {
+        val = valArr[valIndex];
+        target.fieldValues.push(val);
+        if (typeof(val.hashName) === "string") {
+          this.pushFile(val.hashName);
         }
-        this.tmpFields = {};
-    } else {
-        //clear any files set as part of the transaction
-        tmpFields = this.tmpFields;
-        this.tmpFields = {};
-
-        var fileIds = _.map(tmpFields, function(valArr, fieldId) {
-            var fileObjects = _.filter(valArr, function(val) {
-                return typeof(val.hashName) === "string";
-            });
-
-            return _.map(fileObjects, function(fileObject) {
-                return fileObject.hashName;
-            });
-        });
-
-        //Flatten and remove junk
-        fileIds = _.flatten(fileIds);
-        fileIds = _.compact(fileIds);
-
-        async.eachSeries(fileIds, function(fileId, cb) {
-        	log.d("Removing File From Transaction" + fileId);
-            localStorage.removeEntry(fileId, cb);
-        }, function(err) {
-            if (err) {
-                log.e("Error removing file from transaction ", err);
-            } else {
-            	log.d("Finished Removing Transaction Inputs");
-            }
-        });
+      }
     }
+    this.tmpFields = {};
+  } else {
+    //clear any files set as part of the transaction
+    tmpFields = this.tmpFields;
+    this.tmpFields = {};
+
+    var fileIds = _.map(tmpFields, function (valArr, fieldId) {
+      var fileObjects = _.filter(valArr, function (val) {
+        return typeof(val.hashName) === "string";
+      });
+
+      return _.map(fileObjects, function (fileObject) {
+        return fileObject.hashName;
+      });
+    });
+
+    //Flatten and remove junk
+    fileIds = _.flatten(fileIds);
+    fileIds = _.compact(fileIds);
+
+    async.eachSeries(fileIds, function (fileId, cb) {
+      log.d("Removing File From Transaction" + fileId);
+      localStorage.removeEntry(fileId, cb);
+    }, function (err) {
+      if (err) {
+        log.e("Error removing file from transaction ", err);
+      } else {
+        log.d("Finished Removing Transaction Inputs");
+      }
+    });
+  }
 };
 /**
  * remove an input value from submission
@@ -32178,294 +32159,297 @@ Submission.prototype.endInputTransaction = function(succeed) {
  * @param  {[type]} index (optional) the position of the value will be removed if it is repeated field.
  * @return {[type]}         [description]
  */
-Submission.prototype.removeFieldValue = function(fieldId, index) {
-    var self = this;
-    var targetArr = [];
-    var valRemoved = {};
-    if (this.transactionMode) {
-        targetArr = this.tmpFields.fieldId;
-    } else {
-        targetArr = this.getInputValueObjectById(fieldId).fieldId;
+Submission.prototype.removeFieldValue = function (fieldId, index) {
+  var self = this;
+  var targetArr = [];
+  var valRemoved = {};
+  if (this.transactionMode) {
+    targetArr = this.tmpFields.fieldId;
+  } else {
+    targetArr = this.getInputValueObjectById(fieldId).fieldId;
+  }
+  if (typeof index === 'undefined') {
+    valRemoved = targetArr.splice(0, targetArr.length);
+  } else {
+    if (targetArr.length > index) {
+      valRemoved = targetArr.splice(index, 1);
     }
-    if (typeof index === 'undefined') {
-        valRemoved = targetArr.splice(0, targetArr.length);
-    } else {
-        if (targetArr.length > index) {
-            valRemoved = targetArr.splice(index, 1);
-        }
-    }
+  }
 
-    if (typeof(valRemoved.hashName) === "string") {
-        localStorage.removeEntry(valRemoved.hashName, function(err) {
-            if (err) {
-                log.e("Error removing file: ", err);
-            } else {
-                self.removeFileValue(valRemoved.hashName);
-            }
-        });
-    }
+  if (typeof(valRemoved.hashName) === "string") {
+    localStorage.removeEntry(valRemoved.hashName, function (err) {
+      if (err) {
+        log.e("Error removing file: ", err);
+      } else {
+        self.removeFileValue(valRemoved.hashName);
+      }
+    });
+  }
 };
-Submission.prototype.getInputValueObjectById = function(fieldId) {
-    var formFields = this.getFormFields();
-    for (var i = 0; i < formFields.length; i++) {
-        var formField = formFields[i];
+Submission.prototype.getInputValueObjectById = function (fieldId) {
+  var formFields = this.getFormFields();
+  var newField = {
+    'fieldId': fieldId,
+    'fieldValues': []
+  };
 
-        if (formField.fieldId._id) {
-            if (formField.fieldId._id === fieldId) {
-                return formField;
-            }
-        } else {
-            if (formField.fieldId === fieldId) {
-                return formField;
-            }
-        }
+  var foundField = _.find(formFields, function(formField){
+    if(_.isObject(formField.fieldId)){
+      return _.isEqual(formField.fieldId._id, fieldId);
+    } else {
+      return _.isEqual(formField.fieldId, fieldId);
     }
-    var newField = {
-        'fieldId': fieldId,
-        'fieldValues': []
-    };
-    formFields.push(newField);
-    return newField;
+  });
+
+  if(!foundField){
+    foundField = newField;
+    formFields.push(foundField);
+  }
+
+  return foundField;
 };
 /**
  * get form model related to this submission.
  * @return {[type]} [description]
  */
-Submission.prototype.getForm = function(cb) {
-    var formId = this.get('formId');
-    var Form = require("./form");
+Submission.prototype.getForm = function (cb) {
+  var formId = this.get('formId');
+  var Form = require("./form");
 
-    if (formId) {
-        log.d("FormId found for getForm: " + formId);
-        Form.fromLocal({
-            'formId': formId
-        }, cb);
-    } else {
-        log.e("No form Id specified for getForm");
-        return cb("No form Id specified for getForm");
-    }
+  if (formId) {
+    log.d("FormId found for getForm: " + formId);
+    Form.fromLocal({
+      'formId': formId
+    }, cb);
+  } else {
+    log.e("No form Id specified for getForm");
+    return cb("No form Id specified for getForm");
+  }
 };
-Submission.prototype.reloadForm = function(cb) {
-    log.d("Submission reload form");
-    var formId = this.get('formId');
-    var self = this;
-    new require("./form").fromLocal({
-        formId: formId
-    }, function(err, form) {
-        if (err) {
-            cb(err);
-        } else {
-            self.form = form;
-            if (!self.get('deviceFormTimestamp', null)) {
-                self.set('deviceFormTimestamp', form.getLastUpdate());
-            }
-            cb(null, form);
-        }
-    });
+Submission.prototype.reloadForm = function (cb) {
+  log.d("Submission reload form");
+  var formId = this.get('formId');
+  var self = this;
+  new require("./form").fromLocal({
+    formId: formId
+  }, function (err, form) {
+    if (err) {
+      cb(err);
+    } else {
+      self.form = form;
+      if (!self.get('deviceFormTimestamp', null)) {
+        self.set('deviceFormTimestamp', form.getLastUpdate());
+      }
+      cb(null, form);
+    }
+  });
 };
 /**
  * Retrieve all file fields related value
  * If the submission has been downloaded, there is no gurantee that the form is  on-device.
  * @return {[type]} [description]
  */
-Submission.prototype.getFileInputValues = function(cb) {
-    var self = this;
-    self.getFileFieldsId(function(err, fileFieldIds) {
-        if (err) {
-            return cb(err);
-        }
-        return cb(null, self.getInputValueArray(fileFieldIds));
+Submission.prototype.getFileInputValues = function (cb) {
+  var self = this;
+  self.getFileFieldsId(function (err, fileFieldIds) {
+    if (err) {
+      return cb(err);
+    }
+    return cb(null, self.getInputValueArray(fileFieldIds));
+  });
+};
+
+Submission.prototype.getFormFields = function () {
+  var formFields = this.get("formFields", []);
+
+
+  //Removing null values
+  for (var formFieldIndex = 0; formFieldIndex < formFields.length; formFieldIndex++) {
+    formFields[formFieldIndex].fieldValues = formFields[formFieldIndex].fieldValues || [];
+    formFields[formFieldIndex].fieldValues = formFields[formFieldIndex].fieldValues.filter(function (fieldValue) {
+      return fieldValue !== null && typeof(fieldValue) !== "undefined";
     });
+  }
+
+  return formFields;
 };
 
-Submission.prototype.getFormFields = function() {
-    var formFields = this.get("formFields", []);
+Submission.prototype.getFileFieldsId = function (cb) {
+  var self = this;
+  var formFieldIds = [];
 
-    //Removing null values
-    for (var formFieldIndex = 0; formFieldIndex < formFields.length; formFieldIndex++) {
-        formFields[formFieldIndex].fieldValues = formFields[formFieldIndex].fieldValues || [];
-        formFields[formFieldIndex].fieldValues = formFields[formFieldIndex].fieldValues.filter(function(fieldValue) {
-            return fieldValue !== null && typeof(fieldValue) !== "undefined";
-        });
-    }
+  if (self.isDownloadSubmission()) {
+    //For Submission downloads, there needs to be a scan through the formFields param
+    var formFields = self.getFormFields();
 
-    return formFields;
-};
-
-Submission.prototype.getFileFieldsId = function(cb) {
-    var self = this;
-    var formFieldIds = [];
-
-    if (self.isDownloadSubmission()) {
-        //For Submission downloads, there needs to be a scan through the formFields param
-        var formFields = self.getFormFields();
-
-        for (var formFieldIndex = 0; formFieldIndex < formFields.length; formFieldIndex++) {
-            var formFieldEntry = formFields[formFieldIndex].fieldId || {};
-            if (formFieldEntry.type === 'file' || formFieldEntry.type === 'photo' || formFieldEntry.type === 'signature') {
-                if (formFieldEntry._id) {
-                    formFieldIds.push(formFieldEntry._id);
-                }
-            }
-        }
-        return cb(null, formFieldIds);
-    } else {
-        self.getForm(function(err, form) {
-            if (err) {
-                log.e("Error getting form for getFileFieldsId" + err);
-                return cb(err);
-            }
-            return cb(err, form.getFileFieldsId());
-        });
-    }
-};
-
-Submission.prototype.updateFileLocalURI = function(fileDetails, newLocalFileURI, cb) {
-    log.d("updateFileLocalURI: " + newLocalFileURI);
-    var self = this;
-    fileDetails = fileDetails || {};
-
-    if (fileDetails.fileName && newLocalFileURI) {
-        //Search for the file placeholder name.
-        self.findFilePlaceholderFieldId(fileDetails.fileName, function(err, fieldDetails) {
-            if (err) {
-                return cb(err);
-            }
-            if (fieldDetails.fieldId) {
-                var tmpObj = self.getInputValueObjectById(fieldDetails.fieldId).fieldValues[fieldDetails.valueIndex];
-                tmpObj.localURI = newLocalFileURI;
-                self.getInputValueObjectById(fieldDetails.fieldId).fieldValues[fieldDetails.valueIndex] = tmpObj;
-                self.saveLocal(cb);
-            } else {
-                log.e("No file field matches the placeholder name " + fileDetails.fileName);
-                return cb("No file field matches the placeholder name " + fileDetails.fileName);
-            }
-        });
-    } else {
-        log.e("Submission: updateFileLocalURI : No fileName for submissionId : " + JSON.stringify(fileDetails));
-        return cb("Submission: updateFileLocalURI : No fileName for submissionId : " + JSON.stringify(fileDetails));
-    }
-};
-
-Submission.prototype.findFilePlaceholderFieldId = function(filePlaceholderName, cb) {
-    var self = this;
-    var fieldDetails = {};
-    self.getFileFieldsId(function(err, fieldIds) {
-        for (var i = 0; i < fieldIds.length; i++) {
-            var fieldId = fieldIds[i];
-            var inputValue = self.getInputValueObjectById(fieldId);
-            for (var j = 0; j < inputValue.fieldValues.length; j++) {
-                var tmpObj = inputValue.fieldValues[j];
-                if (tmpObj) {
-                    if (tmpObj.fileName !== null && tmpObj.fileName === filePlaceholderName) {
-                        fieldDetails.fieldId = fieldId;
-                        fieldDetails.valueIndex = j;
-                    }
-                }
-            }
-        }
-        return cb(null, fieldDetails);
+    formFields = _.filter(formFields, function (formFieldEntry) {
+      return (formFieldEntry.fieldId.type === 'file' || formFieldEntry.fieldId.type === 'photo' || formFieldEntry.fieldId.type === 'signature');
     });
+
+    formFieldIds = _.map(formFields, function(formFieldEntry){
+      return formFieldEntry.fieldId._id;
+    });
+
+    return cb(null, formFieldIds);
+  } else {
+    self.getForm(function (err, form) {
+      if (err) {
+        log.e("Error getting form for getFileFieldsId" + err);
+        return cb(err);
+      }
+      return cb(err, form.getFileFieldsId());
+    });
+  }
 };
 
-Submission.prototype.getInputValueArray = function(fieldIds) {
-    var rtn = [];
+Submission.prototype.updateFileLocalURI = function (fileDetails, newLocalFileURI, cb) {
+  log.d("updateFileLocalURI: " + newLocalFileURI);
+  var self = this;
+  fileDetails = fileDetails || {};
+
+  if (fileDetails.fileName && newLocalFileURI) {
+    //Search for the file placeholder name.
+    self.findFilePlaceholderFieldId(fileDetails.fileName, function (err, fieldDetails) {
+      if (err) {
+        return cb(err);
+      }
+      if (fieldDetails.fieldId) {
+        var tmpObj = self.getInputValueObjectById(fieldDetails.fieldId).fieldValues[fieldDetails.valueIndex];
+        tmpObj.localURI = newLocalFileURI;
+        self.getInputValueObjectById(fieldDetails.fieldId).fieldValues[fieldDetails.valueIndex] = tmpObj;
+        self.saveLocal(cb);
+      } else {
+        log.e("No file field matches the placeholder name " + fileDetails.fileName);
+        return cb("No file field matches the placeholder name " + fileDetails.fileName);
+      }
+    });
+  } else {
+    log.e("Submission: updateFileLocalURI : No fileName for submissionId : " + JSON.stringify(fileDetails));
+    return cb("Submission: updateFileLocalURI : No fileName for submissionId : " + JSON.stringify(fileDetails));
+  }
+};
+
+Submission.prototype.findFilePlaceholderFieldId = function (filePlaceholderName, cb) {
+  var self = this;
+  var fieldDetails = {};
+  self.getFileFieldsId(function (err, fieldIds) {
     for (var i = 0; i < fieldIds.length; i++) {
-        var fieldId = fieldIds[i];
-        var inputValue = this.getInputValueObjectById(fieldId);
-        for (var j = 0; j < inputValue.fieldValues.length; j++) {
-            var tmpObj = inputValue.fieldValues[j];
-            if (tmpObj) {
-                tmpObj.fieldId = fieldId;
-                rtn.push(tmpObj);
-            }
+      var fieldId = fieldIds[i];
+      var inputValue = self.getInputValueObjectById(fieldId);
+      for (var j = 0; j < inputValue.fieldValues.length; j++) {
+        var tmpObj = inputValue.fieldValues[j];
+        if (tmpObj) {
+          if (tmpObj.fileName !== null && tmpObj.fileName === filePlaceholderName) {
+            fieldDetails.fieldId = fieldId;
+            fieldDetails.valueIndex = j;
+          }
         }
+      }
     }
-    return rtn;
+    return cb(null, fieldDetails);
+  });
 };
-Submission.prototype.clearLocal = function(cb) {
-    var self = this;
-    //remove from uploading list
-    uploadManager.cancelSubmission(self, function(err, uploadTask) {
-        if (err) {
+
+Submission.prototype.getInputValueArray = function (fieldIds) {
+  var rtn = [];
+
+
+  for (var i = 0; i < fieldIds.length; i++) {
+    var fieldId = fieldIds[i];
+    var inputValue = this.getInputValueObjectById(fieldId);
+    for (var j = 0; j < inputValue.fieldValues.length; j++) {
+      var tmpObj = inputValue.fieldValues[j];
+      if (tmpObj) {
+        tmpObj.fieldId = fieldId;
+        rtn.push(tmpObj);
+      }
+    }
+  }
+  return rtn;
+};
+Submission.prototype.clearLocal = function (cb) {
+  var self = this;
+  //remove from uploading list
+  uploadManager.cancelSubmission(self, function (err, uploadTask) {
+    if (err) {
+      log.e(err);
+      return cb(err);
+    }
+    //remove from submission list
+    submissions.removeSubmission(self.getLocalId(), function (err) {
+      if (err) {
+        log.e(err);
+        return cb(err);
+      }
+      self.clearLocalSubmissionFiles(function () {
+        Model.prototype.clearLocal.call(self, function (err) {
+          if (err) {
             log.e(err);
             return cb(err);
-        }
-        //remove from submission list
-        submissions.removeSubmission(self.getLocalId(), function(err) {
-            if (err) {
-                log.e(err);
-                return cb(err);
-            }
-            self.clearLocalSubmissionFiles(function() {
-                Model.prototype.clearLocal.call(self, function(err) {
-                    if (err) {
-                        log.e(err);
-                        return cb(err);
-                    }
-                    cb(null, null);
-                });
-            });
+          }
+          cb(null, null);
         });
+      });
     });
+  });
 };
-Submission.prototype.getRemoteSubmissionId = function() {
-    return this.get("submissionId", "");
+Submission.prototype.getRemoteSubmissionId = function () {
+  return this.get("submissionId", "");
 };
-Submission.prototype.setRemoteSubmissionId = function(submissionId) {
-    if (submissionId) {
-        this.set("submissionId", submissionId);
-    }
+Submission.prototype.setRemoteSubmissionId = function (submissionId) {
+  if (submissionId) {
+    this.set("submissionId", submissionId);
+  }
 };
 
 function newInstance(form, params) {
-    params = params ? params : {};
-    var sub = new Submission(form, params);
+  params = params ? params : {};
+  var sub = new Submission(form, params);
 
-    submissions.updateSubmissionWithoutSaving(sub);
-    return sub;
+  submissions.updateSubmissionWithoutSaving(sub);
+  return sub;
 }
 
 function fromLocal(localId, cb) {
-    log.d("Submission fromLocal: ", localId);
-    if (_submissions[localId]) {
-        log.d("Submission fromLocal from cache: ", localId);
-        //already loaded
-        cb(null, _submissions[localId]);
-    } else {
-        //load from storage
-        log.d("Submission fromLocal not in cache. Loading from local storage.: ", localId);
-        var submissionObject = new Submission();
-        submissionObject.setLocalId(localId);
-        submissionObject.loadLocal(function(err, submission) {
+  log.d("Submission fromLocal: ", localId);
+  if (_submissions[localId]) {
+    log.d("Submission fromLocal from cache: ", localId);
+    //already loaded
+    cb(null, _submissions[localId]);
+  } else {
+    //load from storage
+    log.d("Submission fromLocal not in cache. Loading from local storage.: ", localId);
+    var submissionObject = new Submission();
+    submissionObject.setLocalId(localId);
+    submissionObject.loadLocal(function (err, submission) {
+      if (err) {
+        log.e("Submission fromLocal. Error loading from local: ", localId, err);
+        cb(err);
+      } else {
+        log.d("Submission fromLocal. Load from local sucessfull: ", localId);
+        if (submission.isDownloadSubmission()) {
+          return cb(null, submission);
+        } else {
+          submission.reloadForm(function (err, res) {
             if (err) {
-                log.e("Submission fromLocal. Error loading from local: ", localId, err);
-                cb(err);
+              log.e("Submission fromLocal. reloadForm. Error re-loading form: ", localId, err);
+              cb(err);
             } else {
-                log.d("Submission fromLocal. Load from local sucessfull: ", localId);
-                if (submission.isDownloadSubmission()) {
-                    return cb(null, submission);
-                } else {
-                    submission.reloadForm(function(err, res) {
-                        if (err) {
-                            log.e("Submission fromLocal. reloadForm. Error re-loading form: ", localId, err);
-                            cb(err);
-                        } else {
-                            log.d("Submission fromLocal. reloadForm. Re-loading form successfull: ", localId);
-                            _submissions[localId] = submission;
-                            cb(null, submission);
-                        }
-                    });
-                }
-
+              log.d("Submission fromLocal. reloadForm. Re-loading form successfull: ", localId);
+              _submissions[localId] = submission;
+              cb(null, submission);
             }
-        });
-    }
+          });
+        }
+
+      }
+    });
+  }
 }
 
 module.exports = {
-    newInstance: newInstance,
-    fromLocal: fromLocal
+  newInstance: newInstance,
+  fromLocal: fromLocal
 };
 },{"./config.js":77,"./form":90,"./form.js":90,"./localStorage.js":96,"./log.js":97,"./model.js":98,"./rulesEngine.js":100,"./submissions.js":104,"./uploadManager.js":105,"./utils.js":107,"async":7,"underscore":76}],104:[function(require,module,exports){
 var Model = require("./model");
@@ -33069,6 +33053,7 @@ var FileSubmissionDownload = require("./fileSubmissionDownload.js");
 var FormSubmissionComplete = require("./formSubmissionComplete.js");
 var submission = require("./submission.js");
 var utils = require("./utils.js");
+var _ = require('underscore');
 
 var _uploadTasks = {};
 
@@ -33096,6 +33081,9 @@ function fromLocal(localId, cb) {
 
 
 function UploadTask() {
+
+  _.bindAll(this, 'addFileTask');
+
   Model.call(this, {
     '_type': 'uploadTask'
   });
@@ -33140,13 +33128,10 @@ UploadTask.prototype.getTotalSize = function () {
   var self = this;
   var jsonSize = JSON.stringify(self.get('jsonTask')).length;
   var fileTasks = self.get('fileTasks');
-  var fileSize = 0;
-  var fileTask;
-  for (var i = 0; i < fileTasks.length; i++) {
-    fileTask = fileTasks[i];
-    fileSize += fileTask.fileSize;
-  }
-  return jsonSize + fileSize;
+
+  return  _.reduce(fileTasks, function(memo, fileTask){
+    return memo + fileTask.fileSize;
+  }, jsonSize);
 };
 UploadTask.prototype.getUploadedSize = function () {
   var currentTask = this.getCurrentTask();
@@ -33173,10 +33158,8 @@ UploadTask.prototype.addFileTasks = function (submissionModel, cb) {
       log.e("Error getting file Input values: " + err);
       return cb(err);
     }
-    for (var i = 0; i < files.length; i++) {
-      var file = files[i];
-      self.addFileTask(file);
-    }
+
+    _.each(files, self.addFileTask);
     cb();
   });
 };
@@ -33200,7 +33183,7 @@ UploadTask.prototype.resetRetryAttempts = function () {
   this.set('retryAttempts', 0);
 };
 UploadTask.prototype.isStarted = function () {
-  return this.getCurrentTask() === null ? false : true;
+  return this.getCurrentTask() !== null;
 };
 
 
@@ -33795,11 +33778,7 @@ UploadTask.prototype.error = function (uploadErrorMessage, cb) {
 };
 UploadTask.prototype.isFormCompleted = function () {
   var curTask = this.getCurrentTask();
-  if (curTask === null) {
-    return false;
-  } else {
-    return true;
-  }
+  return curTask !== null;
 };
 UploadTask.prototype.isFileCompleted = function () {
   var curTask = this.getCurrentTask();
@@ -33901,7 +33880,7 @@ module.exports = {
   'newInstance': newInstance,
   'fromLocal': fromLocal
 };
-},{"./config.js":77,"./dataAgent.js":78,"./fileSubmission.js":86,"./fileSubmissionBase64.js":87,"./fileSubmissionDownload.js":88,"./form.js":90,"./formSubmission.js":91,"./formSubmissionComplete.js":92,"./formSubmissionDownload.js":93,"./formSubmissionStatus.js":94,"./log.js":97,"./model.js":98,"./submission":103,"./submission.js":103,"./utils.js":107}],107:[function(require,module,exports){
+},{"./config.js":77,"./dataAgent.js":78,"./fileSubmission.js":86,"./fileSubmissionBase64.js":87,"./fileSubmissionDownload.js":88,"./form.js":90,"./formSubmission.js":91,"./formSubmissionComplete.js":92,"./formSubmissionDownload.js":93,"./formSubmissionStatus.js":94,"./log.js":97,"./model.js":98,"./submission":103,"./submission.js":103,"./utils.js":107,"underscore":76}],107:[function(require,module,exports){
 var md5Node = require("md5-node");
 var _ = require('underscore');
 
@@ -34471,6 +34450,1258 @@ module.exports={
     }
 }
 },{}],111:[function(require,module,exports){
+/*jshint expr: true*/
+
+var chai = require('chai');
+var sinon = require('sinon');
+var expect = chai.expect;
+var assert = chai.assert;
+var _ = require('underscore');
+var config = require('../../src/config.js');
+var requests = [];
+
+describe("Config module", function() {
+
+  beforeEach(function(done) {
+    this.server = sinon.fakeServer.create();
+    this.server.autoRespond = true;
+
+    this.config = config;
+    config.init({}, function(err, returnedConfig) {
+      assert(!err, "Expected no error clearing local storage");
+      config.clearLocal(function(err) {
+        assert(!err, "Expected no error clearing local storage");
+        done();
+      });
+    });
+  });
+
+  afterEach(function() {
+    this.server.restore();
+  });
+
+  it("config should be initialised before usage. config should get data from local storage.", function(done) {
+    assert.equal(config.get("log_email"), "test@example.com");
+    done();
+  });
+
+  it("config should be able to be saved to local storage ", function(done) {
+    this.config.init({}, function(err, returnedConfig) {
+      assert(!err, "Unexpected Error When Returning Config Data.");
+      assert.equal(config.get("log_email"), "test@example.com");
+
+      config.set('log_email', 'someOtherValue@example.com');
+
+      config.saveLocal(function(err) {
+        assert(!err, "Expected No Error When Saving Config");
+
+        assert.equal(config.get("log_email"), "someOtherValue@example.com");
+
+        config.refresh(false, function(err) {
+          assert(!err, "Expected No Error When Loading From Local");
+          assert.equal(config.get("log_email"), "someOtherValue@example.com");
+          done();
+        });
+      });
+
+    });
+  });
+
+  it("config should be able to be loaded from local storage ", function(done) {
+    this.config.init({}, function(err, returnedConfig) {
+      assert(!err, "Unexpected Error When Returning Config Data.");
+      assert.equal(config.get("log_email"), "test@example.com");
+
+      config.set('log_email', 'someOtherValue@example.com');
+
+      assert.equal(config.get("log_email"), "someOtherValue@example.com");
+
+      config.refresh(false, function(err) {
+        assert(!err, "Expected No Error When Loading From Local");
+        assert.equal(config.get("log_email"), "someOtherValue@example.com");
+        done();
+      });
+    });
+  });
+
+
+
+  it("how to get config properties", function() {
+    assert(this.config.getAppId(), "Expected appId To Be set");
+    assert(this.config.get("mbaasBaseUrl"), "Expected mbaasBaseUrl To Be set");
+    assert(this.config.get("formUrls"), "Expected formUrls To Be set");
+    assert(this.config.get("env"), "Expected env To Be set");
+    assert(this.config.get("userConfigValues"), "Expected userConfigValues To Be set");
+    assert.ok(this.config.get("sent_save_min") === 10, "Expected sent_save_min To Be set");
+  });
+
+  it("Should Only Be One Config Module", function() {
+    var sameConfig = require('../../src/config.js');
+
+    assert.ok(sameConfig.get("sent_save_min") === config.get("sent_save_min"));
+  });
+
+  it("how to get config properties From Remote", function(done) {
+
+    this.server.respondWith('GET', config.getCloudHost() + '/sys/info/ping', [200, {
+        "Content-Type": "application/json"
+      },
+      JSON.stringify({
+        "status": "ok"
+      })
+    ]);
+    this.server.respondWith(function(xhr, id) {
+      xhr.respond(200, {
+          "Content-Type": "application/json"
+        },
+        '{"randomRemoteConfig": 12}'
+      );
+
+      console.log("Response sent");
+
+    });
+
+    config.refresh(true, function(err) {
+      assert.equal(config.get('randomRemoteConfig'), 12, "Expected Remote Config To Return");
+      done();
+    });
+  });
+});
+},{"../../src/config.js":77,"chai":15,"sinon":51,"underscore":76}],112:[function(require,module,exports){
+var chai = require('chai');
+var expect = chai.expect;
+var assert = chai.assert;
+var _ = require('underscore');
+var Field = require('../../src/field.js');
+
+//TODO, need to do all field typess.
+
+var testField = {
+    "fieldOptions": {
+        "definition": {
+            "defaultValue": "def"
+        }
+    },
+    "required": true,
+    "type": "text",
+    "name": "Text Field",
+    "helpText": "Text",
+    "adminOnly": false,
+    "_id": "52dfd93ee02b762d3f000001",
+    "repeating": false
+};
+
+
+describe("Field Module", function() {
+	it("Creating A New Field Model", function() {
+		var field = new Field(testField);
+
+		assert.equal(field.isRequired(), true, "Expected the field to not be required.");
+		assert.equal(field.getType(), 'text');
+		assert.equal(field.getDefaultValue(), 'def');
+		assert.equal(field.isAdminField(), false);
+		assert.equal(field.getFieldId(), "52dfd93ee02b762d3f000001");
+		assert.equal(field.getName(), "Text Field");
+	});
+});
+},{"../../src/field.js":79,"chai":15,"underscore":76}],113:[function(require,module,exports){
+var chai = require('chai');
+var expect = chai.expect;
+var assert = chai.assert;
+var _ = require('underscore');
+var Form = require('../../src/form.js');
+var forms = require('../../src/forms.js');
+var config = require('../../src/config.js');
+var sinon = require('sinon');
+
+var testForm = {
+  "_id": "52dfd909a926eb2e3f123456",
+  "description": "Small Form",
+  "name": "Small Form",
+  "updatedBy": "testingform@example.com",
+  "lastUpdatedTimestamp": 1390409513725,
+  "pageRules": [],
+  "fieldRules": [],
+  "pages": [{
+    "_id": "52dfd909a926eb2e3f000001",
+    "name": "A Page",
+    "fields": [{
+      "fieldOptions": {
+        "definition": {
+          "defaultValue": ""
+        }
+      },
+      "required": false,
+      "type": "text",
+      "name": "Text",
+      "helpText": "Text",
+      "_id": "52dfd93ee02b762d3f000001",
+      "repeating": false
+    }, {
+      "required": false,
+      "type": "file",
+      "name": "File",
+      "helpText": "File",
+      "_id": "52dfd93ee02b762d3f000002",
+      "repeating": false
+    }]
+  }, {
+    "name": "Page 2",
+    "_id": "52dff729e02b762d3f000004",
+    "fields": [{
+      "required": false,
+      "type": "text",
+      "name": "Page 2 Text",
+      "helpText": "Page 2 Text",
+      "_id": "52dff729e02b762d3f000003",
+      "repeating": false
+    }]
+  }],
+  "lastUpdated": "2014-01-22T16:51:53.725Z",
+  "dateCreated": "2014-01-22T14:43:21.806Z"
+};
+
+describe("Form model", function () {
+  beforeEach(function (done) {
+    var self = this;
+    this.server = sinon.fakeServer.create();
+    this.server.autoRespond = true;
+    config.init({}, function (err, returnedConfig) {
+      self.server.respondWith('GET', config.getCloudHost() + '/sys/info/ping', [200, {
+        "Content-Type": "application/json"
+      },
+        JSON.stringify({
+          "status": "ok"
+        })
+      ]);
+      assert.ok(!err, "Expected No Error");
+      done();
+    });
+  });
+
+  afterEach(function (done) {
+    this.server.restore();
+    forms.clearAllForms(function (err, model) {
+      assert.ok(!err, "Expected No Error");
+      done();
+    });
+
+  });
+
+  it("how to initialise a form with a JSON object representing a form", function (done) {
+    //load from local then from remote.
+    var form = Form.newInstance({
+      rawMode: true,
+      rawData: testForm,
+      formId: "52dfd909a926eb2e3f123456"
+    });
+
+    assert(form, "Expected a form object");
+    assert(form.getType() === "form");
+    assert.equal(Date(form.getLastUpdate()), Date(1390409513725));
+
+    var fieldRef = form.getFieldRef();
+    var pageRef = form.getPageRef();
+
+    assert.equal(pageRef["52dfd909a926eb2e3f000001"], 0);
+    assert.equal(pageRef["52dff729e02b762d3f000004"], 1);
+
+    assert.equal(fieldRef["52dfd93ee02b762d3f000002"].page, 0);
+    assert.equal(fieldRef["52dfd93ee02b762d3f000002"].field, 1);
+
+    assert.equal(fieldRef["52dff729e02b762d3f000003"].page, 1);
+    assert.equal(fieldRef["52dff729e02b762d3f000003"].field, 0);
+
+    done();
+  });
+  it("Form Should Provide Fields And Page Models", function (done) {
+    //load from local then from remote.
+    var form = Form.newInstance({
+      rawMode: true,
+      rawData: testForm,
+      formId: "52dfd909a926eb2e3f123456"
+    });
+
+    var pages = form.getPageModelList();
+
+    assert.equal(pages.length, 2);
+
+    //Should be able to load Field Models from the Page Models
+    var page = pages[0];
+    var fields = page.getFieldModelList();
+
+    assert.equal(fields.length, 2);
+
+    assert.equal(page.getFieldModelById("52dfd93ee02b762d3f000002"), fields[1]);
+
+    done();
+  });
+  it("form initialisation is singleton for a single formid. only 1 instance of form model will be returned for same form id", function (done) {
+    var form1 = Form.newInstance({
+      rawMode: true,
+      rawData: testForm,
+      formId: "52dfd909a926eb2e3f123456"
+    });
+
+    var form2 = Form.newInstance({
+      rawMode: true,
+      rawData: testForm,
+      formId: "52dfd909a926eb2e3f123456"
+    });
+
+    assert(form1 === form2);
+
+    done();
+  });
+  it("if form id is not found when trying to download data, it will return error ", function (done) {
+
+    var form = Form.newInstance({
+      formId: "somerandomformid",
+      fromRemote: true
+    });
+
+    form.loadFromRemote(function(err){
+      assert.ok(err, "Expected An Error");
+      done();
+    });
+  });
+
+  it("Loading A Form From A Remote Server", function (done) {
+    var changedForm = {
+      "_id": "52dfd909a926eb2e3f123457",
+      "description": "Small Form Updated",
+      "name": "Small Form Updated",
+      "updatedBy": "testingform@example.com",
+      "lastUpdatedTimestamp": 1390409513726,
+      "pageRules": [],
+      "fieldRules": [],
+      "pages": [{
+        "_id": "52dfd909a926eb2e3f000001",
+        "name": "A Page",
+        "fields": [{
+          "fieldOptions": {
+            "definition": {
+              "defaultValue": ""
+            }
+          },
+          "required": false,
+          "type": "text",
+          "name": "Text",
+          "helpText": "Text",
+          "_id": "52dfd93ee02b762d3f000001",
+          "repeating": false
+        }, {
+          "required": false,
+          "type": "file",
+          "name": "File",
+          "helpText": "File",
+          "_id": "52dfd93ee02b762d3f000002",
+          "repeating": false
+        }]
+      }],
+      "lastUpdated": "2014-01-22T16:51:53.726Z",
+      "dateCreated": "2014-01-22T14:43:21.806Z"
+    };
+
+    this.server.respondWith(function (xhr, id) {
+      xhr.respond(200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify(changedForm)
+      );
+
+      console.log("Response sent");
+    });
+
+    var form = Form.newInstance({
+      formId: "52dfd909a926eb2e3f123457"
+    });
+
+    form.loadFromRemote(function(err){
+      assert(!err, "Expected no error when getting a form. " + err);
+
+      assert.equal(form.getName(), "Small Form Updated");
+
+      done();
+    });
+  });
+});
+},{"../../src/config.js":77,"../../src/form.js":90,"../../src/forms.js":95,"chai":15,"sinon":51,"underscore":76}],114:[function(require,module,exports){
+var chai = require('chai');
+var expect = chai.expect;
+var assert = chai.assert;
+var _ = require('underscore');
+var forms = require('../../src/forms.js');
+var Form = require('../../src/form.js');
+var config = require('../../src/config.js');
+var sinon = require('sinon');
+
+var testResponse = {
+  "forms": [{
+    "_id": "54d4cd220a9b02c67e9c3f0c",
+    "name": "Test All Form Things",
+    "description": "Testing all field types",
+    "lastUpdated": "2015-02-06T14:31:07.566Z",
+    "lastUpdatedTimestamp": 1423233067566
+  }]
+};
+
+var testData = {
+  formId: "54d4cd220a9b02c67e9c3f0c"
+};
+
+
+
+describe("forms model", function() {
+  beforeEach(function(done) {
+    var self = this;
+    this.server = sinon.fakeServer.create();
+    this.server.autoRespond = true;
+    this.server.autoRespondAfter = 500;
+    config.init({}, function(err, returnedConfig) {
+      assert.ok(!err, "Expected No Error");
+      self.server.respondWith('GET', config.getCloudHost() + '/sys/info/ping', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({
+          "status": "ok"
+        })
+      ]);
+      forms.clearLocal(function(err, model) {
+        assert.ok(!err, "Expected No Error");
+        done();
+      });
+    });
+  });
+
+  afterEach(function(done) {
+    this.server.restore();
+    forms.clearAllForms(function(err, model) {
+      assert.ok(!err, "Expected No Error");
+      done();
+    });
+  });
+  it("How to load form list from local storage-> mBaaS / can load forms and refresh the model ", function(done) {
+    var timeStamp1 = forms.getLocalUpdateTimeStamp();
+    var response = {
+      forms: [{
+        "_id": "54d4cd220a9b02c67e9c3f0c",
+        "name": "Test A Form",
+        "description": "Testing all field types",
+        "lastUpdated": "2015-02-06T14:31:07.566Z",
+        "lastUpdatedTimestamp": 1423233067567
+      }]
+    };
+
+    this.server.respondWith('GET', 'host/mbaas/forms/appId1234', [200, {
+        "Content-Type": "application/json"
+      },
+      JSON.stringify(response)
+    ]);
+
+    forms.refresh(true, function(err, model) {
+      assert(!err);
+      var timeStamp2 = model.getLocalUpdateTimeStamp();
+
+      assert.equal(forms.getFormsList().length, 1);
+      var formMeta = forms.getFormsList()[0];
+
+      assert.equal(formMeta._id, "54d4cd220a9b02c67e9c3f0c");
+      assert.equal(formMeta.name, "Test A Form");
+
+      assert(timeStamp1 != timeStamp2);
+      done();
+    });
+  });
+  it("how to forcely load form list from mBaaS and store it locally / can load forms and refresh the model forcely from remote", function(done) {
+    var timeStamp1 = forms.getLocalUpdateTimeStamp();
+
+    var response = {
+      forms: [{
+        "_id": "54d4cd220a9b02c67e9c3f0c",
+        "name": "Test A Form",
+        "description": "Testing all field types",
+        "lastUpdated": "2015-02-06T14:31:07.566Z",
+        "lastUpdatedTimestamp": 1423233067567
+      }]
+    };
+
+    this.server.respondWith('GET', 'host/mbaas/forms/appId1234', [200, {
+        "Content-Type": "application/json"
+      },
+      JSON.stringify(response)
+    ]);
+
+    forms.refresh(true, function(err, forms) {
+      assert(!err);
+      var timeStamp2 = forms.getLocalUpdateTimeStamp();
+      assert(timeStamp1 != timeStamp2);
+
+      assert.equal(forms.getFormsList().length, 1);
+      var formMeta = forms.getFormsList()[0];
+
+      assert.equal(formMeta._id, "54d4cd220a9b02c67e9c3f0c");
+      assert.equal(formMeta.name, "Test A Form");
+
+      done();
+    });
+  });
+
+  it("how to test if a form model object is up to date / should check if a form is up to date", function(done) {
+    var response = {
+      forms: [{
+        "_id": "54d4cd220a9b02c67e9c3f0c",
+        "name": "Test A Form",
+        "description": "Testing all field types",
+        "lastUpdated": "2015-02-06T14:31:07.566Z",
+        "lastUpdatedTimestamp": 1423233067567
+      }]
+    };
+
+    this.server.respondWith('GET', 'host/mbaas/forms/appId1234', [200, {
+        "Content-Type": "application/json"
+      },
+      JSON.stringify(response)
+    ]);
+
+    var testFormOutOfDate = {
+      "_id": "54d4cd220a9b02c67e9c3f0c",
+      "description": "Test Form Out Of Date",
+      "name": "Test Form Out Of Date",
+      "updatedBy": "testingform@example.com",
+      "lastUpdatedTimestamp": 1423233067565,
+      "lastUpdated": "2014-01-22T16:51:53.725Z",
+      "dateCreated": "2014-01-22T14:43:21.806Z",
+      "pageRules": [
+
+      ],
+      "fieldRules": [
+
+      ],
+      "pages": [{
+        "_id": "52dfd909a926eb2e3f000001",
+        "name": "A Page",
+        "fields": [{
+          "fieldOptions": {
+            "definition": {
+              "defaultValue": ""
+            }
+          },
+          "required": false,
+          "type": "text",
+          "name": "Text",
+          "helpText": "Text",
+          "_id": "52dfd93ee02b762d3f000001",
+          "repeating": false
+        }]
+      }]
+    };
+
+    var testFormUpToDate = {
+      "_id": "54d4cd220a9b02c67e9c3f0c",
+      "description": "Test Form Up To Date",
+      "name": "Test Form Up To Date",
+      "updatedBy": "testingform@example.com",
+      "lastUpdatedTimestamp": 1423233067567,
+      "lastUpdated": "2014-01-22T16:51:53.725Z",
+      "dateCreated": "2014-01-22T14:43:21.806Z",
+      "pageRules": [
+
+      ],
+      "fieldRules": [
+
+      ],
+      "pages": [{
+        "_id": "52dfd909a926eb2e3f000001",
+        "name": "A Page",
+        "fields": [{
+          "fieldOptions": {
+            "definition": {
+              "defaultValue": ""
+            }
+          },
+          "required": false,
+          "type": "text",
+          "name": "Text",
+          "helpText": "Text",
+          "_id": "52dfd93ee02b762d3f000001",
+          "repeating": false
+        }]
+      }]
+    };
+
+    this.server.respondWith('GET', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c', [200, {
+        "Content-Type": "application/json"
+      },
+      JSON.stringify(testFormUpToDate)
+    ]);
+
+    var form = Form.newInstance({
+      formId: testData.formId,
+      rawMode: true,
+      rawData: testFormOutOfDate
+    });
+
+    assert.equal(form.getName(), "Test Form Out Of Date");
+    assert(forms.isFormUpdated(form), "Form Should Be Marked as Up To Date");
+
+    //Now Get The Up To Date Form
+    form.refresh(true, function(err, form) {
+      assert(!err);
+      assert.equal(form.getName(), "Test Form Up To Date");
+      assert(!forms.isFormUpdated(form), "Form Should Not Be Marked as Updated");
+      done();
+    });
+  });
+});
+},{"../../src/config.js":77,"../../src/form.js":90,"../../src/forms.js":95,"chai":15,"sinon":51,"underscore":76}],115:[function(require,module,exports){
+var chai = require('chai');
+var expect = chai.expect;
+var assert = chai.assert;
+var _ = require('underscore');
+var Page = require('../../src/page.js');
+
+var testPage = {
+    "_id": "52dfd909a926eb2e3f000001",
+    "name": "A Page",
+    "description": "This Is A Page",
+    "fields": [{
+        "fieldOptions": {
+            "definition": {
+                "defaultValue": "first thing"
+            }
+        },
+        "required": false,
+        "type": "text",
+        "name": "Text",
+        "helpText": "Text",
+        "_id": "52dfd93ee02b762d3f000001",
+        "repeating": false
+    }, {
+        "required": false,
+        "type": "file",
+        "name": "File",
+        "helpText": "File",
+        "_id": "52dfd93ee02b762d3f000002",
+        "repeating": false
+    }]
+};
+
+
+describe("Page Module", function() {
+    it("Creating A New Page Model", function() {
+        var page = new Page(testPage, {});
+
+        assert.equal(page.getName(), "A Page");
+        assert.equal(page.getDescription(), "This Is A Page");
+        assert.equal(page.getPageId(), "52dfd909a926eb2e3f000001");
+        assert.ok(page.getFieldIds().indexOf("52dfd93ee02b762d3f000001") === 0, "Expected pages to be in order.");
+        assert.ok(page.getFieldIds().indexOf("52dfd93ee02b762d3f000002") === 1, "Expected pages to be in order.");
+    });
+});
+},{"../../src/page.js":99,"chai":15,"underscore":76}],116:[function(require,module,exports){
+var chai = require('chai');
+var expect = chai.expect;
+var assert = chai.assert;
+var _ = require('underscore');
+var forms = require('../../src/forms.js');
+var Form = require('../../src/form.js');
+var submission = require('../../src/submission.js');
+var submissions = require('../../src/submissions.js');
+var config = require('../../src/config.js');
+var uploadManager = require('../../src/uploadManager.js');
+var sinon = require('sinon');
+var testData = {
+  formId: "54d4cd220a9b02c67e9c3f0d",
+  fieldId: "52dfd93ee02b762d3f000001"
+};
+
+//TODO Move To File
+var testForm = {
+  "_id": "54d4cd220a9b02c67e9c3f0d",
+  "description": "Small Form",
+  "name": "Small Form",
+  "updatedBy": "testingform@example.com",
+  "lastUpdatedTimestamp": 1390409513725,
+  "pageRules": [
+
+  ],
+  "fieldRules": [
+
+  ],
+  "pages": [{
+    "_id": "52dfd909a926eb2e3f000001",
+    "name": "A Page",
+    "fields": [{
+      "fieldOptions": {
+        "definition": {
+          "defaultValue": ""
+        }
+      },
+      "required": false,
+      "type": "text",
+      "name": "Text",
+      "helpText": "Text",
+      "_id": "52dfd93ee02b762d3f000001",
+      "repeating": false
+    }, {
+      "required": false,
+      "type": "file",
+      "name": "File",
+      "helpText": "File",
+      "_id": "52dfd93ee02b762d3f000002",
+      "repeating": false
+    }]
+  }, {
+    "name": "Page 2",
+    "_id": "52dff729e02b762d3f000004",
+    "fields": [{
+      "required": false,
+      "type": "text",
+      "name": "Page 2 Text",
+      "helpText": "Page 2 Text",
+      "_id": "52dff729e02b762d3f000003",
+      "repeating": false
+    }]
+  }],
+  "lastUpdated": "2014-01-22T16:51:53.725Z",
+  "dateCreated": "2014-01-22T14:43:21.806Z"
+};
+
+describe("Submission model", function() {
+  beforeEach(function(done) {
+    config.init({}, function(err, returnedConfig) {
+      assert.ok(!err, "Expected No Error");
+      done();
+    });
+  });
+
+  afterEach(function(done) {
+    forms.clearAllForms(function(err, model) {
+      assert.ok(!err, "Expected No Error");
+      submissions.clear(function(err) {
+        assert.ok(!err, "Expected No Error");
+        done();
+      });
+    });
+  });
+  it("how to create new submission from a form", function(done) {
+    var form = Form.newInstance({
+      formId: testData.formId,
+      rawMode: true,
+      rawData: testForm
+    });
+
+    var newSub = submission.newInstance(form);
+    var localId = newSub.getLocalId();
+    assert.equal(newSub.getStatus(), "new");
+    assert(newSub);
+    assert(localId);
+    done();
+  });
+
+  it("how to load a submission from local storage without a form", function(done) {
+    //load form
+
+    var form = Form.newInstance({
+      formId: testData.formId,
+      rawMode: true,
+      rawData: testForm
+    });
+
+    var newSub = submission.newInstance(form);
+    var localId = newSub.getLocalId();
+    newSub.saveDraft(function(err) {
+      assert(!err);
+      submission.fromLocal(localId, function(err, submission1) {
+        assert(!err);
+        assert.equal(submission1.get("formId"), newSub.get("formId"));
+        assert.equal(submission1.getStatus(), "draft");
+
+        submission1.clearLocal(function(err) {
+          assert(!err);
+          done();
+        });
+      });
+    });
+  });
+
+  it("will throw error if status is in wrong order", function(done) {
+
+    var form = Form.newInstance({
+      formId: testData.formId,
+      rawMode: true,
+      rawData: testForm
+    });
+
+    var newSub = submission.newInstance(form);
+    newSub.saveDraft(function(err) {
+      assert(!err);
+
+      newSub.submitted(function(err) {
+        assert(err, "Expected An Error When Trying To Change To An Invalid State");
+        newSub.clearLocal(function(err) {
+          assert(!err);
+          done();
+        });
+      });
+    });
+  });
+
+  it("how to store a draft,and find it from submissions list", function(done) {
+    var form = Form.newInstance({
+      formId: testData.formId,
+      rawMode: true,
+      rawData: testForm
+    });
+
+    var newSub = submission.newInstance(form);
+
+    newSub.saveDraft(function(err) {
+      assert(!err);
+      var localId = newSub.getLocalId();
+      var meta = submissions.findMetaByLocalId(localId);
+      assert(meta._ludid == localId);
+      assert(meta.formId == newSub.get("formId"));
+      submissions.getSubmissionByMeta(meta, function(err, sub1) {
+        assert(newSub === sub1);
+        newSub.clearLocal(function(err) {
+          assert(!err);
+          done();
+        });
+      });
+    });
+  });
+  it("submission model loaded from local should have only 1 reference", function(done) {
+
+    var form = Form.newInstance({
+      formId: testData.formId,
+      rawMode: true,
+      rawData: testForm
+    });
+
+    var newSub = submission.newInstance(form);
+    var localId = newSub.getLocalId();
+
+    assert(localId, "Expected A Local ID To Be Set");
+
+    var meta = submissions.findByFormId(testData.formId)[0];
+
+    assert.equal(meta._ludid, localId);
+
+    submission.fromLocal(localId, function(err, submission1) {
+      submission.fromLocal(localId, function(err, submission2) {
+        assert(submission1 === submission2);
+        submission1.clearLocal(function(err) {
+          assert(!err);
+          done();
+        });
+      });
+    });
+  });
+  describe("comment", function() {
+    beforeEach(function(done) {
+      config.init({}, function(err) {
+        assert(!err);
+        done();
+      });
+    });
+    it("how to add a comment to a submission with or without a user", function(done) {
+      var form = Form.newInstance({
+        formId: testData.formId,
+        rawMode: true,
+        rawData: testForm
+      });
+
+      var newSub = submission.newInstance(form);
+      var localId = newSub.getLocalId();
+
+      assert(localId, "Expected A Local ID To Be Set");
+      submission.fromLocal(localId, function(err, submission) {
+        assert(!err);
+        var ts1 = submission.addComment("hello world");
+        var ts2 = submission.addComment("test", "testerName");
+        var comments = submission.getComments();
+        assert(comments.length > 0);
+        var str = JSON.stringify(comments);
+        assert(str.indexOf("hello world") > -1);
+        assert(str.indexOf("testerName") > -1);
+        submission.clearLocal(function(err) {
+          assert(!err);
+          done();
+        });
+      });
+
+    });
+
+    it("how to remove a comment from submission", function(done) {
+
+      var form = Form.newInstance({
+        formId: testData.formId,
+        rawMode: true,
+        rawData: testForm
+      });
+
+      var newSub = submission.newInstance(form);
+      var localId = newSub.getLocalId();
+
+      assert(localId, "Expected A Local ID To Be Set");
+      submission.fromLocal(localId, function(err, submission) {
+        assert(!err, "unexpected error: " + err);
+        var ts1 = submission.addComment("hello world2");
+        submission.removeComment(ts1);
+        var comments = submission.getComments();
+
+        var str = JSON.stringify(comments);
+        assert(str.indexOf(ts1.toString()) == -1, "comment still in submission: " + str);
+        submission.clearLocal(function(err) {
+          assert(!err);
+          done();
+        });
+      });
+    });
+
+  });
+
+  describe("User input", function() {
+    var newSub = null;
+    beforeEach(function(done) {
+      config.init({}, function(err) {
+        assert(!err);
+
+        var form = Form.newInstance({
+          formId: testData.formId,
+          rawMode: true,
+          rawData: testForm
+        });
+
+        newSub = submission.newInstance(form);
+        var localId = newSub.getLocalId();
+        assert(newSub.getStatus() == "new");
+        assert(newSub);
+        assert(localId);
+        done();
+      });
+
+    });
+    it("how to add user input value to submission model", function() {
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 40
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[0] == 40);
+      });
+    });
+    it("how to reset a submission to clear all user input", function() {
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 40
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.reset();
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(!err);
+        assert(res.length === 0);
+      });
+    });
+
+    it("how to handle a null user input", function() {
+      newSub.reset();
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: null
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(!err);
+        assert(res.length === 0);
+      });
+    });
+
+    it("how to use transaction to input a series of user values to submission model", function() {
+      newSub.reset();
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 40
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.startInputTransaction();
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 50
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 60
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 35
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.endInputTransaction(true);
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[0] == 40);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[1] == 50);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[2] == 60);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[3] == 35);
+      });
+    });
+    it("how to use transaction for user input and roll back", function() {
+      newSub.reset();
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 40
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.startInputTransaction();
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 50
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 60
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.addInputValue({
+        fieldId: testData.fieldId,
+        value: 35
+      }, function(err) {
+        assert(!err);
+      });
+      newSub.endInputTransaction(false);
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[0] === 40);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[1] === undefined);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[2] === undefined);
+      });
+      newSub.getInputValueByFieldId(testData.fieldId, function(err, res) {
+        assert(res[3] === undefined);
+      });
+    });
+  });
+
+  describe("upload submission with upload manager", function() {
+    var form = null;
+    beforeEach(function(done) {
+      this.server = sinon.fakeServer.create();
+      this.server.autoRespond = true;
+      this.server.autoRespondAfter = 50;
+
+      form = Form.newInstance({
+        formId: testData.formId,
+        rawMode: true,
+        rawData: testForm
+      });
+
+      //Server Ping
+      this.server.respondWith('GET', config.getCloudHost() + '/sys/info/ping', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({
+          "status": "ok"
+        })
+      ]);
+
+      //Submission Data
+      this.server.respondWith('POST', config.getCloudHost() + config.get('mbaasBaseUrl') + '/forms/appId1234/' + testData.formId + '/submitFormData', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({
+          "submissionId": "aSubmissionID"
+        })
+      ]);
+
+      //CompleteSubmission
+      this.server.respondWith('POST', config.getCloudHost() + config.get('mbaasBaseUrl') + '/forms/appId1234/aSubmissionID/completeSubmission', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({
+          "status": "complete"
+        })
+      ]);
+      done();
+    });
+    afterEach(function(done) {
+      this.server.restore();
+      forms.clearAllForms(function(err, model) {
+        assert.ok(!err, "Expected No Error");
+        submissions.clear(function(err) {
+          assert.ok(!err, "Expected No Error");
+          done();
+        });
+      });
+    });
+    it("how to monitor if a submission is submitted", function(done) {
+      var newSub1 = form.newSubmission();
+
+      newSub1.on("submit", function() {
+        newSub1.upload(function(err, uploadTask) {
+          assert(!err);
+          assert(uploadTask);
+        });
+      });
+      newSub1.on("progress", function(progress) {
+        console.log("PROGRESS: ", progress);
+      });
+      newSub1.on("error", function(err, progress) {
+        assert.ok(!err);
+        console.log("ERROR: ", err, progress);
+        done();
+      });
+      newSub1.on("submitted", function(submissionId) {
+        assert.ok(submissionId);
+        assert.ok(newSub1.getLocalId());
+        assert.equal(newSub1.getRemoteSubmissionId(), "aSubmissionID");
+        newSub1.clearLocal(function(err) {
+          assert(!err);
+          done();
+        });
+      });
+      newSub1.submit(function(err) {
+        assert(!err);
+      });
+    });
+  });
+
+  describe("download a submission using a submission Id", function() {
+    beforeEach(function(done) {
+      this.server = sinon.fakeServer.create();
+      this.server.autoRespond = true;
+      this.server.autoRespondAfter = 50;
+
+      this.server.respondWith('GET', config.getCloudHost() + '/sys/info/ping', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify({
+          "status": "ok"
+        })
+      ]);
+
+      done();
+    });
+
+    afterEach(function(done) {
+      this.server.restore();
+
+      forms.clearAllForms(function(err, model) {
+        assert.ok(!err, "Expected No Error");
+        submissions.clear(function(err) {
+          assert.ok(!err, "Expected No Error");
+          done();
+        });
+      });
+    });
+
+    it("how to queue a submission for download", function(done) {
+
+      var testSubmission = {
+        "_id": "somesubmissionid",
+        "appClientId": "iKfLUbYOx_PEkTRzrwE4z_5o",
+        "appCloudName": "testing-ikfl12346ylkvrb93dte1zsc-dev",
+        "appEnvironment": "dev",
+        "appId": "iKfLUVriLnH49pTCPkhgN-9-",
+        "deviceFormTimestamp": "2014-04-07T15:22:42.262Z",
+        "deviceIPAddress": "217.114.169.246,10.25.2.39,10.25.2.12",
+        "deviceId": "666c991129b82259",
+        "formId": "5335a02fbfe537474a91325b",
+        "masterFormTimestamp": "2014-04-07T15:22:42.262Z",
+        "timezoneOffset": -60,
+        "userId": null,
+        "formFields": [{
+          "fieldId": {
+            "fieldOptions": {
+              "validation": {
+                "validateImmediately": true
+              }
+            },
+            "required": true,
+            "type": "text",
+            "name": "text field",
+            "_id": "5335b83b0b4ee17a4f4c096d",
+            "repeating": false
+          },
+          "fieldValues": ["text1", null]
+        }],
+        "comments": [],
+        "status": "complete",
+        "submissionStartedTimestamp": "2014-04-09T17:11:22.832Z",
+        "updatedTimestamp": "2014-04-09T17:11:24.689Z",
+        "submissionCompletedTimestamp": "2014-04-09T17:11:24.688Z"
+      };
+
+      this.server.respondWith('GET', config.getCloudHost() + config.get('mbaasBaseUrl') + '/forms/appId1234/submission/somesubmissionid', [200, {
+          "Content-Type": "application/json"
+        },
+        JSON.stringify(testSubmission)
+      ]);
+
+      var submissionToDownload = null;
+      submissionToDownload = submission.newInstance(null, {
+        "submissionId": "somesubmissionid"
+      });
+
+      submissionToDownload.on("progress", function(progress) {
+        console.log("DOWNLOAD PROGRESS: ", progress);
+        assert.ok(progress);
+      });
+
+      submissionToDownload.on("downloaded", function() {
+        console.log("downloaded event called");
+        done();
+      });
+
+      submissionToDownload.on("error", function(err, progress) {
+
+        console.error("error event called");
+        assert.ok(!err);
+        assert.ok(progress);
+        done();
+      });
+
+      submissionToDownload.download(function(err, downloadTask) {
+
+        console.log(err, downloadTask);
+        assert.ok(!err);
+        assert.ok(downloadTask);
+
+        submissionToDownload.getDownloadTask(function(err, downloadTask) {
+
+          console.log(err, downloadTask);
+          assert.ok(!err);
+          assert.ok(downloadTask);
+        });
+      });
+    });
+  });
+});
+},{"../../src/config.js":77,"../../src/form.js":90,"../../src/forms.js":95,"../../src/submission.js":103,"../../src/submissions.js":104,"../../src/uploadManager.js":105,"chai":15,"sinon":51,"underscore":76}],117:[function(require,module,exports){
 var chai = require('chai');
 var expect = chai.expect;
 var assert = chai.assert;
@@ -34533,429 +35764,429 @@ describe("UploadTask model", function () {
     done();
   });
 
-  //it("how to upload submission form", function(done) {
-  //  var sub = this.form.newSubmission();
-  //  var ut = uploadTask.newInstance(sub);
-  //
-  //  this.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
-  //    "Content-Type": "application/json"
-  //  },
-  //    JSON.stringify({
-  //      "status": "ok",
-  //      "submissionId": "remsubid1234"
-  //    })
-  //  ]);
-  //
-  //  ut.uploadForm(function(err) {
-  //    assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //    var progress = ut.getProgress();
-  //    assert(progress.formJSON);
-  //
-  //    assert.equal(sub.getRemoteSubmissionId(), "remsubid1234");
-  //    assert.equal(sub.get('submissionId'), "remsubid1234");
-  //    done();
-  //  });
-  //});
-  //
-  // it("how to deal with out of date form submission", function(done) {
-  //   var self = this;
-  //   var changedMockForm = _.clone(mockForm);
-  //   changedMockForm.name = "Changed Mock Form";
-  //   this.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
-  //     "Content-Type": "application/json"
-  //   },
-  //     JSON.stringify({
-  //       "status": "ok",
-  //       "submissionId": "remsubid1234",
-  //       "updatedFormDefinition": changedMockForm
-  //     })
-  //   ]);
-  //
-  //   var sub = this.form.newSubmission();
-  //   sub.changeStatus("pending", function(err) {
-  //     assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //     sub.changeStatus("inprogress", function(err) {
-  //       assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //       var ut = uploadTask.newInstance(sub);
-  //       ut.uploadForm(function(err) {
-  //         assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //         var progress = ut.getProgress();
-  //         assert.equal(progress.formJSON, true);
-  //         assert.equal(self.form.getName(), "Changed Mock Form");
-  //         assert(!ut.isCompleted());
-  //         done();
-  //       });
-  //     });
-  //   });
-  // });
+  it("how to upload submission form", function(done) {
+    var sub = this.form.newSubmission();
+    var ut = uploadTask.newInstance(sub);
 
-  //it("how to upload a file ", function(done) {
-  //  var self = this;
-  //  self.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
-  //    "Content-Type": "application/json"
-  //  },
-  //    JSON.stringify({
-  //      "status": "ok",
-  //      "submissionId": "remsubid1234"
-  //    })
-  //  ]);
-  //
-  //
-  //
-  //  var sub = this.form.newSubmission();
-  //  sub.changeStatus("pending", function(err) {
-  //    assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //    sub.changeStatus("inprogress", function(err) {
-  //      assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //      fileSystem.save("testfile.txt", "content of the file", function(err) {
-  //        assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //        fileSystem.readAsFile("testfile.txt", function(err, file) {
-  //          sub.addInputValue({
-  //            fieldId: testData.fieldIdFile,
-  //            value: file
-  //          }, function(err, result) {
-  //            assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //            assert(_.isString(result.hashName), "Expected The Hash Name To Be A String");
-  //
-  //            //Setting Up The File Response
-  //            self.server.respondWith('POST', 'host/mbaas/forms/appId1234/remsubid1234/' + testData.fieldIdFile + "/" + result.hashName + '/submitFormFile', [200, {
-  //              "Content-Type": "multipart/form-data"
-  //            }, JSON.stringify({
-  //
-  //            })
-  //            ]);
-  //
-  //            var ut = uploadTask.newInstance(sub);
-  //            ut.uploadForm(function(err) {
-  //              assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //              ut.uploadFile(function(err) {
-  //                assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //                assert(ut.get("currentTask") === 1);
-  //                done();
-  //              });
-  //            });
-  //          });
-  //        });
-  //      });
-  //    });
-  //  });
-  //});
+    this.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
+      "Content-Type": "application/json"
+    },
+      JSON.stringify({
+        "status": "ok",
+        "submissionId": "remsubid1234"
+      })
+    ]);
 
-  //it("how to upload by tick", function(done) {
-  //  var self = this;
-  //  self.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
-  //    "Content-Type": "application/json"
-  //  },
-  //    JSON.stringify({
-  //      "status": "ok",
-  //      "submissionId": "remsubid12345"
-  //    })
-  //  ]);
-  //
-  //
-  //
-  //  var sub = this.form.newSubmission();
-  //  sub.changeStatus("pending", function(err) {
-  //    assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //    sub.changeStatus("inprogress", function(err) {
-  //      assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //      fileSystem.save("testfile.txt", "content of the file", function(err) {
-  //        assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //        fileSystem.readAsFile("testfile.txt", function(err, file) {
-  //          sub.addInputValue({
-  //            fieldId: testData.fieldIdFile,
-  //            value: file
-  //          }, function(err) {
-  //            assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //            var ut = uploadTask.newInstance(sub);
-  //
-  //            ut.uploadTick(function(err) {
-  //              assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //              assert(ut.isFormCompleted());
-  //              assert(!ut.isFileCompleted());
-  //              assert(!ut.isMBaaSCompleted());
-  //              assert(!ut.isError());
-  //              done();
-  //            });
-  //          });
-  //        });
-  //      });
-  //    });
-  //  });
-  //});
+    ut.uploadForm(function(err) {
+      assert(!err, "Expected No Error: " + JSON.stringify(err));
+      var progress = ut.getProgress();
+      assert(progress.formJSON);
 
-  //it("how to check for failed file upload", function (done) {
-  //  config.set("max_retries", 2);
-  //  var self = this;
-  //  var sub = self.form.newSubmission();
-  //
-  //  sub.on('error', function(err){
-  //    done();
-  //  });
-  //
-  //  self.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
-  //    "Content-Type": "application/json"
-  //  },
-  //    JSON.stringify({
-  //      "status": "ok",
-  //      "submissionId": "subfailedfileupload"
-  //    })
-  //  ]);
-  //
-  //  sub.changeStatus("pending", function (err) {
-  //    assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //    sub.changeStatus("inprogress", function (err) {
-  //      assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //      fileSystem.save("testfile.txt", "content of the file", function (err) {
-  //        assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //        fileSystem.readAsFile("testfile.txt", function (err, file) {
-  //          sub.addInputValue({
-  //            fieldId: testData.fieldIdFile,
-  //            value: file
-  //          }, function (err, result) {
-  //            assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //            //Setting Up The File Response
-  //            self.server.respondWith('POST', 'host/mbaas/forms/appId1234/subfailedfileupload/' + testData.fieldIdFile + "/" + result.hashName + '/submitFormFile', [500, {
-  //              "Content-Type": "multipart/form-data"
-  //            }, JSON.stringify({error: "Error Uploading File"})
-  //            ]);
-  //
-  //            //Setting Up The File Response
-  //            self.server.respondWith('GET', 'host/mbaas/forms/appId1234/subfailedfileupload/status', [200, {
-  //              "Content-Type": "application/json"
-  //            }, JSON.stringify({
-  //              status: "pending",
-  //              pendingFiles: [result.hashName]
-  //            })
-  //            ]);
-  //
-  //            var ut = uploadTask.newInstance(sub);
-  //
-  //            ut.uploadTick(function (err) { //form upload
-  //              assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //              ut.uploadTick(function (err) { //First upload fails -- upload task should be set to try again.
-  //                assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //                assert(ut.getCurrentTask() === 0);
-  //                assert(sub.getStatus() === "queued");
-  //                assert.ok(sub.getRemoteSubmissionId());
-  //                assert(ut.get("retryNeeded") === true);
-  //                assert(ut.get("retryAttempts") === 1);
-  //
-  //                ut.uploadTick(function (err) { // Next upload tick should reset the uploadTask
-  //                  assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //                  assert(sub.getStatus() === "queued");
-  //                  assert(ut.get("retryNeeded") === false);
-  //                  assert(ut.get("retryAttempts") === 1);
-  //
-  //                  ut.uploadTick(function (err) { //Next upload fails again
-  //                    assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //                    assert(ut.getCurrentTask() === 0);
-  //                    assert(sub.getStatus() === "queued");
-  //                    assert(ut.get("retryNeeded") === true);
-  //                    assert(ut.get("retryAttempts") === 2);
-  //
-  //                    ut.uploadTick(function (err) { // Next upload tick should reset the uploadTask again
-  //                      assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //                      assert(ut.getCurrentTask() === 0);
-  //                      assert(sub.getStatus() === "queued");
-  //                      assert(ut.get("retryNeeded") === false);
-  //                      assert(ut.get("retryAttempts") === 2);
-  //
-  //                      ut.uploadTick(function (err) { // Upload fails again. Exceeded max number of retry attempts. Upload task is now in error state
-  //                        assert(err);
-  //                        assert(sub.getStatus() === "error");
-  //                        assert(ut.isError() === true);
-  //                      });
-  //                    });
-  //                  });
-  //                });
-  //              });
-  //            });
-  //          });
-  //        });
-  //      });
-  //    });
-  //  });
-  //});
+      assert.equal(sub.getRemoteSubmissionId(), "remsubid1234");
+      assert.equal(sub.get('submissionId'), "remsubid1234");
+      done();
+    });
+  });
+
+   it("how to deal with out of date form submission", function(done) {
+     var self = this;
+     var changedMockForm = _.clone(mockForm);
+     changedMockForm.name = "Changed Mock Form";
+     this.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
+       "Content-Type": "application/json"
+     },
+       JSON.stringify({
+         "status": "ok",
+         "submissionId": "remsubid1234",
+         "updatedFormDefinition": changedMockForm
+       })
+     ]);
+
+     var sub = this.form.newSubmission();
+     sub.changeStatus("pending", function(err) {
+       assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+       sub.changeStatus("inprogress", function(err) {
+         assert(!err, "Expected No Error: " + JSON.stringify(err));
+         var ut = uploadTask.newInstance(sub);
+         ut.uploadForm(function(err) {
+           assert(!err, "Expected No Error: " + JSON.stringify(err));
+           var progress = ut.getProgress();
+           assert.equal(progress.formJSON, true);
+           assert.equal(self.form.getName(), "Changed Mock Form");
+           assert(!ut.isCompleted());
+           done();
+         });
+       });
+     });
+   });
+
+  it("how to upload a file ", function(done) {
+    var self = this;
+    self.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
+      "Content-Type": "application/json"
+    },
+      JSON.stringify({
+        "status": "ok",
+        "submissionId": "remsubid1234"
+      })
+    ]);
 
 
-  //it("how to check for file status", function (done) {
-  //  var self = this;
-  //
-  //  self.config.set("max_retries", 2);
-  //  var sub = self.form.newSubmission();
-  //
-  //  sub.on('error', function (err) {
-  //    assert(!err, "Expected No Error");
-  //  });
-  //
-  //  sub.on('submitted', function (submissionId) {
-  //    assert.equal(submissionId, "subcompleteupload");
-  //    done();
-  //  });
-  //
-  //  self.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
-  //    "Content-Type": "application/json"
-  //  },
-  //    JSON.stringify({
-  //      "status": "ok",
-  //      "submissionId": "subcompleteupload"
-  //    })
-  //  ]);
-  //
-  //
-  //
-  //  sub.changeStatus("pending", function (err) {
-  //    assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //    sub.changeStatus("inprogress", function (err) {
-  //      assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //      fileSystem.save("testfile.txt", "content of the file", function (err) {
-  //        assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //        fileSystem.readAsFile("testfile.txt", function (err, file) {
-  //          sub.addInputValue({
-  //            fieldId: testData.fieldIdFile,
-  //            value: file
-  //          }, function (err, result) {
-  //            assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //
-  //            self.server.respondWith('POST', 'host/mbaas/forms/appId1234/subcompleteupload/completeSubmission', [200, {
-  //              "Content-Type": "multipart/form-data"
-  //            }, JSON.stringify({
-  //              status: "complete"
-  //            })
-  //            ]);
-  //
-  //            self.server.respondWith('GET', 'host/mbaas/forms/appId1234/subcompleteupload/status', [200, {
-  //                            "Content-Type": "application/json"
-  //            }, JSON.stringify({
-  //              status: "pending",
-  //              pendingFiles: [result.hashName]
-  //            })
-  //            ]);
-  //
-  //            var ut = uploadTask.newInstance(sub);
-  //
-  //            ut.uploadTick(function (err) { //upload form successfully
-  //              assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //
-  //              //Setting Server Responses
-  //              self.server.respondWith('GET', 'host/mbaas/forms/appId1234/subfailedfileupload/status', [200, {
-  //                "Content-Type": "application/json"
-  //              }, JSON.stringify({
-  //                status: "pending",
-  //                pendingFiles: [result.hashName]
-  //              })
-  //              ]);
-  //
-  //              //Setting Up The File Response
-  //              self.server.respondWith('POST', 'host/mbaas/forms/appId1234/subcompleteupload/' + testData.fieldIdFile + "/" + result.hashName + '/submitFormFile', [500, {
-  //                "Content-Type": "multipart/form-data"
-  //              }, JSON.stringify({error: "Failed To Upload File"})
-  //              ]);
-  //
-  //              ut.uploadTick(function (err) { // upload file failed 1st time
-  //                assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //                assert(ut.getCurrentTask() === 0);
-  //                assert(ut.get("retryNeeded") === true);
-  //                assert(ut.get("retryAttempts") === 1);
-  //                assert(sub.getStatus() === "queued");
-  //
-  //                //Setting Up The File Response
-  //                self.server.respondWith('POST', 'host/mbaas/forms/appId1234/subcompleteupload/' + testData.fieldIdFile + "/" + result.hashName + '/submitFormFile', [200, {
-  //                  "Content-Type": "multipart/form-data"
-  //                }, JSON.stringify({})
-  //                ]);
-  //
-  //                ut.uploadTick(function (err) { //rebuilds the upload task
-  //                  assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //                  assert(ut.get("retryNeeded") === false);
-  //                  assert(ut.get("retryAttempts") === 1);
-  //                  assert(sub.getStatus() === "queued");
-  //
-  //
-  //
-  //                  ut.uploadTick(function (err) { //Next file uploaded sucessfully to mbaas.
-  //                    assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //                    assert(sub.getStatus() === "queued");
-  //                    ut.uploadTick(function (err) { //call completeSubmission
-  //                      assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //                      assert(sub.getStatus() === "queued");
-  //
-  //                      ut.uploadTick(function (err) { //Submission is now complete
-  //                        assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //                        assert(sub.getStatus() === "submitted");
-  //                        assert(ut.isCompleted() === true);
-  //                      });
-  //                    });
-  //                  });
-  //                });
-  //              });
-  //            });
-  //          });
-  //        });
-  //      });
-  //    });
-  //  });
-  //});
 
-  //it("how to get total upload size", function() {
-  //  var sub = this.form.newSubmission();
-  //  sub.changeStatus("pending", function(err) {
-  //    assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //    sub.changeStatus("inprogress", function(err) {
-  //      assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //      var ut = uploadTask.newInstance(sub);
-  //      assert(ut.getTotalSize());
-  //    });
-  //  });
-  //});
+    var sub = this.form.newSubmission();
+    sub.changeStatus("pending", function(err) {
+      assert(!err, "Expected No Error: " + JSON.stringify(err));
 
-  //it("how to get uploaded size", function (done) {
-  //  var self = this;
-  //  var sub = this.form.newSubmission();
-  //
-  //  self.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
-  //    "Content-Type": "application/json"
-  //  },
-  //    JSON.stringify({
-  //      "status": "ok",
-  //      "submissionId": "subuploadsize"
-  //    })
-  //  ]);
-  //
-  //  sub.changeStatus("pending", function (err) {
-  //    assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //    sub.changeStatus("inprogress", function (err) {
-  //      assert(!err, "Expected No Error: " + JSON.stringify(err));
-  //
-  //      var ut = uploadTask.newInstance(sub);
-  //      assert(ut.getTotalSize());
-  //      assert.equal(ut.getUploadedSize(), 0);
-  //      ut.uploadTick(function (err) {
-  //        assert.ok(!err, "Expected No Error " + JSON.stringify(err));
-  //        assert.equal(ut.getTotalSize(), ut.getUploadedSize());
-  //        done();
-  //      });
-  //    });
-  //  });
-  //});
+      sub.changeStatus("inprogress", function(err) {
+        assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+        fileSystem.save("testfile.txt", "content of the file", function(err) {
+          assert(!err, "Expected No Error: " + JSON.stringify(err));
+          fileSystem.readAsFile("testfile.txt", function(err, file) {
+            sub.addInputValue({
+              fieldId: testData.fieldIdFile,
+              value: file
+            }, function(err, result) {
+              assert(!err, "Expected No Error: " + JSON.stringify(err));
+              assert(_.isString(result.hashName), "Expected The Hash Name To Be A String");
+
+              //Setting Up The File Response
+              self.server.respondWith('POST', 'host/mbaas/forms/appId1234/remsubid1234/' + testData.fieldIdFile + "/" + result.hashName + '/submitFormFile', [200, {
+                "Content-Type": "multipart/form-data"
+              }, JSON.stringify({
+
+              })
+              ]);
+
+              var ut = uploadTask.newInstance(sub);
+              ut.uploadForm(function(err) {
+                assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+                ut.uploadFile(function(err) {
+                  assert(!err, "Expected No Error: " + JSON.stringify(err));
+                  assert(ut.get("currentTask") === 1);
+                  done();
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  it("how to upload by tick", function(done) {
+    var self = this;
+    self.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
+      "Content-Type": "application/json"
+    },
+      JSON.stringify({
+        "status": "ok",
+        "submissionId": "remsubid12345"
+      })
+    ]);
+
+
+
+    var sub = this.form.newSubmission();
+    sub.changeStatus("pending", function(err) {
+      assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+      sub.changeStatus("inprogress", function(err) {
+        assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+        fileSystem.save("testfile.txt", "content of the file", function(err) {
+          assert(!err, "Expected No Error: " + JSON.stringify(err));
+          fileSystem.readAsFile("testfile.txt", function(err, file) {
+            sub.addInputValue({
+              fieldId: testData.fieldIdFile,
+              value: file
+            }, function(err) {
+              assert(!err, "Expected No Error: " + JSON.stringify(err));
+              var ut = uploadTask.newInstance(sub);
+
+              ut.uploadTick(function(err) {
+                assert(!err, "Expected No Error: " + JSON.stringify(err));
+                assert(ut.isFormCompleted());
+                assert(!ut.isFileCompleted());
+                assert(!ut.isMBaaSCompleted());
+                assert(!ut.isError());
+                done();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  it("how to check for failed file upload", function (done) {
+    config.set("max_retries", 2);
+    var self = this;
+    var sub = self.form.newSubmission();
+
+    sub.on('error', function(err){
+      done();
+    });
+
+    self.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
+      "Content-Type": "application/json"
+    },
+      JSON.stringify({
+        "status": "ok",
+        "submissionId": "subfailedfileupload"
+      })
+    ]);
+
+    sub.changeStatus("pending", function (err) {
+      assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+      sub.changeStatus("inprogress", function (err) {
+        assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+        fileSystem.save("testfile.txt", "content of the file", function (err) {
+          assert(!err, "Expected No Error: " + JSON.stringify(err));
+          fileSystem.readAsFile("testfile.txt", function (err, file) {
+            sub.addInputValue({
+              fieldId: testData.fieldIdFile,
+              value: file
+            }, function (err, result) {
+              assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+              //Setting Up The File Response
+              self.server.respondWith('POST', 'host/mbaas/forms/appId1234/subfailedfileupload/' + testData.fieldIdFile + "/" + result.hashName + '/submitFormFile', [500, {
+                "Content-Type": "multipart/form-data"
+              }, JSON.stringify({error: "Error Uploading File"})
+              ]);
+
+              //Setting Up The File Response
+              self.server.respondWith('GET', 'host/mbaas/forms/appId1234/subfailedfileupload/status', [200, {
+                "Content-Type": "application/json"
+              }, JSON.stringify({
+                status: "pending",
+                pendingFiles: [result.hashName]
+              })
+              ]);
+
+              var ut = uploadTask.newInstance(sub);
+
+              ut.uploadTick(function (err) { //form upload
+                assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+                ut.uploadTick(function (err) { //First upload fails -- upload task should be set to try again.
+                  assert(!err, "Expected No Error: " + JSON.stringify(err));
+                  assert(ut.getCurrentTask() === 0);
+                  assert(sub.getStatus() === "queued");
+                  assert.ok(sub.getRemoteSubmissionId());
+                  assert(ut.get("retryNeeded") === true);
+                  assert(ut.get("retryAttempts") === 1);
+
+                  ut.uploadTick(function (err) { // Next upload tick should reset the uploadTask
+                    assert(!err, "Expected No Error: " + JSON.stringify(err));
+                    assert(sub.getStatus() === "queued");
+                    assert(ut.get("retryNeeded") === false);
+                    assert(ut.get("retryAttempts") === 1);
+
+                    ut.uploadTick(function (err) { //Next upload fails again
+                      assert(!err, "Expected No Error: " + JSON.stringify(err));
+                      assert(ut.getCurrentTask() === 0);
+                      assert(sub.getStatus() === "queued");
+                      assert(ut.get("retryNeeded") === true);
+                      assert(ut.get("retryAttempts") === 2);
+
+                      ut.uploadTick(function (err) { // Next upload tick should reset the uploadTask again
+                        assert(!err, "Expected No Error: " + JSON.stringify(err));
+                        assert(ut.getCurrentTask() === 0);
+                        assert(sub.getStatus() === "queued");
+                        assert(ut.get("retryNeeded") === false);
+                        assert(ut.get("retryAttempts") === 2);
+
+                        ut.uploadTick(function (err) { // Upload fails again. Exceeded max number of retry attempts. Upload task is now in error state
+                          assert(err);
+                          assert(sub.getStatus() === "error");
+                          assert(ut.isError() === true);
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+
+  it("how to check for file status", function (done) {
+    var self = this;
+
+    self.config.set("max_retries", 2);
+    var sub = self.form.newSubmission();
+
+    sub.on('error', function (err) {
+      assert(!err, "Expected No Error");
+    });
+
+    sub.on('submitted', function (submissionId) {
+      assert.equal(submissionId, "subcompleteupload");
+      done();
+    });
+
+    self.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
+      "Content-Type": "application/json"
+    },
+      JSON.stringify({
+        "status": "ok",
+        "submissionId": "subcompleteupload"
+      })
+    ]);
+
+
+
+    sub.changeStatus("pending", function (err) {
+      assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+      sub.changeStatus("inprogress", function (err) {
+        assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+        fileSystem.save("testfile.txt", "content of the file", function (err) {
+          assert(!err, "Expected No Error: " + JSON.stringify(err));
+          fileSystem.readAsFile("testfile.txt", function (err, file) {
+            sub.addInputValue({
+              fieldId: testData.fieldIdFile,
+              value: file
+            }, function (err, result) {
+              assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+
+              self.server.respondWith('POST', 'host/mbaas/forms/appId1234/subcompleteupload/completeSubmission', [200, {
+                "Content-Type": "multipart/form-data"
+              }, JSON.stringify({
+                status: "complete"
+              })
+              ]);
+
+              self.server.respondWith('GET', 'host/mbaas/forms/appId1234/subcompleteupload/status', [200, {
+                              "Content-Type": "application/json"
+              }, JSON.stringify({
+                status: "pending",
+                pendingFiles: [result.hashName]
+              })
+              ]);
+
+              var ut = uploadTask.newInstance(sub);
+
+              ut.uploadTick(function (err) { //upload form successfully
+                assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+
+                //Setting Server Responses
+                self.server.respondWith('GET', 'host/mbaas/forms/appId1234/subfailedfileupload/status', [200, {
+                  "Content-Type": "application/json"
+                }, JSON.stringify({
+                  status: "pending",
+                  pendingFiles: [result.hashName]
+                })
+                ]);
+
+                //Setting Up The File Response
+                self.server.respondWith('POST', 'host/mbaas/forms/appId1234/subcompleteupload/' + testData.fieldIdFile + "/" + result.hashName + '/submitFormFile', [500, {
+                  "Content-Type": "multipart/form-data"
+                }, JSON.stringify({error: "Failed To Upload File"})
+                ]);
+
+                ut.uploadTick(function (err) { // upload file failed 1st time
+                  assert(!err, "Expected No Error: " + JSON.stringify(err));
+                  assert(ut.getCurrentTask() === 0);
+                  assert(ut.get("retryNeeded") === true);
+                  assert(ut.get("retryAttempts") === 1);
+                  assert(sub.getStatus() === "queued");
+
+                  //Setting Up The File Response
+                  self.server.respondWith('POST', 'host/mbaas/forms/appId1234/subcompleteupload/' + testData.fieldIdFile + "/" + result.hashName + '/submitFormFile', [200, {
+                    "Content-Type": "multipart/form-data"
+                  }, JSON.stringify({})
+                  ]);
+
+                  ut.uploadTick(function (err) { //rebuilds the upload task
+                    assert(!err, "Expected No Error: " + JSON.stringify(err));
+                    assert(ut.get("retryNeeded") === false);
+                    assert(ut.get("retryAttempts") === 1);
+                    assert(sub.getStatus() === "queued");
+
+
+
+                    ut.uploadTick(function (err) { //Next file uploaded sucessfully to mbaas.
+                      assert(!err, "Expected No Error: " + JSON.stringify(err));
+                      assert(sub.getStatus() === "queued");
+                      ut.uploadTick(function (err) { //call completeSubmission
+                        assert(!err, "Expected No Error: " + JSON.stringify(err));
+                        assert(sub.getStatus() === "queued");
+
+                        ut.uploadTick(function (err) { //Submission is now complete
+                          assert(!err, "Expected No Error: " + JSON.stringify(err));
+                          assert(sub.getStatus() === "submitted");
+                          assert(ut.isCompleted() === true);
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  it("how to get total upload size", function() {
+    var sub = this.form.newSubmission();
+    sub.changeStatus("pending", function(err) {
+      assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+      sub.changeStatus("inprogress", function(err) {
+        assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+        var ut = uploadTask.newInstance(sub);
+        assert(ut.getTotalSize());
+      });
+    });
+  });
+
+  it("how to get uploaded size", function (done) {
+    var self = this;
+    var sub = this.form.newSubmission();
+
+    self.server.respondWith('POST', 'host/mbaas/forms/appId1234/54d4cd220a9b02c67e9c3f0c/submitFormData', [200, {
+      "Content-Type": "application/json"
+    },
+      JSON.stringify({
+        "status": "ok",
+        "submissionId": "subuploadsize"
+      })
+    ]);
+
+    sub.changeStatus("pending", function (err) {
+      assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+      sub.changeStatus("inprogress", function (err) {
+        assert(!err, "Expected No Error: " + JSON.stringify(err));
+
+        var ut = uploadTask.newInstance(sub);
+        assert(ut.getTotalSize());
+        assert.equal(ut.getUploadedSize(), 0);
+        ut.uploadTick(function (err) {
+          assert.ok(!err, "Expected No Error " + JSON.stringify(err));
+          assert.equal(ut.getTotalSize(), ut.getUploadedSize());
+          done();
+        });
+      });
+    });
+  });
 
   it("how to upload photo/signature", function (done) {
     var self = this;
@@ -35003,41 +36234,150 @@ describe("UploadTask model", function () {
     });
   });
 
-  // it("how to download a submission definition", function(done){
-  //   var sub = submission.newInstance(null ,{submissionId: "submissionData"});
+  it("how to download a submission definition", function (done) {
+    var sub = submission.newInstance(null, {submissionId: "somesubmissionid"});
 
-  //   sub.changeStatus("pending", function(err){
-  //     assert.ok(!err);
+    var self = this;
 
-  //     sub.changeStatus("inprogress", function(err){
-  //       assert.ok(!err);
+    self.server.respondWith('GET', 'host/mbaas/forms/appId1234/submission/somesubmissionid', [200, {
+      "Content-Type": "application/json"
+    },
+      JSON.stringify({
+        _id: "somesubmissionid",
+        formId: "someformid",
+        formFields: [{
+          fieldId: {
+            _id: "sometextfieldid",
+            type: "text"
+          },
+          fieldValues: ["sometext"]
+        }, {
+          fieldId: {
+            _id: "somephotofieldid",
+            type: "photo"
+          },
+          fieldValues: [{
+            groupId: "filegroup1234",
+            fileName: "filename.jpeg",
+            hashName: "filePlaceholderfile1234",
+            fileType: "image/jpeg",
+            fileSize: 1234
+          }]
+        }],
+        formSubmittedAgainst: {
+          _id: "someformid",
+          pages: [{
+            _id: "somepageid",
+            fields: [{
+              _id: "sometextfieldid",
+              type: "text"
+            }, {
+              _id: "somephotofieldid",
+              type: "photo"
+            }]
+          }]
+        }
+      })
+    ]);
 
-  //       var downloadTask = uploadTask.newInstance(sub);
-  //       //First download tick will download the json definition of the submission
-  //       downloadTask.uploadTick(function(err){
-  //         assert.ok(!err);
+    self.server.respondWith('GET', 'host/mbaas/forms/appId1234/submission/somesubmissionid/file/filegroup1234', [200, {
+      "Content-Type": "application/json"
+    },
+      JSON.stringify({})
+    ]);
 
-  //         console.log(downloadTask.getProgress());
-  //         assert.ok(downloadTask.getProgress());
-  //         assert.ok(sub.getStatus() === "inprogress");
+    sub.changeStatus("pending", function (err) {
+      assert.ok(!err);
 
-  //         //Second download tick will download the file from the server
-  //         downloadTask.uploadTick(function(err){
-  //           assert.ok(!err);
-  //           assert.ok(sub.getStatus() === "inprogress");
+      sub.changeStatus("inprogress", function (err) {
+        assert.ok(!err);
 
-  //           //Third download tick will mark the submission as downloaded
-  //           downloadTask.uploadTick(function(err){
-  //             assert.ok(!err);
+        var downloadTask = uploadTask.newInstance(sub);
+        //First download tick will download the json definition of the submission
+        downloadTask.uploadTick(function (err) {
+          assert.ok(!err);
 
-  //             assert.ok(sub.getStatus() === "downloaded");
-  //             //It should have downloaded a file
-  //             done();
-  //           });
-  //         });
-  //       });
-  //     });
-  //   });
-  // });
+          assert.ok(!downloadTask.retryNeeded(), "Expected No Retry Needed");
+
+          assert.ok(downloadTask.getProgress());
+          assert.ok(sub.getStatus() === "inprogress");
+
+          //Second download tick will download the file from the server
+          downloadTask.uploadTick(function (err) {
+            assert.ok(!err);
+            assert.ok(sub.getStatus() === "inprogress");
+            assert.ok(!downloadTask.retryNeeded(), "Expected No Retry Needed");
+
+            //Third download tick will verify the submission as downloaded
+            downloadTask.uploadTick(function (err) {
+              assert.ok(!err);
+              assert.ok(!downloadTask.retryNeeded(), "Expected No Retry Needed");
+              //It should have downloaded a file
+              //Third download tick will verify the submission as downloaded
+              downloadTask.uploadTick(function (err) {
+                assert.ok(!err);
+                assert.ok(!downloadTask.retryNeeded(), "Expected No Retry Needed");
+
+                assert.ok(sub.getStatus() === "downloaded");
+                //It should have downloaded a file
+                done();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
 });
-},{"../../src/config.js":77,"../../src/fileSystem.js":89,"../../src/form.js":90,"../../src/forms.js":95,"../../src/submission.js":103,"../../src/submissions.js":104,"../../src/uploadManager.js":105,"../../src/uploadTask.js":106,"../fixtures/base64pic.js":109,"../fixtures/getForm.json":110,"async":7,"chai":15,"sinon":51,"underscore":76}]},{},[111]);
+},{"../../src/config.js":77,"../../src/fileSystem.js":89,"../../src/form.js":90,"../../src/forms.js":95,"../../src/submission.js":103,"../../src/submissions.js":104,"../../src/uploadManager.js":105,"../../src/uploadTask.js":106,"../fixtures/base64pic.js":109,"../fixtures/getForm.json":110,"async":7,"chai":15,"sinon":51,"underscore":76}],118:[function(require,module,exports){
+/*jshint expr: true*/
+var chai = require('chai');
+var expect = chai.expect;
+var assert = chai.assert;
+
+var Model = require("../../src/model.js");
+var utils = require("../../src/utils");
+
+describe("Form Utils", function() {
+    it("should extend a function", function() {
+        var func1 = function() {};
+        func1.prototype.function1 = function() {};
+
+        var func2 = function() {};
+        func2.prototype.function2 = function() {};
+
+        utils.extend(func1, func2);
+
+        expect(func1.prototype).to.have.property("function2");
+    });
+
+    it("how to generate a local id from a model", function() {
+        var model = new Model();
+        var localId = utils.localId(model);
+        assert(localId.indexOf('model') > -1, "Expected model based local id");
+        assert.ok(model.getLocalId().indexOf('model') > -1, "Expected model based local id");
+        assert.ok(model.getLocalId() === model.getLocalId(), "Expected local model id to be constant");
+    });
+
+    it("how to generate a local id from a custom model", function() {
+        var model = new Model({
+            "_type": "someNewModel"
+        });
+        var localId = utils.localId(model);
+        assert(localId.indexOf('someNewModel') > -1, "Expected custom model based local id");
+        assert.ok(model.getLocalId().indexOf('someNewModel') > -1, "Expected model based local id");
+    });
+
+    it("how to generate a local id from a custom model and a Remote Id", function() {
+        var model = new Model({
+            "_type": "someRNewModel",
+            "_id": "someRemoteID"
+        });
+        var localId = utils.localId(model);
+        assert(localId.indexOf('someRNewModel') > -1, "Expected custom model based local id");
+        assert.ok(model.getLocalId().indexOf('someRNewModel') > -1, "Expected model based local id");
+        assert.ok(model.getLocalId().indexOf('someRemoteID') > -1, "Expected model based local id to contain remote id");
+    });
+});
+
+},{"../../src/model.js":98,"../../src/utils":107,"chai":15}]},{},[111,112,113,114,115,116,117,118]);

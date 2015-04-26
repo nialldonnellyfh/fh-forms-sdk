@@ -84,127 +84,115 @@ describe("Submission model", function() {
     });
   });
   it("how to create new submission from a form", function(done) {
-    var form = new Form({
+    var form = Form.newInstance({
       formId: testData.formId,
       rawMode: true,
-      rawData: testForm,
-      fromRemote: false
-    }, function(err, form) {
-      assert(!err);
-      var newSub = submission.newInstance(form);
-      var localId = newSub.getLocalId();
-      assert.equal(newSub.getStatus(), "new");
-      assert(newSub);
-      assert(localId);
-      done();
+      rawData: testForm
     });
+
+    var newSub = submission.newInstance(form);
+    var localId = newSub.getLocalId();
+    assert.equal(newSub.getStatus(), "new");
+    assert(newSub);
+    assert(localId);
+    done();
   });
 
   it("how to load a submission from local storage without a form", function(done) {
     //load form
-    var form = new Form({
+
+    var form = Form.newInstance({
       formId: testData.formId,
       rawMode: true,
-      rawData: testForm,
-      fromRemote: false
-    }, function(err, form) {
-      assert(!err);
-      var newSub = submission.newInstance(form);
-      var localId = newSub.getLocalId();
-      newSub.saveDraft(function(err) {
-        assert(!err);
-        submission.fromLocal(localId, function(err, submission1) {
-          assert(!err);
-          assert.equal(submission1.get("formId"), newSub.get("formId"));
-          assert.equal(submission1.getStatus(), "draft");
+      rawData: testForm
+    });
 
-          submission1.clearLocal(function(err) {
-            assert(!err);
-            done();
-          });
+    var newSub = submission.newInstance(form);
+    var localId = newSub.getLocalId();
+    newSub.saveDraft(function(err) {
+      assert(!err);
+      submission.fromLocal(localId, function(err, submission1) {
+        assert(!err);
+        assert.equal(submission1.get("formId"), newSub.get("formId"));
+        assert.equal(submission1.getStatus(), "draft");
+
+        submission1.clearLocal(function(err) {
+          assert(!err);
+          done();
         });
       });
     });
   });
 
   it("will throw error if status is in wrong order", function(done) {
-    var error = false;
-    //load form
-    var form = new Form({
+
+    var form = Form.newInstance({
       formId: testData.formId,
       rawMode: true,
-      rawData: testForm,
-      fromRemote: false
-    }, function(err, form) {
-      assert(!err);
-      var newSub = submission.newInstance(form);
-      var localId = newSub.getLocalId();
-      newSub.saveDraft(function(err) {
-        assert(!err);
+      rawData: testForm
+    });
 
-        newSub.submitted(function(err) {
-          assert(err, "Expected An Error When Trying To Change To An Invalid State");
-          newSub.clearLocal(function(err) {
-            assert(!err);
-            done();
-          });
+    var newSub = submission.newInstance(form);
+    newSub.saveDraft(function(err) {
+      assert(!err);
+
+      newSub.submitted(function(err) {
+        assert(err, "Expected An Error When Trying To Change To An Invalid State");
+        newSub.clearLocal(function(err) {
+          assert(!err);
+          done();
         });
       });
     });
   });
 
   it("how to store a draft,and find it from submissions list", function(done) {
-    var form = new Form({
+    var form = Form.newInstance({
       formId: testData.formId,
       rawMode: true,
-      rawData: testForm,
-      fromRemote: false
-    }, function(err, form) {
-      assert(!err);
-      var newSub = submission.newInstance(form);
-      var localId = newSub.getLocalId();
+      rawData: testForm
+    });
 
-      newSub.saveDraft(function(err) {
-        assert(!err);
-        var localId = newSub.getLocalId();
-        var meta = submissions.findMetaByLocalId(localId);
-        assert(meta._ludid == localId);
-        assert(meta.formId == newSub.get("formId"));
-        submissions.getSubmissionByMeta(meta, function(err, sub1) {
-          assert(newSub === sub1);
-          newSub.clearLocal(function(err) {
-            assert(!err);
-            done();
-          });
+    var newSub = submission.newInstance(form);
+
+    newSub.saveDraft(function(err) {
+      assert(!err);
+      var localId = newSub.getLocalId();
+      var meta = submissions.findMetaByLocalId(localId);
+      assert(meta._ludid == localId);
+      assert(meta.formId == newSub.get("formId"));
+      submissions.getSubmissionByMeta(meta, function(err, sub1) {
+        assert(newSub === sub1);
+        newSub.clearLocal(function(err) {
+          assert(!err);
+          done();
         });
       });
     });
   });
   it("submission model loaded from local should have only 1 reference", function(done) {
 
-    var form = new Form({
+    var form = Form.newInstance({
       formId: testData.formId,
       rawMode: true,
-      rawData: testForm,
-      fromRemote: false
-    }, function(err, form) {
-      assert(!err);
-      var newSub = submission.newInstance(form);
-      var localId = newSub.getLocalId();
+      rawData: testForm
+    });
 
-      assert(localId, "Expected A Local ID To Be Set");
+    var newSub = submission.newInstance(form);
+    var localId = newSub.getLocalId();
 
-      var meta = submissions.findByFormId(testData.formId)[0];
+    assert(localId, "Expected A Local ID To Be Set");
 
-      assert.equal(meta._ludid, localId);
+    var meta = submissions.findByFormId(testData.formId)[0];
 
-      submission.fromLocal(localId, function(err, submission1) {
-        submission.fromLocal(localId, function(err, submission2) {
-          assert(submission1 === submission2);
-          submission1.clearLocal(function(err) {
-            assert(!err);
-            done();
-          });
+    assert.equal(meta._ludid, localId);
+
+    submission.fromLocal(localId, function(err, submission1) {
+      submission.fromLocal(localId, function(err, submission2) {
+        assert(submission1 === submission2);
+        submission1.clearLocal(function(err) {
+          assert(!err);
+          done();
         });
       });
     });
@@ -217,59 +205,56 @@ describe("Submission model", function() {
       });
     });
     it("how to add a comment to a submission with or without a user", function(done) {
-      var form = new Form({
+      var form = Form.newInstance({
         formId: testData.formId,
         rawMode: true,
-        rawData: testForm,
-        fromRemote: false
-      }, function(err, form) {
-        assert(!err);
-        var newSub = submission.newInstance(form);
-        var localId = newSub.getLocalId();
+        rawData: testForm
+      });
 
-        assert(localId, "Expected A Local ID To Be Set");
-        submission.fromLocal(localId, function(err, submission) {
+      var newSub = submission.newInstance(form);
+      var localId = newSub.getLocalId();
+
+      assert(localId, "Expected A Local ID To Be Set");
+      submission.fromLocal(localId, function(err, submission) {
+        assert(!err);
+        var ts1 = submission.addComment("hello world");
+        var ts2 = submission.addComment("test", "testerName");
+        var comments = submission.getComments();
+        assert(comments.length > 0);
+        var str = JSON.stringify(comments);
+        assert(str.indexOf("hello world") > -1);
+        assert(str.indexOf("testerName") > -1);
+        submission.clearLocal(function(err) {
           assert(!err);
-          var ts1 = submission.addComment("hello world");
-          var ts2 = submission.addComment("test", "testerName");
-          var comments = submission.getComments();
-          assert(comments.length > 0);
-          var str = JSON.stringify(comments);
-          assert(str.indexOf("hello world") > -1);
-          assert(str.indexOf("testerName") > -1);
-          submission.clearLocal(function(err) {
-            assert(!err);
-            done();
-          });
+          done();
         });
       });
 
     });
 
     it("how to remove a comment from submission", function(done) {
-      var form = new Form({
+
+      var form = Form.newInstance({
         formId: testData.formId,
         rawMode: true,
-        rawData: testForm,
-        fromRemote: false
-      }, function(err, form) {
-        assert(!err);
-        var newSub = submission.newInstance(form);
-        var localId = newSub.getLocalId();
+        rawData: testForm
+      });
 
-        assert(localId, "Expected A Local ID To Be Set");
-        submission.fromLocal(localId, function(err, submission) {
-          assert(!err, "unexpected error: " + err);
-          var ts1 = submission.addComment("hello world2");
-          submission.removeComment(ts1);
-          var comments = submission.getComments();
+      var newSub = submission.newInstance(form);
+      var localId = newSub.getLocalId();
 
-          var str = JSON.stringify(comments);
-          assert(str.indexOf(ts1.toString()) == -1, "comment still in submission: " + str);
-          submission.clearLocal(function(err) {
-            assert(!err);
-            done();
-          });
+      assert(localId, "Expected A Local ID To Be Set");
+      submission.fromLocal(localId, function(err, submission) {
+        assert(!err, "unexpected error: " + err);
+        var ts1 = submission.addComment("hello world2");
+        submission.removeComment(ts1);
+        var comments = submission.getComments();
+
+        var str = JSON.stringify(comments);
+        assert(str.indexOf(ts1.toString()) == -1, "comment still in submission: " + str);
+        submission.clearLocal(function(err) {
+          assert(!err);
+          done();
         });
       });
     });
@@ -281,20 +266,19 @@ describe("Submission model", function() {
     beforeEach(function(done) {
       config.init({}, function(err) {
         assert(!err);
-        var form = new Form({
+
+        var form = Form.newInstance({
           formId: testData.formId,
           rawMode: true,
-          rawData: testForm,
-          fromRemote: false
-        }, function(err, form) {
-          assert(!err);
-          newSub = submission.newInstance(form);
-          var localId = newSub.getLocalId();
-          assert(newSub.getStatus() == "new");
-          assert(newSub);
-          assert(localId);
-          done();
+          rawData: testForm
         });
+
+        newSub = submission.newInstance(form);
+        var localId = newSub.getLocalId();
+        assert(newSub.getStatus() == "new");
+        assert(newSub);
+        assert(localId);
+        done();
       });
 
     });
@@ -428,6 +412,11 @@ describe("Submission model", function() {
       this.server.autoRespond = true;
       this.server.autoRespondAfter = 50;
 
+      form = Form.newInstance({
+        formId: testData.formId,
+        rawMode: true,
+        rawData: testForm
+      });
 
       //Server Ping
       this.server.respondWith('GET', config.getCloudHost() + '/sys/info/ping', [200, {
@@ -455,15 +444,7 @@ describe("Submission model", function() {
           "status": "complete"
         })
       ]);
-      form = new Form({
-        formId: testData.formId,
-        rawMode: true,
-        rawData: testForm,
-        fromRemote: false
-      }, function(err, _form) {
-        form = _form;
-        done();
-      });
+      done();
     });
     afterEach(function(done) {
       this.server.restore();

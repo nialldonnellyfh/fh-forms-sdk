@@ -207,24 +207,21 @@ describe("forms model", function() {
       JSON.stringify(testFormUpToDate)
     ]);
 
-    new Form({
+    var form = Form.newInstance({
       formId: testData.formId,
-      fromRemote: false,
       rawMode: true,
       rawData: testFormOutOfDate
-    }, function(err, form) {
+    });
+
+    assert.equal(form.getName(), "Test Form Out Of Date");
+    assert(forms.isFormUpdated(form), "Form Should Be Marked as Up To Date");
+
+    //Now Get The Up To Date Form
+    form.refresh(true, function(err, form) {
       assert(!err);
-
-      assert.equal(form.getName(), "Test Form Out Of Date");
-      assert(forms.isFormUpdated(form), "Form Should Be Marked as Up To Date");
-
-      //Now Get The Up To Date Form
-      form.refresh(true, function(err, form) {
-        assert(!err);
-        assert.equal(form.getName(), "Test Form Up To Date");
-        assert(!forms.isFormUpdated(form), "Form Should Not Be Marked as Updated");
-        done();
-      });
+      assert.equal(form.getName(), "Test Form Up To Date");
+      assert(!forms.isFormUpdated(form), "Form Should Not Be Marked as Updated");
+      done();
     });
   });
 });
