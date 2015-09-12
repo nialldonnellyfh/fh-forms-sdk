@@ -17002,7 +17002,7 @@ function newInstance(params) {
 
   //Only one form with the same id is permitted to be loaded
   if(_forms[newForm.getRemoteId()]){
-    return _forms[newForm.getRemoteId()];
+    //return _forms[newForm.getRemoteId()];
   }
 
   if (newForm.getRemoteId()) {
@@ -22223,7 +22223,6 @@ function post(url, body, cb) {
       cb(null, data);
     },
     error: function (xhr, status, err) {
-      debugger;
       log.e("Ajax post ", url, " Fail ", xhr, status, err);
       cb(xhr);
     }

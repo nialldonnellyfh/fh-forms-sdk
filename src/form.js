@@ -265,7 +265,7 @@ function newInstance(params) {
 
   //Only one form with the same id is permitted to be loaded
   if(_forms[newForm.getRemoteId()]){
-    return _forms[newForm.getRemoteId()];
+    //return _forms[newForm.getRemoteId()];
   }
 
   if (newForm.getRemoteId()) {
