@@ -2,4 +2,4 @@
 
 var $ = require('jquery');
 
-module.exports = $.ajax
+module.exports = $.ajax;

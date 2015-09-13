@@ -5,7 +5,7 @@
  */
 var Model = require("./model");
 var log = require("./log");
-var config = require("./config");
+var config = require("./config").getConfig();
 var utils = require("./utils");
 var fieldCheckboxes = require("./fieldCheckboxes");
 var fieldFile = require("./fieldFile");

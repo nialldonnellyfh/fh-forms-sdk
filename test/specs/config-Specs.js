@@ -5,7 +5,7 @@ var sinon = require('sinon');
 var expect = chai.expect;
 var assert = chai.assert;
 var _ = require('underscore');
-var config = require('../../src/config.js');
+var config = require('../../src/config.js').getConfig();
 var requests = [];
 
 describe("Config module", function() {
@@ -84,7 +84,7 @@ describe("Config module", function() {
   });
 
   it("Should Only Be One Config Module", function() {
-    var sameConfig = require('../../src/config.js');
+    var sameConfig = require('../../src/config.js').getConfig();
 
     assert.ok(sameConfig.get("sent_save_min") === config.get("sent_save_min"));
   });

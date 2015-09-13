@@ -3,7 +3,7 @@
  */
 var Model = require("./model.js");
 var log = require("./log.js");
-var config = require("./config.js");
+var config = require("./config").getConfig();
 var localStorage = require("./localStorage.js");
 var utils = require('./utils.js');
 

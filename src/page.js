@@ -2,7 +2,7 @@
  * One form contains multiple pages
  */
 var log = require("./log");
-var config = require("./config");
+var config = require("./config").getConfig();
 var Model = require("./model");
 var utils = require("./utils");
 var _ = require('underscore');

@@ -5,7 +5,6 @@
 var localStorage = require("./localStorage.js");
 var fileSystem = require("./fileSystem.js");
 var log = require("./log.js");
-var config = require("./config.js");
 var async = require("async");
 var utils = require("./utils.js");
 var _ = require("underscore");

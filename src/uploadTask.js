@@ -4,7 +4,7 @@
 
 var Model = require("./model.js");
 var log = require("./log.js");
-var config = require("./config.js");
+var config = require("./config.js").getConfig();
 var dataAgent = require("./dataAgent.js");
 var FormSubmission = require("./formSubmission.js");
 var FormSubmissionDownload = require("./formSubmissionDownload.js");

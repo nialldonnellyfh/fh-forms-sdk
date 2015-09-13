@@ -3,6 +3,12 @@ var localStorage = require("./localStorage");
 var utils = require("./utils");
 var Store = require("./store");
 var log = require("./log");
+var _ = require('underscore');
+var config;
+
+_.defer(function(){
+  config = require("./config").getConfig();
+});
 
 
 //default data agent uses mbaas as remote store, localstorage as local store
@@ -75,7 +81,7 @@ DataAgent.attemptRead = function(model, cb) {
 
 
     self.checkOnlineStatus(function(online) {
-        if (require("./config").isOnline()) {
+        if (config.isOnline()) {
             self.refreshRead(model, function(err) {
                 if (err) {
                     self.read(model, cb);
@@ -102,7 +108,7 @@ DataAgent.checkOnlineStatus = function(cb) {
         if (navigator.connection.type) {
             if (navigator.connection.type === Connection.NONE) {
                 //No connection availabile, no need to ping.
-                require("./config").offline();
+                config.offline();
                 return cb(false);
             }
         }
@@ -111,9 +117,9 @@ DataAgent.checkOnlineStatus = function(cb) {
 
     storeMbaas.isOnline(function(online) {
         if (online === false) {
-            require("./config").setOffline();
+            config.setOffline();
         } else {
-            require("./config").setOnline();
+            config.setOnline();
         }
 
         cb(null, online);

@@ -6,6 +6,7 @@ var utils = require("./utils");
 var log = require("./log");
 var dataAgent = require("./dataAgent");
 var uploadTask = require("./uploadTask");
+var config = require('./config').getConfig();
 
 function UploadManager() {
     var self = this;
@@ -35,7 +36,7 @@ UploadManager.prototype.queueSubmission = function(submissionModel, cb) {
     var self = this;
 
     self.checkOnlineStatus(function() {
-        if (require('./config.js').isOnline()) {
+        if (config.isOnline()) {
             if (submissionModel.getUploadTaskId()) {
                 utId = submissionModel.getUploadTaskId();
             } else {
@@ -159,7 +160,7 @@ UploadManager.prototype.tick = function() {
     if (self.sending) {
         var now = utils.getTime();
         var timePassed = now.getTime() - self.sendingStart.getTime();
-        if (timePassed > require('./config.js').get("timeout") * 1000) {
+        if (timePassed > config.get("timeout") * 1000) {
             //time expired. roll current task to the end of queue
             log.e('Uploading content timeout. it will try to reupload.');
             self.sending = false;
@@ -186,7 +187,7 @@ UploadManager.prototype.tick = function() {
                         });
                     } else {
                         self.checkOnlineStatus(function() {
-                            if (require('./config.js').isOnline()) {
+                            if (config.isOnline()) {
                                 task.uploadTick(function(err) {
                                     if (err) {
                                         log.e("Error on upload tick: ", err, task);

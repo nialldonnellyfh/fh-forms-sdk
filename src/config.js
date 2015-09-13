@@ -128,6 +128,12 @@ function getConfig(){
     return config;
 }
 
-module.exports = getConfig();
+module.exports = {
+    init: function(params, cb){
+        var config = getConfig();
+        config.init(params, cb);
+    },
+    getConfig: getConfig
+};
 
 

@@ -4,7 +4,7 @@ var assert = chai.assert;
 var _ = require('underscore');
 var forms = require('../../src/forms.js');
 var Form = require('../../src/form.js');
-var config = require('../../src/config.js');
+var config = require('../../src/config.js').getConfig();
 var sinon = require('sinon');
 
 var testResponse = {

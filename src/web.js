@@ -3,6 +3,11 @@ var utils = require("./utils");
 var _ajax = require("../libs/ajax");
 var fileSystem = require("./fileSystem");
 var _ = require('underscore');
+var config;
+
+_.defer(function(){
+  config = require("./config").getConfig();
+});
 
 
 function get(url, cb) {
@@ -11,7 +16,7 @@ function get(url, cb) {
     url: url,
     type: 'GET',
     dataType: 'json',
-    timeout: require("./config").get("timeout"),
+    timeout: config.get("timeout"),
     success: function (data, text) {
       log.d("Ajax get", url, "Success");
       cb(null, data);
@@ -50,7 +55,7 @@ function post(url, body, cb) {
     dataType: 'json',
     contentType: contentType,
     processData: processData,
-    timeout: require("./config").get("timeout"),
+    timeout: config.get("timeout"),
     success: function (data, xhr) {
       log.d("Ajax post ", url, " Success");
       cb(null, data);
@@ -72,7 +77,7 @@ function uploadFile(url, fileProps, cb) {
   log.d("Phonegap uploadFile ", url, fileProps);
   var filePath = fileProps.fullPath;
 
-  if (!require("./config").isOnline()) {
+  if (!config.isOnline()) {
     log.e("Phonegap uploadFile. Not Online.", url, fileProps);
     return cb("No Internet Connection Available.");
   }
@@ -115,7 +120,7 @@ function downloadFile(url, fileMetaData, cb) {
   log.d("Phonegap downloadFile ", url, fileMetaData);
   var ft = new FileTransfer();
 
-  if (!require("./config").isOnline()) {
+  if (!config.isOnline()) {
     log.e("Phonegap downloadFile. Not Online.", url, fileMetaData);
     return cb("No Internet Connection Available.");
   }

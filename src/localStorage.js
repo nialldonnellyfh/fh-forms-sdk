@@ -6,6 +6,10 @@ var Store = require("./store.js");
 var fileSystem = require("./fileSystem.js");
 var Lawnchair = require("../libs/lawnchair.js");
 var localStorage, localStorageLawnchair;
+var _ = require('underscore');
+var config = function(){
+    return require("./config").getConfig();
+};
 
 var _fileSystemAvailable = function() {
     return fileSystem.isFileSystemAvailable();
@@ -19,7 +23,7 @@ function LocalStorage() {
 LocalStorage.prototype.getLawnchairAdapter = function(cb) {
     Lawnchair({
         fail: onFail,
-        adapter: require("./config.js").getStorageStrategy()
+        adapter: config().getStorageStrategy()
     }, function() {
         return cb(null, this);
     });
@@ -161,7 +165,7 @@ function _fhFileData(options, success, failure) {
     }
 
     function filenameForKey(key, cb) {
-        var appid = require("./config.js").get("appId", "");
+        var appid = config().get("appId", "");
         key = key + appid;
         utils.md5(key, function(err, hash) {
             if (err) {

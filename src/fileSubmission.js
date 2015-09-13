@@ -1,6 +1,5 @@
 var Model = require("./model");
 var log = require("./log");
-var config = require("./config");
 var localStorage = require("./localStorage");
 var utils = require("./utils");
 

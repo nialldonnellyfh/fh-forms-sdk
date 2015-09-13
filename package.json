@@ -2,11 +2,9 @@
   "name": "fh-forms-sdk",
   "author": "Niall Donnelly",
   "license": "Copyright (c) 2014 FeedHenry Ltd, All Rights Reserved.",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "FeedHeny Forms JS SDK",
-  "browser": {
-    "appforms": "dist/appforms.js"
-  },
+  "main": "./src/appforms.js",
   "browserify-shim": {
     "./libs/lawnchair.js": {
       "exports": "Lawnchair"
@@ -17,12 +15,12 @@
     "url": "git://github.com/feedhenry/fh-forms-sdk.git"
   },
   "dependencies": {
-    "type-of": "~2.0.1",
-    "loglevel": "~1.2.0",
-    "underscore": "~1.7.0",
-    "process": "~0.10.0",
-    "md5-node": "~1.0.1",
-    "jquery": "1.11.2"
+    "type-of": "^2.0.1",
+    "loglevel": "^1.2.0",
+    "underscore": "^1.8.0",
+    "process": "^0.10.0",
+    "md5-node": "^1.0.1",
+    "jquery": "^1.11.2"
   },
   "devDependencies": {
     "async": "~0.9.0",
@@ -30,7 +28,7 @@
     "browserify-shim": "~3.8.2",
     "chai": "1.10.0",
     "eventemitter2": "0.4.14",
-    "grunt": "~0.4.5",
+    "grunt": "^0.4.5",
     "grunt-browserify": "~3.3.0",
     "grunt-contrib-clean": "~0.6.0",
     "grunt-contrib-concat": "~0.5.0",

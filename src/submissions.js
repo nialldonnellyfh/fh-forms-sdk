@@ -2,7 +2,7 @@ var Model = require("./model");
 var log = require("./log");
 var submission = require("./submission");
 var utils = require("./utils");
-var config = require("./config");
+var config = require("./config").getConfig();
 var _ = require("underscore");
 var async = require("async");
 

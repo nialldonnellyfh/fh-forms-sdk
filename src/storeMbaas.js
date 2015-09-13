@@ -2,6 +2,12 @@ var log = require("./log");
 var utils = require("./utils");
 var Store = require("./store");
 var web = require("./web");
+var _ = require('underscore');
+var config;
+
+_.defer(function(){
+    config = require("./config").getConfig();
+});
 
 var mbaas;
 
@@ -12,7 +18,7 @@ function MBaaS() {
 utils.extend(MBaaS, Store);
 
 MBaaS.prototype.checkStudio = function() {
-    return require("./config").get("studioMode");
+    return config.get("studioMode");
 };
 MBaaS.prototype.create = function(model, cb) {
     var self = this;
@@ -75,8 +81,8 @@ MBaaS.prototype.submissionStatus = function(submission, cb) {
     web.get(url, cb);
 };
 MBaaS.prototype.isOnline = function(cb) {
-    var host = require("./config").getCloudHost();
-    var url = host + require("./config").get('statusUrl', "/sys/info/ping");
+    var host = config.getCloudHost();
+    var url = host + config.get('statusUrl', "/sys/info/ping");
 
     web.get(url, function(err) {
         if (err) {
@@ -93,7 +99,6 @@ function _getUrl(model) {
     log.d("_getUrl ", model);
 
 
-    var config = require("./config");
     var type = model.get('_type');
     var host = config.getCloudHost();
     var mBaaSBaseUrl = config.get('mbaasBaseUrl', "");
@@ -106,7 +111,7 @@ function _getUrl(model) {
     }
     var url = host + mBaaSBaseUrl + relativeUrl;
     var props = {};
-    props.appId = require("./config").get('appId');
+    props.appId = config.get('appId');
     //Theme and forms do not require any parameters that are not in _fh
     switch (type) {
         case 'config':

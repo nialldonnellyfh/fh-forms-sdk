@@ -1,5 +1,5 @@
 var Model = require("./model");
-var formConfig = require("./config");
+var formConfig = require("./config").getConfig();
 var forms = require("./forms");
 var Form = require("./form");
 var theme = require("./theme");

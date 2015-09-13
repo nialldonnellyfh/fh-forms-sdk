@@ -7,6 +7,12 @@
 var utils = require("./utils");
 var localStorage = require('./localStorage');
 var currentLog;
+var _ = require('underscore');
+var config;
+
+_.defer(function(){
+    config = require("./config").getConfig();
+});
 
 var Log = {
     logs: [],
@@ -19,10 +25,10 @@ Log.info = function(logLevel, msgs) {
     var args = Array.prototype.slice.call(arguments, 0);
 
     var self = this;
-    if (require("./config").get("logger") === true) {
+    if (config.get("logger") === true) {
         var levelString = "";
-        var curLevel = require("./config").get("log_level");
-        var log_levels = require("./config").get("log_levels");
+        var curLevel = config.get("log_level");
+        var log_levels = config.get("log_levels");
 
         if (typeof logLevel === "string") {
             levelString = logLevel;
@@ -45,7 +51,7 @@ Log.info = function(logLevel, msgs) {
                 logStr += JSON.stringify(args.shift()) + " ";
             }
             logs.push(self.wrap(logStr, levelString));
-            if (logs.length > require("./config").get("log_line_limit")) {
+            if (logs.length > config.get("log_line_limit")) {
                 logs.shift();
             }
             if (self.isWriting) {
@@ -113,9 +119,13 @@ Log.clearLogs = function(cb) {
 Log.saveLocal = function(cb) {
     localStorage.upsert(this, cb);
 };
+Log.loadLocal = function(cb){
+    //TODO Load Local
+    return cb();
+};
 Log.sendLogs = function(cb) {
-    var email = require("./config").get("log_email");
-    var configJSON = require("./config").getProps();
+    var email = config.get("log_email");
+    var configJSON = config.getProps();
     var logs = this.getLogs();
     var params = {
         "type": "email",

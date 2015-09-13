@@ -4,21 +4,21 @@ module.exports = function(grunt) {
     grunt.initConfig({
         pkg: pkg,
         browserify: {
+            options: {
+                debug: true
+            },
             dist: {
                 src: ['src/appforms.js'],
                 dest: 'dist/appforms.js',
                 options: {
-                    debug: true,
+                    debug: false,
                     banner: "//Drag & Drop Apps Javascript SDK"
                 },
                 transform: ["browserify-shim"]
             },
             specs: {
                 src: ['test/specs/**/*-Specs.js'],
-                dest: 'test/public/build/specs.js',
-                options: {
-                    debug: true
-                }
+                dest: 'test/public/build/specs.js'
             }
         },
         jshint: {

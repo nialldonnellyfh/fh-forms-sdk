@@ -1,5 +1,4 @@
 var log = require("./log");
-var config = require("./config");
 var submissions = require("./submissions");
 var uploadManager = require("./uploadManager");
 var theme = require("./theme");

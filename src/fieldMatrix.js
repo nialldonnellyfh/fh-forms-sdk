@@ -4,7 +4,6 @@
 
 var Model = require("./model");
 var log = require("./log");
-var config = require("./config");
 
 function getMatrixRows() {
     var def = this.getFieldDefinition();
