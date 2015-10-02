@@ -17683,7 +17683,6 @@ module.exports = function() {
 
 var utils = require("./utils");
 var localStorage = require('./localStorage');
-var currentLog;
 var _ = require('underscore');
 var config;
 
@@ -17797,8 +17796,7 @@ Log.saveLocal = function(cb) {
     localStorage.upsert(this, cb);
 };
 Log.loadLocal = function(cb){
-    //TODO Load Local
-    return cb();
+    localStorage.read(this, cb);
 };
 Log.sendLogs = function(cb) {
     var email = config.get("log_email");
