@@ -1,9 +1,8 @@
+//use strict
+
 var Model = require("./model");
 var utils = require("./utils");
 var dataAgent = require('./dataAgent');
-var appProps = require("../libs/appProps");
-var device = require("../libs/device");
-var waitForCloud = require("../libs/waitForCloud");
 var log = require("./log");
 var _ = require('underscore');
 var online = true;
@@ -81,7 +80,7 @@ Config.prototype.staticConfig = function(config) {
     self.fromJSON(fullConfig);
 };
 Config.prototype._initMBaaS = function(config) {
-    cloudHost = config.cloudHost;
+    cloudHost = config.cloudHost || cloudHost;
 };
 Config.prototype.setOnline = function() {
     var wasOnline = online;

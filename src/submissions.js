@@ -28,27 +28,21 @@ Submissions.prototype.setLocalId = function() {
 Submissions.prototype.saveSubmission = function(submission, cb) {
   log.d("Submissions saveSubmission");
   var self = this;
-  this.updateSubmissionWithoutSaving(submission);
-  this.clearSentSubmission(function() {
-    self.saveLocal(cb);
-  });
+  self.updateSubmissionWithoutSaving(submission);
+  self.saveLocal(cb);
 };
 Submissions.prototype.updateSubmissionWithoutSaving = function(submission) {
   log.d("Submissions updateSubmissionWithoutSaving");
   var pruneData = this.pruneSubmission(submission);
   var localId = pruneData._ludid;
   if (localId) {
-    var meta = this.findMetaByLocalId(localId) || pruneData;
+    var currentMeta = this.findMetaByLocalId(localId);
     var submissions = this.getSubmissions();
 
-    var currentMeta = _.findWhere(submissions, {
-      _ludid: localId
-    });
-
     if (currentMeta) {
-      _.extend(currentMeta, meta);
+      _.extend(currentMeta, pruneData);
     } else {
-      submissions.push(meta);
+      submissions.push(pruneData);
     }
 
     this.updateSubmissionCache(submissions);
@@ -61,9 +55,8 @@ Submissions.prototype.clearSentSubmission = function(cb) {
   log.d("Submissions clearSentSubmission");
   var self = this;
   var maxSent = config.get("max_sent_saved") ? config.get("max_sent_saved") : config.get("sent_save_min");
-  var submissions = self.getSubmissions();
   var sentSubmissions = this.getSubmitted();
-  var toBeRemoved = [];
+  var toBeRemoved;
 
   //Submissions are sorted by the date they were submitted
   sentSubmissions = _.sortBy(sentSubmissions, function(submission) {
@@ -75,7 +68,7 @@ Submissions.prototype.clearSentSubmission = function(cb) {
   });
 
   //toBeRemoved Submissions = all but the last maxSent submissions
-  toBeRemoved = _.without(sentSubmissions, _.last(sentSubmissions, maxSent));
+  toBeRemoved = _.difference(sentSubmissions, _.last(sentSubmissions, maxSent));
 
   //Need to map back to submission meta info
   toBeRemoved = _.map(toBeRemoved, function(submissionLocalId) {
@@ -96,12 +89,11 @@ Submissions.prototype.clearSentSubmission = function(cb) {
       log.e("Error Deleting Submissions");
     }
 
-    cb(err);
+    return _.isFunction(cb) ? cb(err) : null;
   });
 };
 Submissions.prototype.findByFormId = function(formId) {
   log.d("Submissions findByFormId", formId);
-  var rtn = [];
   var submissions = this.getSubmissions();
 
   return _.filter(submissions, function(submission) {

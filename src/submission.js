@@ -280,6 +280,7 @@ Submission.prototype.submitted = function (cb) {
     } else {
       log.d("Submitted status set for submission " + self.get('submissionId') + " with localId " + self.getLocalId());
       self.emit('submitted', self.get('submissionId'));
+      submissions.clearSentSubmission();
       cb(null, null);
     }
   });

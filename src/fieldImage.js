@@ -79,7 +79,7 @@ function genImageName(cb) {
 function convertImage(value, cb) {
   async.map(value || [], function (meta, cb) {
     _loadImage(meta, function () {
-      cb(null, value);
+      cb(null, meta);
     });
   }, cb);
 }

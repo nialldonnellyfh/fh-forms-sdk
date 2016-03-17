@@ -5,17 +5,7 @@
 var $ = require('jquery');
 
 module.exports = $.ajax;
-},{"jquery":9}],2:[function(require,module,exports){
-
-module.exports = {
-	getAppProps: function(){
-		return {
-			appid: "FakeAppId",
-			mode: "dev"
-		};
-	}
-}
-},{}],3:[function(require,module,exports){
+},{"jquery":6}],2:[function(require,module,exports){
 module.exports = {
     "appId": "appId1234",
     "mode": "dev",
@@ -61,13 +51,7 @@ module.exports = {
     }
 
 };
-},{}],4:[function(require,module,exports){
-module.exports = {
-	getDeviceId: function(){
-		return "someDeviceId"
-	}
-}
-},{}],5:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 /**
  * Lawnchair!
  * ---
@@ -1211,14 +1195,7 @@ Lawnchair.adapter('memory', (function(){
     }
 /////
 })());
-},{}],6:[function(require,module,exports){
-
-module.exports = {
-	getCloudHostUrl: function(){
-		return "somehost.com";
-	}
-}
-},{}],7:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 (function (process){
 /*!
  * async
@@ -2345,7 +2322,7 @@ module.exports = {
 }());
 
 }).call(this,require('_process'))
-},{"_process":11}],8:[function(require,module,exports){
+},{"_process":8}],5:[function(require,module,exports){
 /*!
  * EventEmitter2
  * https://github.com/hij1nx/EventEmitter2
@@ -2920,7 +2897,7 @@ module.exports = {
   }
 }();
 
-},{}],9:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v1.11.2
  * http://jquery.com/
@@ -13268,7 +13245,7 @@ return jQuery;
 
 }));
 
-},{}],10:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /**
  * Copyright (c) 2014 Meizu bigertech, All rights reserved.
  * http://www.bigertech.com/
@@ -13522,7 +13499,7 @@ function md5(string, key, raw) {
 }
 module.exports = md5;
 
-},{}],11:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -13581,7 +13558,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],12:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -15131,7 +15108,7 @@ process.umask = function() { return 0; };
   }
 }.call(this));
 
-},{}],13:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var Model = require("./model");
 var formConfig = require("./config").getConfig();
 var forms = require("./forms");
@@ -15157,7 +15134,6 @@ var configInterface = {
         return defaultConfigValues.config_admin_user === true;
     },
     "get": function(key) {
-        var self = this;
         if (key) {
             var userConfigValues = formConfig.get("userConfigValues", {});
             var defaultConfigValues = formConfig.get("defaultConfigValues", {});
@@ -15296,9 +15272,13 @@ var getForm = function(params, cb) {
     params = params ? params : {};
     cb = cb ? cb : defaultFunction;
 
-    var form = Form.fromLocal();
+    Form.fromLocal(params, function(err, form){
+      if(err){
+        return cb(err);
+      }
 
-    Form(params, cb);
+      form.loadFromRemote(cb);
+    });
 };
 
 /**
@@ -15352,7 +15332,7 @@ var getSubmissions = function(params, cb) {
             log.e(err);
             cb(err);
         } else {
-            cb(null, _submissions);
+            cb(null, submissions);
         }
     });
 };
@@ -15478,15 +15458,16 @@ module.exports = {
     submitForm: submitForm,
     config: configInterface,
     log: log,
-    init: init
+    init: init,
+    photoUtils: require('./photoUtils'),
+    fileSystem: require('./fileSystem')
 };
-},{"./config":14,"./form":27,"./forms":32,"./init":33,"./log":35,"./model":36,"./submission":41,"./submissions":42,"./theme":43,"underscore":12}],14:[function(require,module,exports){
+},{"./config":11,"./fileSystem":23,"./form":24,"./forms":29,"./init":30,"./log":32,"./model":33,"./photoUtils":35,"./submission":39,"./submissions":40,"./theme":41,"underscore":9}],11:[function(require,module,exports){
+//use strict
+
 var Model = require("./model");
 var utils = require("./utils");
 var dataAgent = require('./dataAgent');
-var appProps = require("../libs/appProps");
-var device = require("../libs/device");
-var waitForCloud = require("../libs/waitForCloud");
 var log = require("./log");
 var _ = require('underscore');
 var online = true;
@@ -15564,7 +15545,7 @@ Config.prototype.staticConfig = function(config) {
     self.fromJSON(fullConfig);
 };
 Config.prototype._initMBaaS = function(config) {
-    cloudHost = config.cloudHost;
+    cloudHost = config.cloudHost || cloudHost;
 };
 Config.prototype.setOnline = function() {
     var wasOnline = online;
@@ -15621,7 +15602,7 @@ module.exports = {
 
 
 
-},{"../libs/appProps":2,"../libs/constants.js":3,"../libs/device":4,"../libs/waitForCloud":6,"./dataAgent":15,"./log":35,"./model":36,"./utils":46,"underscore":12}],15:[function(require,module,exports){
+},{"../libs/constants.js":2,"./dataAgent":12,"./log":32,"./model":33,"./utils":44,"underscore":9}],12:[function(require,module,exports){
 var storeMbaas = require("./storeMbaas");
 var localStorage = require("./localStorage");
 var utils = require("./utils");
@@ -15752,7 +15733,7 @@ DataAgent.checkOnlineStatus = function(cb) {
 
 module.exports = DataAgent;
 
-},{"./config":14,"./localStorage":34,"./log":35,"./store":39,"./storeMbaas":40,"./utils":46,"underscore":12}],16:[function(require,module,exports){
+},{"./config":11,"./localStorage":31,"./log":32,"./store":37,"./storeMbaas":38,"./utils":44,"underscore":9}],13:[function(require,module,exports){
 /**
  * Field model for form
  * @param  {[type]} module [description]
@@ -15945,7 +15926,7 @@ Field.prototype.setVisible = function(isVisible) {
 
 module.exports = Field;
 
-},{"./config":14,"./fieldCheckboxes":17,"./fieldFile":18,"./fieldImage":19,"./fieldLocation":20,"./fieldMatrix":21,"./fieldRadio":22,"./log":35,"./model":36,"./utils":46}],17:[function(require,module,exports){
+},{"./config":11,"./fieldCheckboxes":14,"./fieldFile":15,"./fieldImage":16,"./fieldLocation":17,"./fieldMatrix":18,"./fieldRadio":19,"./log":32,"./model":33,"./utils":44}],14:[function(require,module,exports){
 /**
  * extension of Field class to support checkbox field
  */
@@ -15983,7 +15964,7 @@ module.exports = {
         convert_checkboxes: convert_checkboxes
     }
 };
-},{}],18:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /**
  * extension of Field class to support file field
  */
@@ -16118,7 +16099,7 @@ module.exports = {
     }
 
 };
-},{"./config":14,"./localStorage.js":34,"./log.js":35,"./model.js":36,"./utils.js":46}],19:[function(require,module,exports){
+},{"./config":11,"./localStorage.js":31,"./log.js":32,"./model.js":33,"./utils.js":44}],16:[function(require,module,exports){
 /**
  * extension of Field class to support file field
  */
@@ -16200,7 +16181,7 @@ function genImageName(cb) {
 function convertImage(value, cb) {
   async.map(value || [], function (meta, cb) {
     _loadImage(meta, function () {
-      cb(null, value);
+      cb(null, meta);
     });
   }, cb);
 }
@@ -16258,7 +16239,7 @@ module.exports = {
   }
 
 };
-},{"./fileSystem.js":26,"./localStorage.js":34,"./log.js":35,"./utils.js":46,"async":7,"underscore":12}],20:[function(require,module,exports){
+},{"./fileSystem.js":23,"./localStorage.js":31,"./log.js":32,"./utils.js":44,"async":4,"underscore":9}],17:[function(require,module,exports){
     /**
      * extension of Field class to support latitude longitude field
      */
@@ -16305,7 +16286,7 @@ module.exports = {
             process_location: process_location
         }
     };
-},{"./log":35,"./model":36}],21:[function(require,module,exports){
+},{"./log":32,"./model":33}],18:[function(require,module,exports){
 /**
  * extension of Field class to support matrix field
  */
@@ -16339,7 +16320,7 @@ module.exports = {
         getMatrixCols: getMatrixCols
     }
 };
-},{"./log":35,"./model":36}],22:[function(require,module,exports){
+},{"./log":32,"./model":33}],19:[function(require,module,exports){
 /**
  * extension of Field class to support radio field
  */
@@ -16361,7 +16342,7 @@ module.exports = {
         getRadioOption: getRadioOption
     }
 };
-},{"./log":35,"./model":36}],23:[function(require,module,exports){
+},{"./log":32,"./model":33}],20:[function(require,module,exports){
 var Model = require("./model");
 var log = require("./log");
 var localStorage = require("./localStorage");
@@ -16416,7 +16397,7 @@ FileSubmission.prototype.getFieldId = function() {
 
 module.exports = FileSubmission;
 
-},{"./localStorage":34,"./log":35,"./model":36,"./utils":46}],24:[function(require,module,exports){
+},{"./localStorage":31,"./log":32,"./model":33,"./utils":44}],21:[function(require,module,exports){
 var Model = require("./model");
 var log = require("./log");
 var localStorage = require("./localStorage");
@@ -16432,7 +16413,7 @@ utils.extend(Base64FileSubmission, FileSubmission);
 
 module.exports = Base64FileSubmission;
 
-},{"./fileSubmission":23,"./localStorage":34,"./log":35,"./model":36,"./utils":46}],25:[function(require,module,exports){
+},{"./fileSubmission":20,"./localStorage":31,"./log":32,"./model":33,"./utils":44}],22:[function(require,module,exports){
 var Model = require("./model");
 var log = require("./log");
 var config = require("./config").getConfig();
@@ -16505,94 +16486,128 @@ FileSubmissionDownload.prototype.getRemoteFileURL = function() {
 
 module.exports = FileSubmissionDownload;
 
-},{"./config":14,"./fileSubmission":23,"./localStorage":34,"./log":35,"./model":36,"./utils":46}],26:[function(require,module,exports){
+},{"./config":11,"./fileSubmission":20,"./localStorage":31,"./log":32,"./model":33,"./utils":44}],23:[function(require,module,exports){
 var utils = require("./utils");
 var async = require('async');
+var _ = require('underscore');
 
 var fileSystemAvailable = false;
 var _requestFileSystem = function() {
-    console.error("No file system available");
+  console.error("No file system available");
 };
 //placeholder
 var PERSISTENT = 1;
 //placeholder
 function isFileSystemAvailable() {
-    _checkEnv();
-    return fileSystemAvailable;
+  _checkEnv();
+  return fileSystemAvailable;
 }
 //convert a file object to base64 encoded.
 function fileToBase64(file, cb) {
-    if (!file instanceof File) {
-        return cb('Only file object can be used for converting');
-    }
-    var fileReader = new FileReader();
-    fileReader.onloadend = function(evt) {
-        var text = evt.target.result;
-        return cb(null, text);
-    };
-    fileReader.readAsDataURL(file);
+  if (!file instanceof File) {
+    return cb('Only file object can be used for converting');
+  }
+  var fileReader = new FileReader();
+  fileReader.onloadend = function(evt) {
+    var text = evt.target.result;
+    return cb(null, text);
+  };
+  fileReader.readAsDataURL(file);
 }
 
 function _createBlobOrString(contentstr) {
-    var retVal;
-    if (utils.isPhoneGap()) { // phonegap filewriter works with strings, later versions also ork with binary arrays, and if passed a blob will just convert to binary array anyway
+  var retVal;
+  if (utils.isPhoneGap()) { // phonegap filewriter works with strings, later versions also ork with binary arrays, and if passed a blob will just convert to binary array anyway
+    retVal = contentstr;
+  } else {
+    var targetContentType = 'text/plain';
+    try {
+      retVal = new Blob([contentstr], {
+        type: targetContentType
+      }); // Blob doesn't exist on all androids
+    } catch (e) {
+      // TypeError old chrome and FF
+      var blobBuilder = window.BlobBuilder ||
+        window.WebKitBlobBuilder ||
+        window.MozBlobBuilder ||
+        window.MSBlobBuilder;
+      if (e.name === 'TypeError' && blobBuilder) {
+        var bb = new blobBuilder();
+        bb.append([contentstr.buffer]);
+        retVal = bb.getBlob(targetContentType);
+      } else {
+        // We can't make a Blob, so just return the stringified content
         retVal = contentstr;
-    } else {
-        var targetContentType = 'text/plain';
-        try {
-            retVal = new Blob([contentstr], {
-                type: targetContentType
-            }); // Blob doesn't exist on all androids
-        } catch (e) {
-            // TypeError old chrome and FF
-            var blobBuilder = window.BlobBuilder ||
-                window.WebKitBlobBuilder ||
-                window.MozBlobBuilder ||
-                window.MSBlobBuilder;
-            if (e.name === 'TypeError' && blobBuilder) {
-                var bb = new blobBuilder();
-                bb.append([contentstr.buffer]);
-                retVal = bb.getBlob(targetContentType);
-            } else {
-                // We can't make a Blob, so just return the stringified content
-                retVal = contentstr;
-            }
-        }
+      }
     }
-    return retVal;
+  }
+  return retVal;
 }
 
 
-function getBasePath(cb) {
-    save("dummy.txt", "TestContnet", function(err, fileEntry) {
-        if (err) {
-            return cb(err);
-        }
+function getBasePath(callback) {
+  async.waterfall([
 
-        _getFileEntry("dummy.txt", 0, {}, function(err, fileEntry) {
-            var sPath = fileEntry.fullPath.replace("dummy.txt", "");
-            fileEntry.remove();
-            return cb(null, sPath);
-        });
-    });
+    function saveDummyFile(cb) {
+      save("dummy.txt", "TestContnet", cb);
+    },
+    function getFileEntryPath(fileEntry, cb) {
+      _getFileEntry("dummy.txt", 0, {}, function(err, fileEntry) {
+        var sPath = fileEntry.fullPath.replace("dummy.txt", "");
+        fileEntry.remove();
+        return cb(null, sPath);
+      });
+    }
+  ], callback);
 }
 
 function _getSaveObject(content) {
-    var saveObj = null;
-    if (typeof content === 'object' && content !== null) {
-        if (content instanceof File || content instanceof Blob) {
-            //File object
-            saveObj = content;
-        } else {
-            //JSON object
-            var contentstr = JSON.stringify(content);
-            saveObj = _createBlobOrString(contentstr);
-        }
-    } else if (typeof content === 'string') {
-        saveObj = _createBlobOrString(content);
+  var saveObj = null;
+  if (typeof content === 'object' && content !== null) {
+    if (content instanceof File || content instanceof Blob) {
+      //File object
+      saveObj = content;
+    } else {
+      //JSON object
+      var contentstr = JSON.stringify(content);
+      saveObj = _createBlobOrString(contentstr);
     }
+  } else if (typeof content === 'string') {
+    saveObj = _createBlobOrString(content);
+  }
 
-    return saveObj;
+  return saveObj;
+}
+
+
+function writePhonegapFile(fileEntry, saveObj, callback) {
+
+  async.waterfall([
+
+    function getFileParent(cb) {
+      fileEntry.getParent(function(parentDir) {
+        cb(undefined, parentDir);
+      });
+    },
+    function resolveParentFile(parentDir, cb) {
+      _resolveFile(saveObj.fullPath, function(err, fileToCopy) {
+        cb(err, fileToCopy, parentDir);
+      });
+    },
+    function removeDestinationFile(fileToCopy, parentDir, cb) {
+      fileEntry.remove(function() {
+        cb(undefined, fileToCopy, parentDir);
+      });
+    },
+    function copyFileToDest(fileToCopy, parentDir, cb) {
+      var fileName = fileEntry.name;
+      fileToCopy.copyTo(parentDir, fileName, function(copiedFile) {
+        return cb(null, copiedFile);
+      }, function(err) {
+        return cb(err);
+      });
+    }
+  ], callback);
 }
 
 /**
@@ -16605,67 +16620,46 @@ function _getSaveObject(content) {
  * @param  {[type]} cb  (err, result)
  * @return {[type]}          [description]
  */
-function save(fileName, content, cb) {
-    var self = this;
-    var saveObj = _getSaveObject(content);
-    if (saveObj === null) {
-        return cb("Invalid content type. Object was null");
-    }
-    var size = saveObj.size || saveObj.length;
+function save(fileName, content, callback) {
+  var self = this;
+  var saveObj = _getSaveObject(content);
+  if (saveObj === null) {
+    return cb("Invalid content type. Object was null");
+  }
+  var size = saveObj.size || saveObj.length;
 
-    _getFileEntry(fileName, size, {
+  async.waterfall([
+
+    function getFileEntry(cb) {
+      _getFileEntry(fileName, size, {
         create: true
-    }, function(err, fileEntry) {
-        if (err) {
-            cb(err);
-        } else {
-            if (utils.isPhoneGap() && saveObj instanceof File) {
-                //Writing binary files is not possible in windows phone.
-                //So if the thing to save is a file, and it is in phonegap, use the copyTo functions instead.
-                fileEntry.getParent(function(parentDir) {
-                    //Get the file entry for the file input
-                    _resolveFile(saveObj.fullPath, function(err, fileToCopy) {
-                        if (err) {
-                            return cb(err);
-                        }
-                        fileName = fileEntry.name;
+      }, cb);
+    },
+    function writeFile(fileEntry, cb) {
+      if (utils.isPhoneGap() && saveObj instanceof File) {
+        //Writing binary files is not possible in windows phone.
+        //So if the thing to save is a file, and it is in phonegap, use the copyTo functions instead.
+        writePhonegapFile(fileEntry, saveObj, cb);
+      } else {
+        //Otherwise, just write text
+        fileEntry.createWriter(function(writer) {
+          function _onFinished(evt) {
+            return cb(null, evt);
+          }
 
-                        fileEntry.remove(function() {
-                            fileToCopy.copyTo(parentDir, fileName, function(copiedFile) {
-                                return cb(null, copiedFile);
-                            }, function(err) {
-                                return cb(err);
-                            });
-                        }, function(err) {
-                            return cb(err);
-                        });
-                    }, function(err) {
-                        return cb(err);
-                    });
-                }, function(err) {
-                    return cb(err);
-                });
-            } else {
-                //Otherwise, just write text
-                fileEntry.createWriter(function(writer) {
-                    function _onFinished(evt) {
-                        return cb(null, evt);
-                    }
-
-                    function _onTruncated() {
-                        writer.onwriteend = _onFinished;
-                        writer.write(saveObj); //write method can take a blob or file object according to html5 standard.
-                    }
-                    writer.onwriteend = _onTruncated;
-                    //truncate the file first.
-                    writer.truncate(0);
-                }, function(e) {
-                    cb('Failed to create file write:' + e);
-                });
-            }
-
-        }
-    });
+          function _onTruncated() {
+            writer.onwriteend = _onFinished;
+            writer.write(saveObj); //write method can take a blob or file object according to html5 standard.
+          }
+          writer.onwriteend = _onTruncated;
+          //truncate the file first.
+          writer.truncate(0);
+        }, function(e) {
+          cb('Failed to create file write: ' + e);
+        });
+      }
+    }
+  ], callback);
 }
 /**
  * Remove a file from file system
@@ -16674,20 +16668,20 @@ function save(fileName, content, cb) {
  * @return {[type]}            [description]
  */
 function remove(fileName, cb) {
-    _getFileEntry(fileName, 0, {}, function(err, fileEntry) {
-        if (err) {
-            if (!(err.name === 'NotFoundError' || err.code === 1)) {
-                return cb(err);
-            } else {
-                return cb(null, null);
-            }
-        }
-        fileEntry.remove(function() {
-            cb(null, null);
-        }, function(e) {
-            cb('Failed to remove file' + e);
-        });
+  _getFileEntry(fileName, 0, {}, function(err, fileEntry) {
+    if (err) {
+      if (!(err.name === 'NotFoundError' || err.code === 1)) {
+        return cb(err);
+      } else {
+        return cb(null, null);
+      }
+    }
+    fileEntry.remove(function() {
+      cb(null, null);
+    }, function(e) {
+      cb('Failed to remove file' + e);
     });
+  });
 }
 /**
  * Read a file as text
@@ -16696,28 +16690,28 @@ function remove(fileName, cb) {
  * @return {[type]}            [description]
  */
 function readAsText(fileName, cb) {
-    _getFile(fileName, function(err, file) {
-        if (err) {
-            cb(err);
-        } else {
-            var reader = new FileReader();
-            reader.onloadend = function(evt) {
-                var text = evt.target.result;
-                if (typeof text === "object") {
-                    text = JSON.stringify(text);
-                }
-                // Check for URLencoded
-                // PG 2.2 bug in readAsText()
-                try {
-                    text = decodeURIComponent(text);
-                } catch (e) {
-
-                }
-                return cb(null, text);
-            };
-            reader.readAsText(file);
+  _getFile(fileName, function(err, file) {
+    if (err) {
+      cb(err);
+    } else {
+      var reader = new FileReader();
+      reader.onloadend = function(evt) {
+        var text = evt.target.result;
+        if (typeof text === "object") {
+          text = JSON.stringify(text);
         }
-    });
+        // Check for URLencoded
+        // PG 2.2 bug in readAsText()
+        try {
+          text = decodeURIComponent(text);
+        } catch (e) {
+
+        }
+        return cb(null, text);
+      };
+      reader.readAsText(file);
+    }
+  });
 }
 /**
  * Read a file and return base64 encoded data
@@ -16726,17 +16720,17 @@ function readAsText(fileName, cb) {
  * @return {[type]}            [description]
  */
 function readAsBase64Encoded(fileName, cb) {
-    _getFile(fileName, function(err, file) {
-        if (err) {
-            return cb(err);
-        }
-        var reader = new FileReader();
-        reader.onloadend = function(evt) {
-            var text = evt.target.result;
-            return cb(null, text);
-        };
-        reader.readAsDataURL(file);
-    });
+  _getFile(fileName, function(err, file) {
+    if (err) {
+      return cb(err);
+    }
+    var reader = new FileReader();
+    reader.onloadend = function(evt) {
+      var text = evt.target.result;
+      return cb(null, text);
+    };
+    reader.readAsDataURL(file);
+  });
 }
 /**
  * Read a file return blob object (which can be used for XHR uploading binary)
@@ -16745,26 +16739,26 @@ function readAsBase64Encoded(fileName, cb) {
  * @return {[type]}            [description]
  */
 function readAsBlob(fileName, cb) {
-    _getFile(fileName, function(err, file) {
-        if (err) {
-            return cb(err);
-        } else {
-            var type = file.type;
-            var reader = new FileReader();
-            reader.onloadend = function(evt) {
-                var arrayBuffer = evt.target.result;
-                var blob = new Blob([arrayBuffer], {
-                    'type': type
-                });
-                cb(null, blob);
-            };
-            reader.readAsArrayBuffer(file);
-        }
-    });
+  _getFile(fileName, function(err, file) {
+    if (err) {
+      return cb(err);
+    } else {
+      var type = file.type;
+      var reader = new FileReader();
+      reader.onloadend = function(evt) {
+        var arrayBuffer = evt.target.result;
+        var blob = new Blob([arrayBuffer], {
+          'type': type
+        });
+        cb(null, blob);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  });
 }
 
 function readAsFile(fileName, cb) {
-    _getFile(fileName, cb);
+  _getFile(fileName, cb);
 }
 /**
  * Retrieve a file object
@@ -16773,107 +16767,107 @@ function readAsFile(fileName, cb) {
  * @return {[type]}            [description]
  */
 function _getFile(fileName, cb) {
-    _getFileEntry(fileName, 0, {}, function(err, fe) {
-        if (err) {
-            return cb(err);
-        }
-        fe.file(function(file) {
-            cb(null, file);
-        }, function(e) {
-            cb(e);
-        });
+  _getFileEntry(fileName, 0, {}, function(err, fe) {
+    if (err) {
+      return cb(err);
+    }
+    fe.file(function(file) {
+      cb(null, file);
+    }, function(e) {
+      cb(e);
     });
+  });
 }
 
 function _resolveFile(fileName, cb) {
-    //This is necessary to get the correct uri for apple. The URI in a file object for iphone does not have the file:// prefix.
-    //This gives invalid uri errors when trying to resolve.
-    if (fileName.indexOf("file://") === -1 && window.device.platform !== "Win32NT") {
-        fileName = "file://" + fileName;
-    }
-    window.resolveLocalFileSystemURI(fileName, function(fileEntry) {
-        return cb(null, fileEntry);
-    }, function(err) {
-        return cb(err);
-    });
+  //This is necessary to get the correct uri for apple. The URI in a file object for iphone does not have the file:// prefix.
+  //This gives invalid uri errors when trying to resolve.
+  if (fileName.indexOf("file://") === -1 && window.device.platform !== "Win32NT") {
+    fileName = "file://" + fileName;
+  }
+  window.resolveLocalFileSystemURI(fileName, function(fileEntry) {
+    return cb(null, fileEntry);
+  }, function(err) {
+    return cb(err);
+  });
 }
 
 function _getFileEntry(fileName, size, params, cb) {
-    var self = this;
-    _checkEnv();
-    if (typeof(fileName) === "string") {
-        _requestFileSystem(PERSISTENT, size, function gotFS(fileSystem) {
-            fileSystem.root.getFile(fileName, params, function gotFileEntry(fileEntry) {
-                cb(null, fileEntry);
-            }, function(err) {
-                if (err.name === 'QuotaExceededError' || err.code === 10) {
-                    //this happens only on browser. request for 1 gb storage
-                    //TODO configurable from cloud
-                    var bigSize = 1024 * 1024 * 1024;
-                    _requestQuote(bigSize, function(err, bigSize) {
-                        _getFileEntry(fileName, size, params, cb);
-                    });
-                } else {
-                    if (!utils.isPhoneGap()) {
-                        return cb(err);
-                    } else {
-                        _resolveFile(fileName, cb);
-                    }
-                }
-            });
-        }, function() {
-            cb('Failed to requestFileSystem');
-        });
-    } else {
-        if (typeof(cb) === "function") {
-            cb("Expected file name to be a string but was " + fileName);
+  var self = this;
+  _checkEnv();
+  if (typeof(fileName) === "string") {
+    _requestFileSystem(PERSISTENT, size, function gotFS(fileSystem) {
+      fileSystem.root.getFile(fileName, params, function gotFileEntry(fileEntry) {
+        cb(null, fileEntry);
+      }, function(err) {
+        if (err.name === 'QuotaExceededError' || err.code === 10) {
+          //this happens only on browser. request for 1 gb storage
+          //TODO configurable from cloud
+          var bigSize = 1024 * 1024 * 1024;
+          _requestQuote(bigSize, function(err, bigSize) {
+            _getFileEntry(fileName, size, params, cb);
+          });
+        } else {
+          if (!utils.isPhoneGap()) {
+            return cb(err);
+          } else {
+            _resolveFile(fileName, cb);
+          }
         }
+      });
+    }, function() {
+      cb('Failed to requestFileSystem');
+    });
+  } else {
+    if (typeof(cb) === "function") {
+      cb("Expected file name to be a string but was " + fileName);
     }
+  }
 }
 
 function _requestQuote(size, cb) {
-    if (navigator.webkitPersistentStorage) {
-        //webkit browser
-        navigator.webkitPersistentStorage.requestQuota(size, function(size) {
-            cb(null, size);
-        }, function(err) {
-            cb(err, 0);
-        });
-    } else {
-        //PhoneGap does not need to do this.return directly.
-        cb(null, size);
-    }
+  if (navigator.webkitPersistentStorage) {
+    //webkit browser
+    navigator.webkitPersistentStorage.requestQuota(size, function(size) {
+      cb(null, size);
+    }, function(err) {
+      cb(err, 0);
+    });
+  } else {
+    //PhoneGap does not need to do this.return directly.
+    cb(null, size);
+  }
 }
 
 function _checkEnv() {
-    if (window.requestFileSystem) {
-        _requestFileSystem = window.requestFileSystem;
-        fileSystemAvailable = true;
-    } else if (window.webkitRequestFileSystem) {
-        _requestFileSystem = window.webkitRequestFileSystem;
-        fileSystemAvailable = true;
-    } else {
-        fileSystemAvailable = false;
-    }
-    if (window.LocalFileSystem) {
-        PERSISTENT = window.LocalFileSystem.PERSISTENT;
-    } else if (window.PERSISTENT) {
-        PERSISTENT = window.PERSISTENT;
-    }
+  if (window.requestFileSystem) {
+    _requestFileSystem = window.requestFileSystem;
+    fileSystemAvailable = true;
+  } else if (window.webkitRequestFileSystem) {
+    _requestFileSystem = window.webkitRequestFileSystem;
+    fileSystemAvailable = true;
+  } else {
+    fileSystemAvailable = false;
+  }
+  if (window.LocalFileSystem) {
+    PERSISTENT = window.LocalFileSystem.PERSISTENT;
+  } else if (window.PERSISTENT) {
+    PERSISTENT = window.PERSISTENT;
+  }
 }
 
 module.exports = {
-    isFileSystemAvailable: isFileSystemAvailable,
-    save: save,
-    remove: remove,
-    readAsText: readAsText,
-    readAsBlob: readAsBlob,
-    readAsBase64Encoded: readAsBase64Encoded,
-    readAsFile: readAsFile,
-    fileToBase64: fileToBase64,
-    getBasePath: getBasePath
+  isFileSystemAvailable: isFileSystemAvailable,
+  save: save,
+  remove: remove,
+  readAsText: readAsText,
+  readAsBlob: readAsBlob,
+  readAsBase64Encoded: readAsBase64Encoded,
+  readAsFile: readAsFile,
+  fileToBase64: fileToBase64,
+  getBasePath: getBasePath
 };
-},{"./utils":46,"async":7}],27:[function(require,module,exports){
+},{"./utils":44,"async":4,"underscore":9}],24:[function(require,module,exports){
 var Page = require("./page");
 var Field = require("./field");
 var RulesEngine = require("./rulesEngine");
@@ -16926,11 +16920,11 @@ Form.prototype.loadFromRemote = function(cb) {
 
   log.d("Form: loadFromRemote", id);
 
-  self.refresh(true, function(err, obj1) {
+  self.refresh(true, function(err, refreshedForm) {
     self.initialise();
 
-    _forms[id] = obj1;
-    return cb(err, obj1);
+    _forms[id] = refreshedForm;
+    return cb(err, refreshedForm);
   });
 };
 
@@ -17129,7 +17123,7 @@ function fromLocal(params, cb) {
   //No cached form, check local storage
 
   var form = newInstance({
-    id: formId
+    formId: formId
   });
 
   //Check local storage
@@ -17157,7 +17151,7 @@ module.exports = {
   fromLocal: fromLocal,
   newInstance: newInstance
 };
-},{"./field":16,"./forms":32,"./log":35,"./model":36,"./page":37,"./rulesEngine":38,"./submission":41,"./utils":46,"underscore":12}],28:[function(require,module,exports){
+},{"./field":13,"./forms":29,"./log":32,"./model":33,"./page":34,"./rulesEngine":36,"./submission":39,"./utils":44,"underscore":9}],25:[function(require,module,exports){
 var Model = require("./model");
 var log = require("./log");
 var utils = require("./utils");
@@ -17183,7 +17177,7 @@ FormSubmission.prototype.getFormId = function() {
 };
 
 module.exports = FormSubmission;
-},{"./log":35,"./model":36,"./utils":46}],29:[function(require,module,exports){
+},{"./log":32,"./model":33,"./utils":44}],26:[function(require,module,exports){
 var Model = require("./model");
 var log = require("./log");
 var utils = require("./utils");
@@ -17199,7 +17193,7 @@ function FormSubmissionComplete(submissionTask) {
 utils.extend(FormSubmissionComplete, Model);
 
 module.exports = FormSubmissionComplete;
-},{"./log":35,"./model":36,"./utils":46}],30:[function(require,module,exports){
+},{"./log":32,"./model":33,"./utils":44}],27:[function(require,module,exports){
 var Model = require("./model");
 var log = require("./log");
 var utils = require("./utils");
@@ -17217,7 +17211,7 @@ FormSubmissionDownload.prototype.getSubmissionId = function() {
 utils.extend(FormSubmissionDownload, Model);
 
 module.exports = FormSubmissionDownload;
-},{"./log":35,"./model":36,"./utils":46}],31:[function(require,module,exports){
+},{"./log":32,"./model":33,"./utils":44}],28:[function(require,module,exports){
 var Model = require("./model");
 var log = require("./log");
 var utils = require("./utils");
@@ -17233,7 +17227,7 @@ function FormSubmissionStatus(submissionTask) {
 utils.extend(FormSubmissionStatus, Model);
 
 module.exports = FormSubmissionStatus;
-},{"./log":35,"./model":36,"./utils":46}],32:[function(require,module,exports){
+},{"./log":32,"./model":33,"./utils":44}],29:[function(require,module,exports){
 var Model = require("./model");
 var utils = require("./utils");
 var log = require("./log");
@@ -17330,13 +17324,20 @@ Forms.prototype.getForm = function(params, cb){
 
 
 module.exports = new Forms();
-},{"./form":27,"./log":35,"./model":36,"./utils":46,"async":7,"underscore":12}],33:[function(require,module,exports){
+},{"./form":24,"./log":32,"./model":33,"./utils":44,"async":4,"underscore":9}],30:[function(require,module,exports){
 var log = require("./log");
 var submissions = require("./submissions");
 var uploadManager = require("./uploadManager");
 var theme = require("./theme");
 var forms = require("./forms");
 var async = require('async');
+
+var _ = require('underscore');
+var config;
+
+_.defer(function(){
+    config = require("./config").getConfig();
+});
 
 var init = function(params, cb) {
     var def = {
@@ -17351,7 +17352,7 @@ var init = function(params, cb) {
     }
 
     //init config module
-    var config = def.config || {};
+    var passedConfig = def.config || {};
 
     async.series([
         function(cb) {
@@ -17359,7 +17360,7 @@ var init = function(params, cb) {
         },
         function(cb) {
             log.l("Loading Config");
-            config.init(config, cb);
+            config.init(passedConfig, cb);
         },
         function(cb) {
             log.l("Loading Submissions");
@@ -17385,7 +17386,7 @@ var init = function(params, cb) {
 };
 
 module.exports = init;
-},{"./forms":32,"./log":35,"./submissions":42,"./theme":43,"./uploadManager":44,"async":7}],34:[function(require,module,exports){
+},{"./config":11,"./forms":29,"./log":32,"./submissions":40,"./theme":41,"./uploadManager":42,"async":4,"underscore":9}],31:[function(require,module,exports){
 /**
  * Local storage stores a model's json definition persistently.
  */
@@ -17427,12 +17428,6 @@ LocalStorage.prototype.create = function(model, cb) {
 
 //read a model from local storage
 LocalStorage.prototype.read = function(model, cb) {
-    if (typeof(model) === "object") {
-        if (model.get("_type") === "offlineTest") {
-            return cb(null, {});
-        }
-    }
-
     var key = _getKey(model);
     if (key !== null) {
         _fhData({
@@ -17674,7 +17669,7 @@ module.exports = function() {
 
     return localStorage;
 }();
-},{"../libs/lawnchair.js":5,"./config":14,"./fileSystem.js":26,"./store.js":39,"./utils.js":46,"underscore":12}],35:[function(require,module,exports){
+},{"../libs/lawnchair.js":3,"./config":11,"./fileSystem.js":23,"./store.js":37,"./utils.js":44,"underscore":9}],32:[function(require,module,exports){
 /**
  * Async log module
  * @param  {[type]} module [description]
@@ -17821,7 +17816,7 @@ Log.getProps = function() {
 
 module.exports = Log;
 
-},{"./config":14,"./localStorage":34,"./utils":46,"underscore":12}],36:[function(require,module,exports){
+},{"./config":11,"./localStorage":31,"./utils":44,"underscore":9}],33:[function(require,module,exports){
 var Event = require('eventemitter2').EventEmitter2;
 var utils = require("./utils");
 var localStorage = require("./localStorage");
@@ -17977,7 +17972,7 @@ Model.prototype.clearLocal = function(cb) {
 
 module.exports = Model;
 
-},{"./dataAgent":15,"./localStorage":34,"./utils":46,"eventemitter2":8,"underscore":12}],37:[function(require,module,exports){
+},{"./dataAgent":12,"./localStorage":31,"./utils":44,"eventemitter2":5,"underscore":9}],34:[function(require,module,exports){
 /**
  * One form contains multiple pages
  */
@@ -18098,7 +18093,216 @@ Page.prototype.getDescription = function() {
 
 module.exports = Page;
 
-},{"./config":14,"./log":35,"./model":36,"./utils":46,"underscore":12}],38:[function(require,module,exports){
+},{"./config":11,"./log":32,"./model":33,"./utils":44,"underscore":9}],35:[function(require,module,exports){
+var log = require('./log');
+var config;
+var _ = require('underscore');
+_.defer(function(){
+  config = require("./config").getConfig();
+});
+
+var isPhoneGap = false;
+var isHtml5 = false;
+var video = null;
+var canvas = null;
+var ctx = null;
+var localMediaStream = null;
+function isHtml5CamAvailable() {
+  checkEnv();
+  return isHtml5;
+}
+function isPhoneGapAvailable() {
+  checkEnv();
+  return isPhoneGap;
+}
+function initHtml5Camera(params, cb) {
+  checkEnv();
+  _html5Camera(params, cb);
+}
+function cancelHtml5Camera() {
+  if (localMediaStream) {
+    localMediaStream.stop();
+    localMediaStream = null;
+  }
+}
+function takePhoto(params, cb) {
+  params = params || {};
+  log.d("Taking photo ", params, isPhoneGap);
+  //use configuration
+  var width = params.targetWidth ? params.targetWidth : config.get("targetWidth", 640);
+  var height = params.targetHeight ? params.targetHeight : config.get("targetHeight", 480);
+  var quality = params.quality ? params.quality : config.get("quality", 50);
+  //For Safety, the default value of saving to photo album is true.
+  var saveToPhotoAlbum = typeof(params.saveToPhotoAlbum) !== "undefined" ? params.saveToPhotoAlbum : config.get("saveToPhotoAlbum");
+  var encodingType = params.encodingType ? params.encodingType : config.get("encodingType", 'jpeg');
+
+  params.targetWidth = width;
+  params.targetHeight = height;
+  params.quality = quality;
+  params.saveToPhotoAlbum = saveToPhotoAlbum;
+  params.encodingType = encodingType;
+
+  if ("undefined" === typeof(params.sourceType) && typeof(Camera) !== 'undefined') {
+    params.sourceType = Camera.PictureSourceType.CAMERA;
+  }
+
+  if (isPhoneGap) {
+    _phoneGapPhoto(params, cb);
+  } else if (isHtml5) {
+    snapshot(params, cb);
+  } else {
+    cb('Your device does not support camera.');
+  }
+}
+function _phoneGapPhoto(params, cb) {
+  params.encodingType = params.encodingType === 'jpeg' ? Camera.EncodingType.JPEG : Camera.EncodingType.PNG;
+  navigator.camera.getPicture(_phoneGapPhotoSuccess(cb), cb, {
+    quality: params.quality,
+    targetWidth: params.targetWidth,
+    targetHeight: params.targetHeight,
+    sourceType: params.sourceType,
+    saveToPhotoAlbum: params.saveToPhotoAlbum,
+    destinationType: Camera.DestinationType.FILE_URI,
+    encodingType: params.encodingType
+  });
+}
+function _phoneGapPhotoSuccess(cb) {
+  return function (imageData) {
+    var imageURI = imageData;
+    cb(null, imageURI);
+  };
+}
+function _html5Camera(params, cb) {
+  log.d("Taking photo _html5Camera", params, isPhoneGap);
+  var width = params.targetWidth || config.get("targetWidth");
+  var height = params.targetHeight || config.get("targetHeight");
+  video.width = width;
+  video.height = height;
+  canvas.width = width;
+  canvas.height = height;
+  if (!localMediaStream) {
+    navigator.getUserMedia({video: true, audio: false}, function (stream) {
+      video.src = window.URL.createObjectURL(stream);
+      localMediaStream = stream;
+      cb(null, video);
+    }, cb);
+  } else {
+    log.e('Media device was not released by browser.');
+    cb('Media device occupied.');
+  }
+}
+
+/**
+ * Capturing a barcode using the PhoneGap barcode plugin
+ */
+function _phoneGapBarcode(params, cb) {
+  //Checking for a cordova barcodeScanner plugin.
+  if (window.cordova && window.cordova.plugins && window.cordova.plugins.barcodeScanner) {
+    cordova.plugins.barcodeScanner.scan(
+      function (result) {
+        log.d("Barcode Found: " + JSON.stringify(result));
+        return cb(null, result);
+      },
+      function (error) {
+        log.e("Scanning failed: " + error);
+        cb("Scanning failed: " + error);
+      }
+    );
+  } else {
+    return cb("Barcode plugin not installed");
+  }
+}
+
+/**
+ * Capturing a barcode using a webcam and image processors.
+ * TODO Not complete yet.
+ * @param params
+ * @param cb
+ * @private
+ */
+function _webBarcode(params, cb) {
+  //TODO Web barcode decoding not supported yet.
+  log.e("Web Barcode Decoding not supported yet.");
+  return cb("Web Barcode Decoding not supported yet.");
+}
+
+function captureBarcode(params, cb) {
+  if (isPhoneGapAvailable()) {
+    _phoneGapBarcode(params, cb);
+  } else {
+    _webBarcode(params, cb);
+  }
+}
+function checkEnv() {
+  log.d("Checking env");
+  if (navigator.camera && navigator.camera.getPicture) {
+    // PhoneGap
+    isPhoneGap = true;
+  } else if (_browserWebSupport()) {
+    isHtml5 = true;
+    video = document.createElement('video');
+    video.autoplay = 'autoplay';
+    canvas = document.createElement('canvas');
+    ctx = canvas.getContext('2d');
+  } else {
+    console.error('Cannot detect usable media API. Camera will not run properly on this device.');
+  }
+}
+function _browserWebSupport() {
+  if (navigator.getUserMedia) {
+    return true;
+  }
+  if (navigator.webkitGetUserMedia) {
+    navigator.getUserMedia = navigator.webkitGetUserMedia;
+    return true;
+  }
+  if (navigator.mozGetUserMedia) {
+    navigator.getUserMedia = navigator.mozGetUserMedia;
+    return true;
+  }
+  if (navigator.msGetUserMedia) {
+    navigator.getUserMedia = navigator.msGetUserMedia;
+    return true;
+  }
+  return false;
+}
+
+function snapshot(params, cb) {
+  log.d("Snapshot ", params);
+  if (localMediaStream) {
+    ctx.drawImage(video, 0, 0, params.targetWidth, params.targetHeight);
+    // "image/webp" works in Chrome.
+    // Other browsers will fall back to image/png.
+    var base64 = canvas.toDataURL('image/png');
+    var imageData = ctx.getImageData(0, 0, params.targetWidth, params.targetHeight);
+
+    if (params.cancelHtml5Camera) {
+      cancelHtml5Camera();
+    }
+
+    //Deciding whether to return raw image data or a base64 image.
+    //rawData is mainly used for scanning for barcodes.
+    if (params.rawData) {
+      return cb(null, {imageData: imageData, width: params.targetWidth, height: params.targetHeight, base64: base64});
+    } else {
+      return cb(null, base64);
+    }
+  } else {
+    log.e('Media resource is not available');
+    cb('Resource not available');
+  }
+}
+
+module.exports = {
+  takePhoto: takePhoto,
+  isPhoneGapCamAvailable: isPhoneGapAvailable,
+  isHtml5CamAvailable: isHtml5CamAvailable,
+  initHtml5Camera: initHtml5Camera,
+  cancelHtml5Camera: cancelHtml5Camera,
+  captureBarcode: captureBarcode
+};
+
+},{"./config":11,"./log":32,"underscore":9}],36:[function(require,module,exports){
 /*! fh-forms - v0.8.00 -  */
 /*! async - v0.2.9 -  */
 /*! 2014-08-27 */
@@ -19627,7 +19831,7 @@ function rulesEngine(formDef) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = rulesEngine;
 }
-},{"async":7,"underscore":12}],39:[function(require,module,exports){
+},{"async":4,"underscore":9}],37:[function(require,module,exports){
 function Store(name) {
     this.name = name;
 }
@@ -19654,7 +19858,7 @@ Store.prototype.upsert = function(model, cb) {
 
 module.exports = Store;
 
-},{}],40:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 var log = require("./log");
 var utils = require("./utils");
 var Store = require("./store");
@@ -19823,7 +20027,7 @@ function getMbaasStore(){
 
 module.exports = getMbaasStore();
 
-},{"./config":14,"./log":35,"./store":39,"./utils":46,"./web":47,"underscore":12}],41:[function(require,module,exports){
+},{"./config":11,"./log":32,"./store":37,"./utils":44,"./web":45,"underscore":9}],39:[function(require,module,exports){
 //implmenetation
 var _submissions = {};
 //cache in mem for single reference usage.
@@ -20106,6 +20310,7 @@ Submission.prototype.submitted = function (cb) {
     } else {
       log.d("Submitted status set for submission " + self.get('submissionId') + " with localId " + self.getLocalId());
       self.emit('submitted', self.get('submissionId'));
+      submissions.clearSentSubmission();
       cb(null, null);
     }
   });
@@ -20800,7 +21005,7 @@ module.exports = {
   newInstance: newInstance,
   fromLocal: fromLocal
 };
-},{"./config.js":14,"./form":27,"./form.js":27,"./localStorage.js":34,"./log.js":35,"./model.js":36,"./rulesEngine.js":38,"./submissions.js":42,"./uploadManager.js":44,"./utils.js":46,"async":7,"underscore":12}],42:[function(require,module,exports){
+},{"./config.js":11,"./form":24,"./form.js":24,"./localStorage.js":31,"./log.js":32,"./model.js":33,"./rulesEngine.js":36,"./submissions.js":40,"./uploadManager.js":42,"./utils.js":44,"async":4,"underscore":9}],40:[function(require,module,exports){
 var Model = require("./model");
 var log = require("./log");
 var submission = require("./submission");
@@ -20831,27 +21036,21 @@ Submissions.prototype.setLocalId = function() {
 Submissions.prototype.saveSubmission = function(submission, cb) {
   log.d("Submissions saveSubmission");
   var self = this;
-  this.updateSubmissionWithoutSaving(submission);
-  this.clearSentSubmission(function() {
-    self.saveLocal(cb);
-  });
+  self.updateSubmissionWithoutSaving(submission);
+  self.saveLocal(cb);
 };
 Submissions.prototype.updateSubmissionWithoutSaving = function(submission) {
   log.d("Submissions updateSubmissionWithoutSaving");
   var pruneData = this.pruneSubmission(submission);
   var localId = pruneData._ludid;
   if (localId) {
-    var meta = this.findMetaByLocalId(localId) || pruneData;
+    var currentMeta = this.findMetaByLocalId(localId);
     var submissions = this.getSubmissions();
 
-    var currentMeta = _.findWhere(submissions, {
-      _ludid: localId
-    });
-
     if (currentMeta) {
-      _.extend(currentMeta, meta);
+      _.extend(currentMeta, pruneData);
     } else {
-      submissions.push(meta);
+      submissions.push(pruneData);
     }
 
     this.updateSubmissionCache(submissions);
@@ -20864,9 +21063,8 @@ Submissions.prototype.clearSentSubmission = function(cb) {
   log.d("Submissions clearSentSubmission");
   var self = this;
   var maxSent = config.get("max_sent_saved") ? config.get("max_sent_saved") : config.get("sent_save_min");
-  var submissions = self.getSubmissions();
   var sentSubmissions = this.getSubmitted();
-  var toBeRemoved = [];
+  var toBeRemoved;
 
   //Submissions are sorted by the date they were submitted
   sentSubmissions = _.sortBy(sentSubmissions, function(submission) {
@@ -20878,7 +21076,7 @@ Submissions.prototype.clearSentSubmission = function(cb) {
   });
 
   //toBeRemoved Submissions = all but the last maxSent submissions
-  toBeRemoved = _.without(sentSubmissions, _.last(sentSubmissions, maxSent));
+  toBeRemoved = _.difference(sentSubmissions, _.last(sentSubmissions, maxSent));
 
   //Need to map back to submission meta info
   toBeRemoved = _.map(toBeRemoved, function(submissionLocalId) {
@@ -20899,12 +21097,11 @@ Submissions.prototype.clearSentSubmission = function(cb) {
       log.e("Error Deleting Submissions");
     }
 
-    cb(err);
+    return _.isFunction(cb) ? cb(err) : null;
   });
 };
 Submissions.prototype.findByFormId = function(formId) {
   log.d("Submissions findByFormId", formId);
-  var rtn = [];
   var submissions = this.getSubmissions();
 
   return _.filter(submissions, function(submission) {
@@ -21154,7 +21351,7 @@ function getSubmissionsModel() {
 }
 
 module.exports = getSubmissionsModel();
-},{"./config":14,"./log":35,"./model":36,"./submission":41,"./utils":46,"async":7,"underscore":12}],43:[function(require,module,exports){
+},{"./config":11,"./log":32,"./model":33,"./submission":39,"./utils":44,"async":4,"underscore":9}],41:[function(require,module,exports){
 var Model = require("./model");
 var utils = require("./utils");
 
@@ -21172,7 +21369,7 @@ Theme.prototype.getCSS = function() {
 };
 
 module.exports = new Theme();
-},{"./model":36,"./utils":46}],44:[function(require,module,exports){
+},{"./model":33,"./utils":44}],42:[function(require,module,exports){
 /**
  * Manages submission uploading tasks
  */
@@ -21403,7 +21600,7 @@ UploadManager.prototype.getTaskById = function(taskId, cb) {
 };
 
 module.exports = new UploadManager();
-},{"./config":14,"./dataAgent":15,"./log":35,"./model":36,"./uploadTask":45,"./utils":46}],45:[function(require,module,exports){
+},{"./config":11,"./dataAgent":12,"./log":32,"./model":33,"./uploadTask":43,"./utils":44}],43:[function(require,module,exports){
 /**
  * Uploading task for each submission
  */
@@ -22248,7 +22445,7 @@ module.exports = {
   'newInstance': newInstance,
   'fromLocal': fromLocal
 };
-},{"./config.js":14,"./dataAgent.js":15,"./fileSubmission.js":23,"./fileSubmissionBase64.js":24,"./fileSubmissionDownload.js":25,"./form.js":27,"./formSubmission.js":28,"./formSubmissionComplete.js":29,"./formSubmissionDownload.js":30,"./formSubmissionStatus.js":31,"./log.js":35,"./model.js":36,"./submission":41,"./submission.js":41,"./utils.js":46,"underscore":12}],46:[function(require,module,exports){
+},{"./config.js":11,"./dataAgent.js":12,"./fileSubmission.js":20,"./fileSubmissionBase64.js":21,"./fileSubmissionDownload.js":22,"./form.js":24,"./formSubmission.js":25,"./formSubmissionComplete.js":26,"./formSubmissionDownload.js":27,"./formSubmissionStatus.js":28,"./log.js":32,"./model.js":33,"./submission":39,"./submission.js":39,"./utils.js":44,"underscore":9}],44:[function(require,module,exports){
 var md5Node = require("md5-node");
 var _ = require('underscore');
 
@@ -22316,7 +22513,7 @@ module.exports = {
     isPhoneGap: isPhoneGap
 };
 
-},{"md5-node":10,"underscore":12}],47:[function(require,module,exports){
+},{"md5-node":7,"underscore":9}],45:[function(require,module,exports){
 var log = require("./log");
 var utils = require("./utils");
 var _ajax = require("../libs/ajax");
@@ -22386,8 +22583,6 @@ function post(url, body, cb) {
   };
   if (file === false) {
     param.contentType = 'application/json';
-  } else {
-    param.contentType = 'multipart/form-data';
   }
   _ajax(param);
 }
@@ -22482,4 +22677,4 @@ module.exports = {
   downloadFile: downloadFile
 };
 
-},{"../libs/ajax":1,"./config":14,"./fileSystem":26,"./log":35,"./utils":46,"underscore":12}]},{},[13]);
+},{"../libs/ajax":1,"./config":11,"./fileSystem":23,"./log":32,"./utils":44,"underscore":9}]},{},[10]);

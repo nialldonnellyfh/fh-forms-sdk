@@ -23,7 +23,6 @@ var configInterface = {
         return defaultConfigValues.config_admin_user === true;
     },
     "get": function(key) {
-        var self = this;
         if (key) {
             var userConfigValues = formConfig.get("userConfigValues", {});
             var defaultConfigValues = formConfig.get("defaultConfigValues", {});
@@ -162,9 +161,13 @@ var getForm = function(params, cb) {
     params = params ? params : {};
     cb = cb ? cb : defaultFunction;
 
-    var form = Form.fromLocal();
+    Form.fromLocal(params, function(err, form){
+      if(err){
+        return cb(err);
+      }
 
-    Form(params, cb);
+      form.loadFromRemote(cb);
+    });
 };
 
 /**
@@ -218,7 +221,7 @@ var getSubmissions = function(params, cb) {
             log.e(err);
             cb(err);
         } else {
-            cb(null, _submissions);
+            cb(null, submissions);
         }
     });
 };
@@ -344,5 +347,7 @@ module.exports = {
     submitForm: submitForm,
     config: configInterface,
     log: log,
-    init: init
+    init: init,
+    photoUtils: require('./photoUtils'),
+    fileSystem: require('./fileSystem')
 };

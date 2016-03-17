@@ -50,11 +50,11 @@ Form.prototype.loadFromRemote = function(cb) {
 
   log.d("Form: loadFromRemote", id);
 
-  self.refresh(true, function(err, obj1) {
+  self.refresh(true, function(err, refreshedForm) {
     self.initialise();
 
-    _forms[id] = obj1;
-    return cb(err, obj1);
+    _forms[id] = refreshedForm;
+    return cb(err, refreshedForm);
   });
 };
 
@@ -253,7 +253,7 @@ function fromLocal(params, cb) {
   //No cached form, check local storage
 
   var form = newInstance({
-    id: formId
+    formId: formId
   });
 
   //Check local storage

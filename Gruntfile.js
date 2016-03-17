@@ -67,6 +67,8 @@ module.exports = function(grunt) {
 
     grunt.registerTask('buildTest', ['clean', 'jshint:test', 'browserify']);
 
+    grunt.registerTask('default', ['buildTest']);
+
     grunt.registerTask('testServer', ['karma:unit']);
 
 };

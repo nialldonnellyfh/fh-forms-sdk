@@ -5,6 +5,13 @@ var theme = require("./theme");
 var forms = require("./forms");
 var async = require('async');
 
+var _ = require('underscore');
+var config;
+
+_.defer(function(){
+    config = require("./config").getConfig();
+});
+
 var init = function(params, cb) {
     var def = {
         'updateForms': true
@@ -18,7 +25,7 @@ var init = function(params, cb) {
     }
 
     //init config module
-    var config = def.config || {};
+    var passedConfig = def.config || {};
 
     async.series([
         function(cb) {
@@ -26,7 +33,7 @@ var init = function(params, cb) {
         },
         function(cb) {
             log.l("Loading Config");
-            config.init(config, cb);
+            config.init(passedConfig, cb);
         },
         function(cb) {
             log.l("Loading Submissions");

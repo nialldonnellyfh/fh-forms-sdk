@@ -67,8 +67,6 @@ function post(url, body, cb) {
   };
   if (file === false) {
     param.contentType = 'application/json';
-  } else {
-    param.contentType = 'multipart/form-data';
   }
   _ajax(param);
 }
