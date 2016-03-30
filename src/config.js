@@ -119,6 +119,71 @@ Config.prototype.getAppId = function() {
     return this.get('appId');
 };
 
+Config.prototype.getStatusUrl = function(){
+    var host = this.get('cloudHost');
+    return host + this.get('statusUrl', "/sys/info/ping");
+};
+
+//Getting the relevant url endpoint for a model
+Config.prototype.getUrlEndpoint = function(model) {
+    log.d("_getUrl ", model);
+
+    var type = model.get('_type');
+    var host = this.get('cloudHost');
+    var mBaaSBaseUrl = this.get('mbaasBaseUrl', "");
+    var formUrls = this.get('formUrls');
+    var relativeUrl = "";
+    if (formUrls[type]) {
+        relativeUrl = formUrls[type];
+    } else {
+        log.e('type not found to get url:' + type);
+    }
+    var url = host + mBaaSBaseUrl + relativeUrl;
+    var props = {};
+    props.appId = this.get('appId');
+    //Theme and forms do not require any parameters that are not in _fh
+    switch (type) {
+        case 'config':
+            props.deviceId = model.get("deviceId");
+            break;
+        case 'form':
+            props.formId = model.get('_id');
+            break;
+        case 'formSubmission':
+            props.formId = model.getFormId();
+            break;
+        case 'fileSubmission':
+            props.submissionId = model.getSubmissionId();
+            props.hashName = model.getHashName();
+            props.fieldId = model.getFieldId();
+            break;
+        case 'base64fileSubmission':
+            props.submissionId = model.getSubmissionId();
+            props.hashName = model.getHashName();
+            props.fieldId = model.getFieldId();
+            break;
+        case 'submissionStatus':
+            props.submissionId = model.get('submissionId');
+            break;
+        case 'completeSubmission':
+            props.submissionId = model.get('submissionId');
+            break;
+        case 'formSubmissionDownload':
+            props.submissionId = model.getSubmissionId();
+            break;
+        case 'fileSubmissionDownload':
+            props.submissionId = model.getSubmissionId();
+            props.fileGroupId = model.getFileGroupId();
+            break;
+        case 'offlineTest':
+            return "http://127.0.0.1:8453";
+    }
+    for (var key in props) {
+        url = url.replace(':' + key, props[key]);
+    }
+    return url;
+};
+
 function getConfig(){
     if(!config){
         config = new Config();

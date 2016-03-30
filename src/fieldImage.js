@@ -3,7 +3,7 @@
  */
 
 var localStorage = require("./localStorage.js");
-var fileSystem = require("./fileSystem.js");
+var fileSystem = require("fh-filesystem-api");
 var log = require("./log.js");
 var async = require("async");
 var utils = require("./utils.js");

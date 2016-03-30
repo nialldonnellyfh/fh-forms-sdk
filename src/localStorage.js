@@ -2,10 +2,9 @@
  * Local storage stores a model's json definition persistently.
  */
 var utils = require("./utils.js");
-var Store = require("./store.js");
-var fileSystem = require("./fileSystem.js");
+var fileSystem = require("fh-filesystem-api");
 var Lawnchair = require("../libs/lawnchair.js");
-var localStorage, localStorageLawnchair;
+var localStorage;
 var _ = require('underscore');
 var config = function(){
     return require("./config").getConfig();
@@ -17,7 +16,7 @@ var _fileSystemAvailable = function() {
 
 //placeholder
 function LocalStorage() {
-    Store.call(this, 'LocalStorage');
+    this.name = 'LocalStorage';
 }
 
 LocalStorage.prototype.getLawnchairAdapter = function(cb) {
@@ -29,7 +28,6 @@ LocalStorage.prototype.getLawnchairAdapter = function(cb) {
     });
 };
 
-utils.extend(LocalStorage, Store);
 
 //store a model to local storage
 LocalStorage.prototype.create = function(model, cb) {

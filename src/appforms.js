@@ -349,5 +349,5 @@ module.exports = {
     log: log,
     init: init,
     photoUtils: require('./photoUtils'),
-    fileSystem: require('./fileSystem')
+    fileSystem: require('fh-filesystem-api')
 };

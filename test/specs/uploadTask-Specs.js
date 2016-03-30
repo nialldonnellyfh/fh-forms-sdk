@@ -10,8 +10,7 @@ var submissions = require('../../src/submissions.js');
 var config = require('../../src/config.js').getConfig();
 var uploadManager = require('../../src/uploadManager.js');
 var uploadTask = require('../../src/uploadTask.js');
-var fileSystem = require('../../src/fileSystem.js');
-var aync = require('async');
+var fileSystem = require('fh-filesystem-api');
 
 
 var testBase64Pic = require('../fixtures/base64pic.js').value;

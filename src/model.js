@@ -13,6 +13,11 @@ var Model = function(options) {
 
 utils.extend(Model, Event);
 
+Model.prototype.getUrl = function(){
+    var config = require('./config').getConfig();
+    return config.getUrlEndpoint(this);
+};
+
 Model.prototype.getProps = function() {
     this.props = this.props || {};
     return this.props;
